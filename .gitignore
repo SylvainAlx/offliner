@@ -1,0 +1,58 @@
+# Global node modules
+node_modules
+
+# App React Native
+app/node_modules/
+
+# Expo
+app/.expo/
+app/.expo-shared/
+app/dist/
+app/web-build/
+app/expo-env.d.ts
+
+# Environment files
+app/.env
+app/.env*.local
+
+# Native credentials and keys
+app/.kotlin/
+app/*.orig.*
+app/*.jks
+app/*.p8
+app/*.p12
+app/*.key
+app/*.mobileprovision
+
+# Metro bundler cache
+app/.metro/
+app/.metro-health-check*
+
+# Debug logs
+app/npm-debug.*
+app/yarn-debug.*
+app/yarn-error.*
+app/*.log
+
+# macOS
+.DS_Store
+*.pem
+
+# TypeScript build cache
+app/*.tsbuildinfo
+
+# Example app folder
+app/app-example
+
+# Optional lock files if relevant
+app/pnpm-lock.yaml
+app/yarn.lock
+
+# Coverage folder if tests are present
+app/coverage/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo

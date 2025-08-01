@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "composite": true, // nécessaire si tu veux build ou référencer
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist",
+    "baseUrl": "."
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
+}

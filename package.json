@@ -1,0 +1,12 @@
+{
+  "name": "offliner",
+  "private": true,
+  "version": "1.0.0",
+  "packageManager": "pnpm@8.15.4",
+  "scripts": {
+    "dev:app": "pnpm --filter app start",
+    "dev:app:android": "pnpm --filter app android",
+    "dev:app:ios": "pnpm --filter app ios",
+    "dev:app:web": "pnpm --filter app web"
+  }
+}
