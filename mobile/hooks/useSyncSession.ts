@@ -3,9 +3,9 @@ import { getTotalDuration, insertMeasure } from "@/api/measures";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
 import { clearPeriod, getUnsyncedPeriods } from "@/storage/offlineStorage";
+import { getReadableDeviceName } from "@/utils/deviceModelMap";
 import { showMessage } from "@/utils/formatNotification";
 import { Session } from "@supabase/supabase-js";
-import * as Device from "expo-device";
 import { useEffect } from "react";
 
 export const useSyncSession = (session: Session | null) => {
@@ -17,7 +17,7 @@ export const useSyncSession = (session: Session | null) => {
       if (!session)
         throw new Error("Aucune session active pour la synchronisation.");
 
-      const modelName = Device.modelName;
+      const modelName = await getReadableDeviceName();
       if (!modelName) throw new Error("L'appareil n'a pas de nom de modèle.");
 
       let globalSuccess = true;
@@ -54,7 +54,7 @@ export const useSyncSession = (session: Session | null) => {
   };
 
   const getAndUpdateLocalDevice = async (session: Session): Promise<string> => {
-    const deviceName = Device.modelName;
+    const deviceName = await getReadableDeviceName();
 
     if (deviceName) {
       try {

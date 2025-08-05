@@ -1,6 +1,7 @@
 import { STORAGE_KEYS } from "@/constants/Labels";
 import { OfflinePeriod } from "@/types/OfflinePeriod";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { showMessage } from "./formatNotification";
 
 export async function getLastOpenPeriod(): Promise<Date | null> {
   try {
@@ -10,8 +11,10 @@ export async function getLastOpenPeriod(): Promise<Date | null> {
     if (last && last.start && !last.end) {
       return new Date(last.start);
     }
-  } catch (e) {
-    console.error("[Home] Erreur lecture créneau offline:", e);
+  } catch (error) {
+    if (error instanceof Error) {
+      showMessage(error.message);
+    }
   }
   return null;
 }
@@ -21,7 +24,9 @@ async function getAllPeriods(): Promise<OfflinePeriod[]> {
     const json = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_PERIODS);
     return json ? JSON.parse(json) : [];
   } catch (error) {
-    console.error("Erreur lors de la lecture des périodes hors ligne :", error);
+    if (error instanceof Error) {
+      showMessage(error.message);
+    }
     return [];
   }
 }

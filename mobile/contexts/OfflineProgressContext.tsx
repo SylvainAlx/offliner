@@ -52,7 +52,6 @@ export const OfflineProgressProvider = ({
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
       const connected = state.isConnected && state.isInternetReachable;
-      console.warn({ connected });
       setIsOnline(!!connected);
     });
 

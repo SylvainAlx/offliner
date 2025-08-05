@@ -74,6 +74,6 @@ export const globalStyles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: "transparent",
+    backgroundColor: COLORS.tabs,
   },
 });

@@ -8,7 +8,7 @@ import { Picker } from "@react-native-picker/picker";
 import { Button, Input } from "@rneui/themed";
 import { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import {
   buildCountryTreeByName,
@@ -47,9 +47,6 @@ export default function Account({ session }: { session: Session }) {
         let tree = await loadCountryTreeFromStorage(country);
         if (!tree) {
           tree = await buildCountryTreeByName(country);
-          console.log(`✅ Arbre pour "${country}" construit.`);
-        } else {
-          console.log(`✅ Arbre pour "${country}" chargé depuis AsyncStorage.`);
         }
         setRegions(tree?.children || []);
       }
@@ -116,7 +113,7 @@ export default function Account({ session }: { session: Session }) {
   }
 
   return (
-    <View style={globalStyles.container}>
+    <ScrollView contentContainerStyle={globalStyles.container}>
       <View style={globalStyles.card}>
         <Text style={globalStyles.title}>{deviceName}</Text>
 
@@ -140,7 +137,12 @@ export default function Account({ session }: { session: Session }) {
           />
         </View>
 
-        <View style={globalStyles.verticallySpaced}>
+        <View
+          style={[
+            globalStyles.verticallySpaced,
+            { paddingHorizontal: SIZES.padding },
+          ]}
+        >
           <Text style={styles.label}>Pays</Text>
           <Picker
             style={globalStyles.input}
@@ -158,7 +160,12 @@ export default function Account({ session }: { session: Session }) {
           </Picker>
         </View>
 
-        <View style={globalStyles.verticallySpaced}>
+        <View
+          style={[
+            globalStyles.verticallySpaced,
+            { paddingHorizontal: SIZES.padding },
+          ]}
+        >
           <Text style={styles.label}>Région</Text>
           <Picker
             style={globalStyles.input}
@@ -177,7 +184,12 @@ export default function Account({ session }: { session: Session }) {
           </Picker>
         </View>
 
-        <View style={globalStyles.verticallySpaced}>
+        <View
+          style={[
+            globalStyles.verticallySpaced,
+            { paddingHorizontal: SIZES.padding },
+          ]}
+        >
           <Text style={styles.label}>Sous-région</Text>
           <Picker
             style={globalStyles.input}
@@ -227,7 +239,7 @@ export default function Account({ session }: { session: Session }) {
           />
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -237,6 +249,5 @@ const styles = StyleSheet.create({
     fontSize: SIZES.text_lg,
     fontWeight: "bold",
     marginLeft: SIZES.margin,
-    marginBottom: SIZES.margin,
   },
 });

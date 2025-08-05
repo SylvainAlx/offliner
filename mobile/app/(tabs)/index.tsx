@@ -8,7 +8,7 @@ import { useSyncSession } from "@/hooks/useSyncSession";
 import { globalStyles } from "@/styles/global.styles";
 import { indexStyles } from "@/styles/index.styles";
 import { formatDuration } from "@/utils/formatDuration";
-import { confirmDialog } from "@/utils/formatNotification";
+import { confirmDialog, showMessage } from "@/utils/formatNotification";
 import { getLastOpenPeriod } from "@/utils/getOfflineTime";
 import { Button } from "@rneui/themed";
 import { Link } from "expo-router";
@@ -41,7 +41,9 @@ export default function Home() {
       setIsLoading(true);
       await syncMeasures();
     } catch (error) {
-      console.error(error);
+      if (error instanceof Error) {
+        showMessage(error.message);
+      }
     } finally {
       setIsLoading(false);
     }

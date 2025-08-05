@@ -1,55 +1,56 @@
 # Global node modules
 node_modules
+.env
 
 # App React Native
-app/node_modules/
+mobile/node_modules/
 
 # Expo
-app/.expo/
-app/.expo-shared/
-app/dist/
-app/web-build/
-app/expo-env.d.ts
+mobile/.expo/
+mobile/.expo-shared/
+mobile/dist/
+mobile/web-build/
+mobile/expo-env.d.ts
 
 # Environment files
-app/.env
-app/.env*.local
+mobile/.env
+mobile/.env*.local
 
 # Native credentials and keys
-app/.kotlin/
-app/*.orig.*
-app/*.jks
-app/*.p8
-app/*.p12
-app/*.key
-app/*.mobileprovision
+mobile/.kotlin/
+mobile/*.orig.*
+mobile/*.jks
+mobile/*.p8
+mobile/*.p12
+mobile/*.key
+mobile/*.mobileprovision
 
 # Metro bundler cache
-app/.metro/
-app/.metro-health-check*
+mobile/.metro/
+mobile/.metro-health-check*
 
 # Debug logs
-app/npm-debug.*
-app/yarn-debug.*
-app/yarn-error.*
-app/*.log
+mobile/npm-debug.*
+mobile/yarn-debug.*
+mobile/yarn-error.*
+mobile/*.log
 
 # macOS
 .DS_Store
 *.pem
 
 # TypeScript build cache
-app/*.tsbuildinfo
+mobile/*.tsbuildinfo
 
-# Example app folder
-app/app-example
+# Example mobile folder
+mobile/app-example
 
 # Optional lock files if relevant
-app/pnpm-lock.yaml
-app/yarn.lock
+mobile/pnpm-lock.yaml
+mobile/yarn.lock
 
 # Coverage folder if tests are present
-app/coverage/
+mobile/coverage/
 
 # IDE and editor files
 .vscode/

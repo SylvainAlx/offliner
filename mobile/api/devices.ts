@@ -17,7 +17,7 @@ export async function getDeviceId(session: Session, deviceName: string) {
     if (data && data.length > 0) {
       return data[0].id; // Return the first device ID found
     } else {
-      throw new Error("L'appareil n'existe pas pour cet utilisateur.");
+      return null; // No device found
     }
   } catch (error) {
     if (error instanceof Error) {

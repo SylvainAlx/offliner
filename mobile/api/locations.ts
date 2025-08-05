@@ -1,4 +1,5 @@
 // geonames.ts
+import { config } from "@/config/env";
 import { STORAGE_KEYS } from "@/constants/Labels";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { z } from "zod";
@@ -13,7 +14,7 @@ const SubdivisionSchema = z.object({
   name: z.string(),
 });
 
-const username = process.env.EXPO_PUBLIC_GEONAMES_USERNAME || "demo";
+const username = config.geonamesUsername || "demo";
 
 export type Country = z.infer<typeof CountrySchema>;
 export type Subdivision = z.infer<typeof SubdivisionSchema>;
@@ -114,7 +115,6 @@ export const buildCountryTreeByName = async (
     // ✅ Enregistrement dans AsyncStorage
     const key = `country_tree:${countryName}`;
     await AsyncStorage.setItem(key, JSON.stringify(countryNode));
-    console.log(`✅ Tree pour "${countryName}" sauvegardé dans AsyncStorage.`);
 
     return countryNode;
   } catch (error) {

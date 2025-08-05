@@ -4,10 +4,13 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { COLORS } from "@/constants/Theme";
 import { router, Tabs, usePathname } from "expo-router";
 import React from "react";
-import { Platform, Pressable } from "react-native";
+import { Linking, Platform, Pressable, View } from "react-native";
 
 export default function TabLayout() {
   const pathname = usePathname();
+  const openExternalLink = () => {
+    Linking.openURL("https://example.com"); // Remplace par ton URL
+  };
   return (
     <Tabs
       screenOptions={{
@@ -33,23 +36,40 @@ export default function TabLayout() {
           fontSize: 18,
         },
         headerRight: () => {
-          const isActive = pathname === "/profile"; // ou "/(tabs)/profile" selon ton structure
+          const isProfile = pathname === "/profile";
 
           return (
-            <Pressable
-              onPress={() => router.push("/profile")}
-              style={{ marginRight: 16 }}
-              hitSlop={8}
-              accessibilityLabel="Aller au profil"
-            >
-              {({ pressed }) => (
-                <IconSymbol
-                  name="person.crop.circle"
-                  size={24}
-                  color={pressed || isActive ? COLORS.accent : COLORS.border}
-                />
-              )}
-            </Pressable>
+            <View style={{ flexDirection: "row", gap: 12, marginRight: 16 }}>
+              {/* Bouton vers page web externe */}
+              <Pressable
+                onPress={openExternalLink}
+                hitSlop={8}
+                accessibilityLabel="Ouvrir la page externe"
+              >
+                {({ pressed }) => (
+                  <IconSymbol
+                    name="medal.fill"
+                    size={24}
+                    color={pressed ? COLORS.accent : COLORS.border}
+                  />
+                )}
+              </Pressable>
+
+              {/* Bouton profil */}
+              <Pressable
+                onPress={() => router.push("/profile")}
+                hitSlop={8}
+                accessibilityLabel="Aller au profil"
+              >
+                {({ pressed }) => (
+                  <IconSymbol
+                    name="person.crop.circle"
+                    size={24}
+                    color={pressed || isProfile ? COLORS.accent : COLORS.border}
+                  />
+                )}
+              </Pressable>
+            </View>
           );
         },
       }}
