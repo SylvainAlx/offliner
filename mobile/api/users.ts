@@ -1,8 +1,18 @@
 import { showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
 import { Session } from "@supabase/supabase-js";
+import { z } from "zod";
 
-export async function getUser(session: Session) {
+const UserSchema = z.object({
+  username: z.string().nullable(),
+  country: z.string().nullable(),
+  region: z.string().nullable(),
+  subregion: z.string().nullable(),
+});
+
+export type UserProfile = z.infer<typeof UserSchema>;
+
+export async function getUser(session: Session): Promise<UserProfile | null> {
   try {
     if (!session?.user) throw new Error("Aucune session active.");
 
@@ -11,17 +21,20 @@ export async function getUser(session: Session) {
       .select(`username, country, region, subregion`)
       .eq("id", session?.user.id)
       .single();
+
     if (error && status !== 406) {
       throw error;
     }
 
     if (data) {
-      return data;
+      return UserSchema.parse(data);
     }
+    return null;
   } catch (error) {
     if (error instanceof Error) {
       showMessage(error.message);
     }
+    return null;
   }
 }
 

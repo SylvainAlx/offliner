@@ -72,7 +72,7 @@ export async function getSubdivisions(
   }
 }
 
-export type TreeNode = {
+type TreeNode = {
   name: string;
   geonameId: number;
   children?: TreeNode[];

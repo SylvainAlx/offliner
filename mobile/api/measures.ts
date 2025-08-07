@@ -2,30 +2,44 @@ import { showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
 import { Session } from "@supabase/supabase-js";
 import { getDeviceId } from "./devices";
+import { z } from "zod";
 
-export async function getAllMeasures(session: Session) {
+const MeasureSchema = z.object({
+  date: z.string(),
+  duration: z.number(),
+  user_id: z.string(),
+  device_id: z.number().nullable(),
+});
+
+export type Measure = z.infer<typeof MeasureSchema>;
+
+export async function getAllMeasures(
+  session: Session
+): Promise<Measure[] | null> {
   try {
     if (!session?.user) throw new Error("Aucune session active.");
 
     const { data, error, status } = await supabase
       .from("measures")
-      .select(`date, duration`)
+      .select(`date, duration, user_id, device_id`)
       .eq("user_id", session?.user.id);
     if (error && status !== 406) {
       throw error;
     }
 
     if (data) {
-      return data;
+      return z.array(MeasureSchema).parse(data);
     }
+    return null;
   } catch (error) {
     if (error instanceof Error) {
       showMessage(error.message);
     }
+    return null;
   }
 }
 
-export async function getTotalDuration(session: Session) {
+export async function getTotalDuration(session: Session): Promise<number> {
   try {
     if (!session?.user) throw new Error("Aucune session active.");
 
@@ -39,7 +53,10 @@ export async function getTotalDuration(session: Session) {
     }
 
     const total =
-      data?.reduce((sum, item) => sum + (item.duration || 0), 0) ?? 0;
+      z
+        .array(z.object({ duration: z.number() }))
+        .parse(data || [])
+        .reduce((sum, item) => sum + (item.duration || 0), 0) ?? 0;
     return total;
   } catch (error) {
     if (error instanceof Error) {
@@ -61,7 +78,7 @@ export async function insertMeasure(
       throw new Error("La durée doit être supérieure à 0 secondes.");
     }
 
-    const deviceId = await getDeviceId(session, deviceName);
+    const device = await getDeviceId(session, deviceName);
     const userId = session.user.id;
 
     // Vérifie s'il existe déjà une mesure pour cette date / user / device
@@ -69,7 +86,7 @@ export async function insertMeasure(
       .from("measures")
       .select("id, duration")
       .eq("user_id", userId)
-      .eq("device_id", deviceId)
+      .eq("device_id", device?.id)
       .eq("date", date)
       .single();
 
@@ -95,7 +112,7 @@ export async function insertMeasure(
       const { error: insertError } = await supabase.from("measures").insert([
         {
           user_id: userId,
-          device_id: deviceId,
+          device_id: device?.id,
           date,
           duration,
         },

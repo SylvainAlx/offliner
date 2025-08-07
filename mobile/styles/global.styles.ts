@@ -1,5 +1,5 @@
 import { COLORS, SIZES } from "@/constants/Theme";
-import { StyleSheet } from "react-native";
+import { Platform, StyleSheet } from "react-native";
 
 export const globalStyles = StyleSheet.create({
   container: {
@@ -26,13 +26,17 @@ export const globalStyles = StyleSheet.create({
     flexDirection: "column",
     gap: SIZES.margin,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    ...Platform.select({
+      ios: {
+        boxShadow: "0px 2px 3.84px rgba(0,0,0,0.25)",
+      },
+      android: {
+        elevation: 5,
+      },
+      web: {
+        boxShadow: "0px 2px 3.84px rgba(0,0,0,0.25)",
+      },
+    }),
   },
   cardTitle: {
     fontSize: SIZES.text_lg,

@@ -68,7 +68,7 @@ export async function getTotalOfflineSeconds(
   return total;
 }
 
-export async function getOfflinePeriodsByDay(): Promise<
+async function getOfflinePeriodsByDay(): Promise<
   Record<string, number>
 > {
   const periods = await getAllPeriods();

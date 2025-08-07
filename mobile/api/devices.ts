@@ -1,21 +1,30 @@
 import { showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
 import { Session } from "@supabase/supabase-js";
+import { z } from "zod";
 
-export async function getDeviceId(session: Session, deviceName: string) {
+const DeviceSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  user_id: z.string(),
+});
+
+export type Device = z.infer<typeof DeviceSchema>;
+
+export async function getDeviceId(session: Session, deviceName: string): Promise<Device | null> {
   try {
     if (!session?.user) throw new Error("Aucune session active.");
 
     const { data, error, status } = await supabase
       .from("devices")
-      .select("id")
+      .select("id, name, user_id")
       .eq("user_id", session.user.id)
       .eq("name", deviceName)
       .limit(1);
 
     if (error && status !== 406) throw error;
     if (data && data.length > 0) {
-      return data[0].id; // Return the first device ID found
+      return DeviceSchema.parse(data[0]); // Return the first device found
     } else {
       return null; // No device found
     }
@@ -23,6 +32,7 @@ export async function getDeviceId(session: Session, deviceName: string) {
     if (error instanceof Error) {
       showMessage(error.message);
     }
+    return null;
   }
 }
 

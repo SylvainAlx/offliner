@@ -4,7 +4,7 @@ import { showMessage } from "@/utils/formatNotification";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { OfflinePeriod } from "../types/OfflinePeriod";
 
-export async function getPeriods(): Promise<OfflinePeriod[]> {
+async function getPeriods(): Promise<OfflinePeriod[]> {
   const json = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_PERIODS);
   return json ? JSON.parse(json) : [];
 }
