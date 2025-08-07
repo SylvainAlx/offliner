@@ -1,7 +1,7 @@
-import { getDeviceId, insertDevice } from "@/api/devices";
 import { getTotalDuration, insertMeasure } from "@/api/measures";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
+import { getAndUpdateLocalDevice } from "@/services/devices";
 import { clearPeriod, getUnsyncedPeriods } from "@/storage/offlineStorage";
 import { getReadableDeviceName } from "@/utils/deviceModelMap";
 import { showMessage } from "@/utils/formatNotification";
@@ -53,27 +53,6 @@ export const useSyncSession = (session: Session | null) => {
     }
   };
 
-  const getAndUpdateLocalDevice = async (session: Session): Promise<string> => {
-    const deviceName = await getReadableDeviceName();
-
-    if (deviceName) {
-      try {
-        const data = await getDeviceId(session, deviceName);
-        if (!data) {
-          console.warn(
-            "L'appareil n'existe pas dans la base de données, insertion..."
-          );
-          await insertDevice(session, deviceName);
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          showMessage(error.message);
-        }
-      }
-    }
-    return deviceName ?? "Unknown Device";
-  };
-
   useEffect(() => {
     const loadTotalSyncTime = async (session: Session) => {
       const totalSeconds = await getTotalDuration(session);
@@ -91,5 +70,5 @@ export const useSyncSession = (session: Session | null) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
-  return { session, getAndUpdateLocalDevice, syncMeasures };
+  return { session, syncMeasures };
 };

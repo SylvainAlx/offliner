@@ -1,21 +1,25 @@
 import { Goal } from "@/constants/Goals";
-import { COLORS, SIZES } from "@/constants/Theme";
+import { COLORS } from "@/constants/Theme";
+import { goalProgressStyles } from "@/styles/custom.styles";
 import { globalStyles } from "@/styles/global.styles";
 import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import * as Progress from "react-native-progress";
 
 type Props = {
   goal: Goal;
   totalSeconds: number;
+  bgColor?: string;
 };
 
-export default function GoalProgress({ goal, totalSeconds }: Props) {
+export default function GoalProgress({ goal, totalSeconds, bgColor }: Props) {
   const isAchieved = totalSeconds >= goal.targetSeconds;
   const percent = Math.min(1, totalSeconds / goal.targetSeconds);
 
   return (
-    <View style={globalStyles.card}>
+    <View
+      style={[globalStyles.card, { backgroundColor: bgColor || COLORS.card }]}
+    >
       <Text style={globalStyles.cardTitle}>
         {goal.label} {isAchieved ? "✅" : ""}
       </Text>
@@ -31,29 +35,17 @@ export default function GoalProgress({ goal, totalSeconds }: Props) {
             // borderColor={COLORS.border}
             // borderWidth={2}
           />
-          <Text style={styles.percentText}>
+          <Text style={goalProgressStyles.percentText}>
             {(percent * 100).toFixed(0)}% complété
           </Text>
         </>
       )}
 
       {isAchieved && (
-        <Text style={styles.achievedText}>🎉 Objectif atteint !</Text>
+        <Text style={goalProgressStyles.achievedText}>
+          🎉 Objectif atteint !
+        </Text>
       )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  percentText: {
-    marginTop: SIZES.margin,
-    fontSize: SIZES.text_lg,
-    color: COLORS.primary,
-  },
-  achievedText: {
-    marginTop: SIZES.margin,
-    fontSize: SIZES.text_lg,
-    fontWeight: "600",
-    color: COLORS.succes,
-  },
-});

@@ -9,6 +9,7 @@
     "dev:mobile:ios": "pnpm --filter mobile ios",
     "dev:mobile:web": "pnpm --filter mobile web"
   },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^24.2.0"
   }

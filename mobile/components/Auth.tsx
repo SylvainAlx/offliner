@@ -1,41 +1,21 @@
-import { signInWithEmail, signUpWithEmail } from "@/api/auth";
 import { COLORS } from "@/constants/Theme";
+import { useAuth } from "@/hooks/useAuth";
 import { globalStyles } from "@/styles/global.styles";
-import { supabase } from "@/utils/supabase";
 import { Button, Input } from "@rneui/themed";
-import React, { useRef, useState } from "react";
-import { AppState, Text, TextInput, View } from "react-native";
-
-// Tells Supabase Auth to continuously refresh the session automatically if
-// the app is in the foreground. When this is added, you will continue to receive
-// `onAuthStateChange` events with the `TOKEN_REFRESHED` or `SIGNED_OUT` event
-// if the user's session is terminated. This should only be registered once.
-AppState.addEventListener("change", (state) => {
-  if (state === "active") {
-    supabase.auth.startAutoRefresh();
-  } else {
-    supabase.auth.stopAutoRefresh();
-  }
-});
+import React from "react";
+import { Text, View } from "react-native";
 
 export default function Auth() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const passwordRef = useRef<TextInput>(null);
-
-  async function signIn() {
-    setLoading(true);
-    signInWithEmail(email, password);
-    setLoading(false);
-  }
-
-  async function signUp() {
-    setLoading(true);
-    signUpWithEmail(email, password);
-    setLoading(false);
-  }
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    loading,
+    passwordRef,
+    signIn,
+    signUp,
+  } = useAuth();
 
   return (
     <View style={globalStyles.container}>

@@ -1,6 +1,6 @@
 // contexts/SessionContext.tsx
 import { getUser } from "@/api/users";
-import { useSyncSession } from "@/hooks/useSyncSession";
+import { getAndUpdateLocalDevice } from "@/services/devices";
 import { showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
 import { Session, User } from "@supabase/supabase-js";
@@ -52,7 +52,6 @@ export const SessionProvider = ({
   const [subregion, setSubregion] = useState<string | null>(null);
 
   const [totalSyncSeconds, setTotalSyncSeconds] = useState<number>(0);
-  const { getAndUpdateLocalDevice } = useSyncSession(session);
 
   async function getProfile() {
     try {

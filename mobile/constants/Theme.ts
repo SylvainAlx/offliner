@@ -5,6 +5,7 @@ export const COLORS = {
   tabs: "#264653",
   background: "#2a9d8f",
   card: "#4a5759",
+  subCard: "#666666",
   text: "#fdf0d5",
   border: "#ffffff",
   notification: "#EF476F",

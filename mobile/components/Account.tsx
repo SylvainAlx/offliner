@@ -1,116 +1,31 @@
-import { deleteAccount, logout } from "@/api/auth";
-import { updateUser } from "@/api/users";
 import { COLORS, SIZES } from "@/constants/Theme";
-import { useSession } from "@/contexts/SessionContext";
 import { globalStyles } from "@/styles/global.styles";
-import { confirmDialog, showMessage } from "@/utils/formatNotification";
 import { Picker } from "@react-native-picker/picker";
 import { Button, Input } from "@rneui/themed";
 import { Session } from "@supabase/supabase-js";
-import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-
-import {
-  buildCountryTreeByName,
-  Country,
-  getCountries,
-  getSubdivisions,
-  loadCountryTreeFromStorage,
-  Subdivision,
-} from "@/api/locations";
+import { ScrollView, Text, View } from "react-native";
+import { useAccount } from "@/hooks/useAccount";
+import { accountStyles } from "@/styles/custom.styles";
 
 export default function Account({ session }: { session: Session }) {
-  const [loading, setLoading] = useState(false);
   const {
-    setTotalSyncSeconds,
+    loading,
     username,
     setUsername,
     country,
-    setCountry,
     region,
-    setRegion,
     subregion,
     setSubregion,
     deviceName,
-  } = useSession();
-
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [regions, setRegions] = useState<Subdivision[]>([]);
-  const [subregions, setSubregions] = useState<Subdivision[]>([]);
-
-  useEffect(() => {
-    (async () => {
-      if (!country) {
-        const result = await getCountries();
-        setCountries(result);
-      } else {
-        let tree = await loadCountryTreeFromStorage(country);
-        if (!tree) {
-          tree = await buildCountryTreeByName(country);
-        }
-        setRegions(tree?.children || []);
-      }
-    })();
-  }, [session, country]);
-
-  useEffect(() => {
-    if (!region || !country) return;
-    (async () => {
-      const tree = await loadCountryTreeFromStorage(country);
-      const subregionList =
-        tree?.children?.find((r) => r.name === region)?.children || [];
-      setSubregions(subregionList);
-    })();
-  }, [country, region]);
-
-  const handleCountryChange = async (countryName: string) => {
-    setCountry(countryName);
-    setRegion("");
-    setSubregion("");
-    setRegions([]);
-    setSubregions([]);
-
-    if (!countryName) return;
-
-    const country = countries.find((c) => c.countryName === countryName);
-    if (!country) return;
-
-    const subdivisions = await getSubdivisions(country.geonameId);
-    setRegions(subdivisions);
-    setRegion(subdivisions[0]?.name || "");
-  };
-
-  const handleRegionChange = async (regionName: string) => {
-    setRegion(regionName);
-    const region = regions.find((r) => r.name === regionName);
-    if (!region) return;
-
-    const subregionList = await getSubdivisions(region.geonameId);
-    setSubregions(subregionList);
-    setSubregion(subregionList[0]?.name || "");
-  };
-
-  async function updateProfile({ username }: { username: string }) {
-    const confirmed = await confirmDialog("Mettre à jour le profil ?");
-    if (!confirmed) return;
-    try {
-      setLoading(true);
-      await updateUser({
-        session,
-        username,
-        country,
-        region,
-        subregion,
-      });
-      showMessage("Profil mis à jour avec succès.");
-    } catch (error) {
-      if (error instanceof Error) {
-        showMessage(error.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
+    countries,
+    regions,
+    subregions,
+    handleCountryChange,
+    handleRegionChange,
+    updateProfile,
+    handleLogout,
+    handleDeleteAccount,
+  } = useAccount(session);
 
   return (
     <ScrollView contentContainerStyle={globalStyles.container}>
@@ -143,7 +58,7 @@ export default function Account({ session }: { session: Session }) {
             { paddingHorizontal: SIZES.padding },
           ]}
         >
-          <Text style={styles.label}>Pays</Text>
+          <Text style={accountStyles.label}>Pays</Text>
           <Picker
             style={globalStyles.input}
             selectedValue={country || ""}
@@ -166,7 +81,7 @@ export default function Account({ session }: { session: Session }) {
             { paddingHorizontal: SIZES.padding },
           ]}
         >
-          <Text style={styles.label}>Région</Text>
+          <Text style={accountStyles.label}>Région</Text>
           <Picker
             style={globalStyles.input}
             selectedValue={region || ""}
@@ -190,7 +105,7 @@ export default function Account({ session }: { session: Session }) {
             { paddingHorizontal: SIZES.padding },
           ]}
         >
-          <Text style={styles.label}>Sous-région</Text>
+          <Text style={accountStyles.label}>Sous-région</Text>
           <Picker
             style={globalStyles.input}
             selectedValue={subregion || ""}
@@ -220,20 +135,14 @@ export default function Account({ session }: { session: Session }) {
           <Button
             title="Se déconnecter"
             color={COLORS.warning}
-            onPress={() => {
-              logout();
-              setTotalSyncSeconds(0);
-            }}
+            onPress={handleLogout}
             radius={100}
             style={globalStyles.button}
           />
           <Button
             title="Supprimer le compte"
             color={COLORS.danger}
-            onPress={() => {
-              deleteAccount();
-              setTotalSyncSeconds(0);
-            }}
+            onPress={handleDeleteAccount}
             radius={100}
             style={globalStyles.button}
           />
@@ -242,12 +151,3 @@ export default function Account({ session }: { session: Session }) {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  label: {
-    color: COLORS.text,
-    fontSize: SIZES.text_lg,
-    fontWeight: "bold",
-    marginLeft: SIZES.margin,
-  },
-});

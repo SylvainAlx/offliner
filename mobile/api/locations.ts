@@ -21,6 +21,12 @@ export type Subdivision = z.infer<typeof SubdivisionSchema>;
 
 export async function getCountries(): Promise<Country[]> {
   try {
+    const countriesFromStorage = await AsyncStorage.getItem(
+      STORAGE_KEYS.COUNTRIES
+    );
+    if (countriesFromStorage) {
+      return z.array(CountrySchema).parse(JSON.parse(countriesFromStorage));
+    }
     const response = await fetch(
       `https://secure.geonames.org/countryInfoJSON?username=${username}`
     );
@@ -30,23 +36,17 @@ export async function getCountries(): Promise<Country[]> {
     if (!response.ok || !json.geonames) {
       throw new Error(json.status?.message || "Failed to fetch countries");
     }
-
+    // ✅ Enregistrement dans AsyncStorage
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.COUNTRIES,
+      JSON.stringify(json.geonames)
+    );
     return z.array(CountrySchema).parse(json.geonames);
   } catch (error) {
     console.error("❌ getCountries error:", error);
     return [];
   }
 }
-
-export const getRegions = async (countryName: string) => {
-  const countries = await getCountries();
-  const country = countries.find((c) => c.countryName === countryName);
-  if (!country) return [];
-  const regionList = await getSubdivisions(country.geonameId);
-  if (!regionList) return [];
-  await AsyncStorage.setItem(STORAGE_KEYS.REGIONS, JSON.stringify(regionList));
-  return regionList;
-};
 
 export async function getSubdivisions(
   geonameId: number
