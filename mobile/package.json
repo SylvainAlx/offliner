@@ -12,6 +12,7 @@
     "knip": "knip"
   },
   "dependencies": {
+    "@expo/metro-config": "^0.20.17",
     "@expo/vector-icons": "^14.1.0",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/netinfo": "^11.4.1",
@@ -42,6 +43,7 @@
     "react-native-url-polyfill": "^2.0.0",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
+    "shared": "workspace:^",
     "zod": "^4.0.15"
   },
   "devDependencies": {

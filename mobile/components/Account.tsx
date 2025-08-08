@@ -1,4 +1,4 @@
-import { COLORS, SIZES } from "@/constants/Theme";
+import { COLORS, SIZES } from "shared/theme";
 import { globalStyles } from "@/styles/global.styles";
 import { Picker } from "@react-native-picker/picker";
 import { Button, Input } from "@rneui/themed";

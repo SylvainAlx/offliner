@@ -1,4 +1,4 @@
-import { COLORS, SIZES } from "@/constants/Theme";
+import { COLORS, SIZES } from "shared/theme";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
 import { indexStyles } from "@/styles/custom.styles";

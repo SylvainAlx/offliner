@@ -1,4 +1,4 @@
-import { COLORS, SIZES } from "@/constants/Theme";
+import { COLORS, SIZES } from "shared/theme";
 import { useSession } from "@/contexts/SessionContext";
 import { globalStyles } from "@/styles/global.styles";
 import { Button } from "@rneui/themed";

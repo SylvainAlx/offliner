@@ -1,7 +1,7 @@
 import { AppHeaderTitle } from "@/components/AppHeaderTitle";
 import { HapticTab } from "@/components/HapticTab";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { COLORS } from "@/constants/Theme";
+import { COLORS } from "shared/theme";
 import { router, Tabs, usePathname } from "expo-router";
 import React from "react";
 import { Linking, Platform, Pressable, View } from "react-native";

@@ -1,4 +1,4 @@
-import { COLORS, SIZES } from "@/constants/Theme";
+import { COLORS, SIZES } from "shared/theme";
 import { Platform, StyleSheet } from "react-native";
 
 export const globalStyles = StyleSheet.create({

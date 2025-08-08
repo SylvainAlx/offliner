@@ -1,4 +1,4 @@
-import { COLORS } from "@/constants/Theme";
+import { COLORS } from "shared/theme";
 import { useAuth } from "@/hooks/useAuth";
 import { globalStyles } from "@/styles/global.styles";
 import { Button, Input } from "@rneui/themed";

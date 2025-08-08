@@ -1,4 +1,4 @@
-import { COLORS, SIZES } from "@/constants/Theme";
+import { COLORS, SIZES } from "shared/theme";
 import { StyleSheet } from "react-native";
 
 export const indexStyles = StyleSheet.create({

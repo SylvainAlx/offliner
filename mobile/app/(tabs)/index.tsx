@@ -1,6 +1,6 @@
 import GoalProgress from "@/components/GoalProgress";
 import TimerCard from "@/components/TimerCard";
-import { COLORS } from "@/constants/Theme";
+import { COLORS } from "shared/theme";
 import { useHome } from "@/hooks/useHome";
 import { indexStyles } from "@/styles/custom.styles";
 import { globalStyles } from "@/styles/global.styles";

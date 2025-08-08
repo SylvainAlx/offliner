@@ -4,8 +4,3 @@ export const STORAGE_KEYS = {
   COUNTRIES: "countries",
   COUNTRY_TREE: "country_tree",
 };
-
-export const LABELS = {
-  APP_TITLE: "Offliner",
-  APP_VERSION: "0.1-alpha",
-};

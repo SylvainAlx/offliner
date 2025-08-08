@@ -1,5 +1,5 @@
 import { Goal } from "@/constants/Goals";
-import { COLORS } from "@/constants/Theme";
+import { COLORS } from "shared/theme";
 import { goalProgressStyles } from "@/styles/custom.styles";
 import { globalStyles } from "@/styles/global.styles";
 import React from "react";
