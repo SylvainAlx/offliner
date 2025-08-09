@@ -14,7 +14,7 @@ const MeasureSchema = z.object({
 export type Measure = z.infer<typeof MeasureSchema>;
 
 export async function getAllMeasures(
-  session: Session
+  session: Session,
 ): Promise<Measure[] | null> {
   try {
     if (!session?.user) throw new Error("Aucune session active.");
@@ -70,7 +70,7 @@ export async function insertMeasure(
   session: Session,
   deviceName: string,
   date: string,
-  duration: number
+  duration: number,
 ) {
   try {
     if (!session?.user) throw new Error("Aucune session active.");
@@ -107,6 +107,7 @@ export async function insertMeasure(
       if (updateError) {
         throw updateError;
       }
+      showMessage("Synchronisation réussie 🎉");
     } else {
       // Insertion classique
       const { error: insertError } = await supabase.from("measures").insert([
@@ -121,9 +122,8 @@ export async function insertMeasure(
       if (insertError) {
         throw insertError;
       }
+      showMessage("Synchronisation réussie 🎉");
     }
-
-    showMessage("Synchronisation réussie 🎉");
     return { success: true };
   } catch (error) {
     if (error instanceof Error) {

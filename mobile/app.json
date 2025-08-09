@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Offliners",
-    "slug": "Offliners",
+    "name": "Offliner",
+    "slug": "Offliner",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

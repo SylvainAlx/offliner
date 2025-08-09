@@ -5,12 +5,26 @@ import { indexStyles } from "@/styles/custom.styles";
 import { globalStyles } from "@/styles/global.styles";
 import { formatDuration } from "@/utils/formatDuration";
 import { Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { config } from "@/config/env";
 
 export default function TimerCard() {
   const { totalUnsync, isOnline } = useOfflineProgress();
   const { totalSyncSeconds } = useSession();
+  const [isStarting, setIsStarting] = useState(false);
 
   const totalAll = totalSyncSeconds + totalUnsync;
+
+  useEffect(() => {
+    if (!isOnline) {
+      setIsStarting(true);
+      setTimeout(() => {
+        setIsStarting(false);
+      }, config.startupDelayMs);
+    } else {
+      setIsStarting(false);
+    }
+  }, [isOnline]);
 
   return (
     <View style={globalStyles.card}>
@@ -25,27 +39,30 @@ export default function TimerCard() {
         >
           {formatDuration(totalAll)}
         </Text>
-        {!isOnline && totalUnsync === 0 && (
-          <Text style={indexStyles.totalValue}>DÉMARRAGE...</Text>
-        )}
+        {isStarting && <Text style={indexStyles.totalValue}>DÉMARRAGE...</Text>}
       </View>
       <View
         style={{
           flexDirection: "row",
           gap: SIZES.margin,
           alignItems: "center",
+          justifyContent: "space-around",
           flexWrap: "wrap",
         }}
       >
-        <Text style={indexStyles.totalLabel}>🔄 Synchronisé :</Text>
-        <Text style={indexStyles.totalValue}>
-          {formatDuration(totalSyncSeconds)}
-        </Text>
+        <View>
+          <Text style={indexStyles.totalLabel}>Synchronisé :</Text>
+          <Text style={indexStyles.totalValue}>
+            {formatDuration(totalSyncSeconds)}
+          </Text>
+        </View>
 
-        <Text style={indexStyles.totalLabel}>📥 Non synchronisé :</Text>
-        <Text style={indexStyles.totalValue}>
-          {formatDuration(totalUnsync)}
-        </Text>
+        <View>
+          <Text style={indexStyles.totalLabel}>Non synchronisé :</Text>
+          <Text style={indexStyles.totalValue}>
+            {formatDuration(totalUnsync)}
+          </Text>
+        </View>
       </View>
     </View>
   );

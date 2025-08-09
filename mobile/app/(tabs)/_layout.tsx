@@ -5,11 +5,12 @@ import { COLORS } from "shared/theme";
 import { router, Tabs, usePathname } from "expo-router";
 import React from "react";
 import { Linking, Platform, Pressable, View } from "react-native";
+import { config } from "@/config/env";
 
 export default function TabLayout() {
   const pathname = usePathname();
   const openExternalLink = () => {
-    Linking.openURL("https://example.com"); // Remplace par ton URL
+    Linking.openURL(config.websiteUrl);
   };
   return (
     <Tabs
@@ -17,8 +18,8 @@ export default function TabLayout() {
         headerShown: true,
         headerTitle: () => <AppHeaderTitle />,
         tabBarButton: HapticTab,
-        tabBarActiveTintColor: COLORS.accent, // Couleur des icônes actives
-        tabBarInactiveTintColor: COLORS.border, // Couleur des icônes inactives
+        tabBarActiveTintColor: COLORS.secondary, // Couleur des icônes actives
+        tabBarInactiveTintColor: COLORS.accent, // Couleur des icônes inactives
         tabBarStyle: Platform.select({
           ios: {
             // Use a transparent background on iOS to show the blur effect
@@ -50,7 +51,7 @@ export default function TabLayout() {
                   <IconSymbol
                     name="medal.fill"
                     size={24}
-                    color={pressed ? COLORS.accent : COLORS.border}
+                    color={pressed ? COLORS.secondary : COLORS.accent}
                   />
                 )}
               </Pressable>
@@ -65,7 +66,9 @@ export default function TabLayout() {
                   <IconSymbol
                     name="person.crop.circle"
                     size={24}
-                    color={pressed || isProfile ? COLORS.accent : COLORS.border}
+                    color={
+                      pressed || isProfile ? COLORS.secondary : COLORS.accent
+                    }
                   />
                 )}
               </Pressable>

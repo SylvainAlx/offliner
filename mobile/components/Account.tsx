@@ -29,8 +29,9 @@ export default function Account({ session }: { session: Session }) {
 
   return (
     <ScrollView contentContainerStyle={globalStyles.container}>
+      <Text style={globalStyles.title}>Mon compte</Text>
       <View style={globalStyles.card}>
-        <Text style={globalStyles.title}>{deviceName}</Text>
+        <Text style={globalStyles.cardTitle}>{deviceName}</Text>
 
         <View style={globalStyles.verticallySpaced}>
           <Input
@@ -128,9 +129,10 @@ export default function Account({ session }: { session: Session }) {
             title={loading ? "Chargement ..." : "Mettre à jour"}
             onPress={() => updateProfile({ username: username ?? "" })}
             disabled={loading}
-            color={COLORS.primary}
+            color={COLORS.secondary}
             radius={100}
             style={globalStyles.button}
+            titleStyle={{ color: COLORS.dark }} // couleur du texte
           />
           <Button
             title="Se déconnecter"

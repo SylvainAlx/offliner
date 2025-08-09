@@ -17,6 +17,7 @@ export const globalStyles = StyleSheet.create({
     fontSize: SIZES.text_xl,
     fontWeight: "bold",
     textAlign: "center",
+    fontFamily: "Montserrat",
   },
   card: {
     backgroundColor: COLORS.card,
@@ -43,10 +44,12 @@ export const globalStyles = StyleSheet.create({
     color: COLORS.text,
     fontWeight: "bold",
     textAlign: "center",
+    fontFamily: "Montserrat",
   },
   contentText: {
     fontSize: SIZES.text_lg,
     color: COLORS.text,
+    fontFamily: "Montserrat",
   },
   link: {
     paddingVertical: SIZES.padding / 2,
@@ -75,6 +78,7 @@ export const globalStyles = StyleSheet.create({
     borderWidth: 2,
     borderColor: COLORS.primary,
     color: COLORS.text,
+    fontFamily: "Montserrat",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,

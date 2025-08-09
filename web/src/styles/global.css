@@ -2,5 +2,26 @@
 @config "../../tailwind.config.ts";
 
 @plugin "daisyui" {
-  themes: false;
+  /* themes: false; */
+}
+
+@font-face {
+  font-family: "TitleFont";
+  src: url("../../../shared/fonts/Knewave-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "MainFont";
+  src: url("../../../shared/fonts/montserrat-latin-400-normal.ttf")
+    format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-title: "TitleFont", sans-serif;
+  --font-main: "MainFont", sans-serif;
 }

@@ -5,8 +5,9 @@ import AppWithSession from "./AppWithSession";
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-    Knewave: require("../assets/fonts/Knewave-Regular.ttf"),
+    SpaceMono: require("shared/fonts/SpaceMono-Regular.ttf"),
+    Knewave: require("shared/fonts/Knewave-Regular.ttf"),
+    Montserrat: require("shared/fonts/montserrat-latin-400-normal.ttf"),
   });
 
   if (!loaded) return null;

@@ -4,7 +4,7 @@ import { PROJECT } from "shared/config";
 
 export function AppHeaderTitle() {
   return (
-    <View>
+    <View style={{ position: "relative" }}>
       <Text style={headerStyles.headerTitle}>{PROJECT.TITLE}</Text>
       <Text style={headerStyles.version}>v {PROJECT.VERSION}</Text>
     </View>

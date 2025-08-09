@@ -28,7 +28,11 @@ export default function Home() {
       contentContainerStyle={globalStyles.container}
       showsVerticalScrollIndicator={true}
     >
-      <Text style={globalStyles.title}>Bienvenue {username && username} !</Text>
+      <Text style={globalStyles.title}>
+        Bienvenue{" "}
+        {username && <Text style={{ color: COLORS.accent }}>{username}</Text>} !
+      </Text>
+
       <View style={globalStyles.card}>
         <Text
           style={[
@@ -39,23 +43,23 @@ export default function Home() {
           {isOnline === null
             ? "Chargement..."
             : isOnline
-            ? "📶 Appareil connecté à internet"
-            : "🧘 Appareil hors ligne"}
+            ? "Appareil connecté à internet"
+            : "Appareil hors ligne"}
         </Text>
 
         {!isOnline && since && (
-          <Text style={indexStyles.timer}>⏳ Depuis {elapsed}</Text>
+          <Text style={indexStyles.timer}>Depuis {elapsed}</Text>
         )}
 
         <Text style={indexStyles.message}>
           {isOnline
-            ? "🌐 Coupe ta connexion pour commencer une session focus."
-            : "✨ Bien joué ! Profite de ta déconnexion pour te recentrer."}
+            ? "Coupe ta connexion pour commencer une session focus."
+            : "Bien joué ! Profite de ta déconnexion pour te recentrer."}
         </Text>
       </View>
       <TimerCard />
       <View style={globalStyles.card}>
-        <Text style={globalStyles.cardTitle}>🎯 Objectif en cours</Text>
+        <Text style={globalStyles.cardTitle}>Objectif en cours</Text>
         {nextGoal && (
           <GoalProgress
             goal={nextGoal}
@@ -66,7 +70,7 @@ export default function Home() {
       </View>
 
       <View style={globalStyles.card}>
-        <Text style={globalStyles.cardTitle}>🔄 Synchronisation</Text>
+        <Text style={globalStyles.cardTitle}>Synchronisation</Text>
         <Text style={indexStyles.message}>
           {session
             ? "Compte et appareil liés"
@@ -75,19 +79,21 @@ export default function Home() {
         {session ? (
           <Button
             title="Synchroniser"
-            color={COLORS.primary}
+            color={COLORS.secondary}
             disabled={!isOnline || totalUnsync === 0 || isLoading}
             onPress={sendPeriods}
             radius={100}
             style={globalStyles.button}
+            titleStyle={{ color: COLORS.dark }}
           />
         ) : (
           <Link href={"/profile"} asChild>
             <Button
               title="Accéder au profile"
-              color={COLORS.primary}
+              color={COLORS.secondary}
               radius={100}
               style={globalStyles.button}
+              titleStyle={{ color: COLORS.dark }}
             />
           </Link>
         )}

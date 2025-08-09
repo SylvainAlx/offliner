@@ -29,11 +29,11 @@ export default function GoalProgress({ goal, totalSeconds, bgColor }: Props) {
           <Progress.Bar
             progress={percent}
             // width={null}
-            color={COLORS.primary}
+            color={COLORS.secondary}
             height={12}
             borderRadius={10}
-            // borderColor={COLORS.border}
-            // borderWidth={2}
+            borderColor={COLORS.primary}
+            borderWidth={2}
           />
           <Text style={goalProgressStyles.percentText}>
             {(percent * 100).toFixed(0)}% complété

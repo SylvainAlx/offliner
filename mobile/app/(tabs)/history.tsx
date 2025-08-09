@@ -38,6 +38,7 @@ export default function HistoryScreen() {
               color={COLORS.primary}
               radius={100}
               style={globalStyles.button}
+              titleStyle={{ color: COLORS.dark }}
             />
           ) : (
             <Link href={"/profile"} asChild>
@@ -46,6 +47,7 @@ export default function HistoryScreen() {
                 color={COLORS.primary}
                 radius={100}
                 style={globalStyles.button}
+                titleStyle={{ color: COLORS.dark }}
               />
             </Link>
           )}
@@ -58,7 +60,7 @@ export default function HistoryScreen() {
             {item.displayDate}
           </Text>
           <Text style={globalStyles.contentText}>
-            ⏱️ Total : {formatDuration(item.totalSeconds)}
+            Total : {formatDuration(item.totalSeconds)}
           </Text>
         </View>
       )}
