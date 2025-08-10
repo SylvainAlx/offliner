@@ -3,7 +3,7 @@ import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
 import { indexStyles } from "@/styles/custom.styles";
 import { globalStyles } from "@/styles/global.styles";
-import { formatDuration } from "@/utils/formatDuration";
+import { formatDuration } from "shared/utils/formatDuration";
 import { Text, View } from "react-native";
 import { useEffect, useState } from "react";
 import { config } from "@/config/env";

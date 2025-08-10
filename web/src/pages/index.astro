@@ -1,18 +1,10 @@
 ---
 import Hero from "../components/hero.astro";
+import Layout from "../layouts/Layout.astro";
 import "../styles/global.css";
 import { PROJECT } from "shared/config";
 ---
 
-<html lang="fr">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <title>{PROJECT.TITLE}</title>
-  </head>
-  <body class="font-main">
-    <Hero />
-  </body>
-</html>
+<Layout title={`${PROJECT.TITLE}`} description={PROJECT.DESCRIPTION}>
+  <Hero />
+</Layout>

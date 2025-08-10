@@ -5,12 +5,12 @@ import { COLORS } from "shared/theme";
 import { router, Tabs, usePathname } from "expo-router";
 import React from "react";
 import { Linking, Platform, Pressable, View } from "react-native";
-import { config } from "@/config/env";
+import { env } from "@/config/env";
 
 export default function TabLayout() {
   const pathname = usePathname();
   const openExternalLink = () => {
-    Linking.openURL(config.websiteUrl);
+    Linking.openURL(env.websiteUrl);
   };
   return (
     <Tabs

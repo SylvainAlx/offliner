@@ -1,4 +1,4 @@
-import { config } from "@/config/env";
+import { env } from "@/config/env";
 import { STORAGE_KEYS } from "@/constants/Labels";
 import { showMessage } from "@/utils/formatNotification";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -14,7 +14,7 @@ export async function addPeriod(period: OfflinePeriod) {
   data.push(period);
   await AsyncStorage.setItem(
     STORAGE_KEYS.OFFLINE_PERIODS,
-    JSON.stringify(data)
+    JSON.stringify(data),
   );
 }
 
@@ -29,7 +29,7 @@ export async function closeLastPeriod(to: string) {
   const toDate = new Date(to);
   const duration = toDate.getTime() - fromDate.getTime();
 
-  if (duration >= config.minimumDurationMs) {
+  if (duration >= env.minimumDurationMs) {
     last.to = to;
   } else {
     // Supprimer la période si elle est trop courte
@@ -40,7 +40,7 @@ export async function closeLastPeriod(to: string) {
   // Sauvegarder les données dans le bon ordre
   await AsyncStorage.setItem(
     STORAGE_KEYS.OFFLINE_PERIODS,
-    JSON.stringify(reversed.reverse())
+    JSON.stringify(reversed.reverse()),
   );
   showMessage("cloture de la mesure hors ligne");
 }
@@ -50,7 +50,7 @@ export async function deleteUnclosePeriods() {
   const updated = data.filter((period) => period.to);
   await AsyncStorage.setItem(
     STORAGE_KEYS.OFFLINE_PERIODS,
-    JSON.stringify(updated)
+    JSON.stringify(updated),
   );
 }
 
@@ -63,6 +63,6 @@ export async function clearPeriod(index: number) {
   periods.splice(index, 1);
   await AsyncStorage.setItem(
     STORAGE_KEYS.OFFLINE_PERIODS,
-    JSON.stringify(periods)
+    JSON.stringify(periods),
   );
 }

@@ -38,16 +38,9 @@ export const useHistory = () => {
     setDailyData(summaries);
   };
 
-  const formatDuration = (seconds: number): string => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${h}h ${m}m ${s}s`;
-  };
-
   useEffect(() => {
     if (session) loadSlots(session);
   }, [session]);
 
-  return { dailyData, loadSlots, formatDuration };
+  return { dailyData, loadSlots };
 };

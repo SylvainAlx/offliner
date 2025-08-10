@@ -96,18 +96,27 @@ export async function insertMeasure(
     }
 
     if (existing) {
-      // Mise à jour : on incrémente la durée
-      const { error: updateError } = await supabase
+      // Mise à jour de la mesure
+      const { error: updateMeasureError } = await supabase
         .from("measures")
         .update({
           duration: existing.duration + duration,
         })
         .eq("id", existing.id);
 
-      if (updateError) {
-        throw updateError;
+      if (updateMeasureError) {
+        throw updateMeasureError;
       }
-      showMessage("Synchronisation réussie 🎉");
+
+      // Mise à jour du total_duration
+      const { error: updateUserError } = await supabase.rpc(
+        "increment_total_duration",
+        {
+          user_id: userId,
+          amount: duration,
+        },
+      );
+      if (updateUserError) throw updateUserError;
     } else {
       // Insertion classique
       const { error: insertError } = await supabase.from("measures").insert([
@@ -118,12 +127,20 @@ export async function insertMeasure(
           duration,
         },
       ]);
+      if (insertError) throw insertError;
 
-      if (insertError) {
-        throw insertError;
-      }
-      showMessage("Synchronisation réussie 🎉");
+      // Mise à jour du total_duration
+      const { error: updateUserError } = await supabase.rpc(
+        "increment_total_duration",
+        {
+          user_id: userId,
+          amount: duration,
+        },
+      );
+      if (updateUserError) throw updateUserError;
     }
+
+    showMessage("Synchronisation réussie 🎉");
     return { success: true };
   } catch (error) {
     if (error instanceof Error) {

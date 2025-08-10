@@ -32,7 +32,7 @@ async function getAllPeriods(): Promise<OfflinePeriod[]> {
 }
 
 export async function getTotalOfflineSeconds(
-  takeCurrent: boolean = true
+  takeCurrent: boolean = true,
 ): Promise<number> {
   const periods = await getAllPeriods();
 
@@ -66,25 +66,4 @@ export async function getTotalOfflineSeconds(
   });
 
   return total;
-}
-
-async function getOfflinePeriodsByDay(): Promise<
-  Record<string, number>
-> {
-  const periods = await getAllPeriods();
-
-  const perDay: Record<string, number> = {};
-
-  for (const p of periods) {
-    const from = new Date(p.from);
-    const to = new Date(p.to ?? new Date());
-
-    const day = from.toISOString().split("T")[0]; // yyyy-mm-dd
-
-    const seconds = Math.floor((to.getTime() - from.getTime()) / 1000);
-
-    perDay[day] = (perDay[day] ?? 0) + seconds;
-  }
-
-  return perDay;
 }

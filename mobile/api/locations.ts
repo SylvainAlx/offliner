@@ -22,13 +22,13 @@ export type Subdivision = z.infer<typeof SubdivisionSchema>;
 export async function getCountries(): Promise<Country[]> {
   try {
     const countriesFromStorage = await AsyncStorage.getItem(
-      STORAGE_KEYS.COUNTRIES
+      STORAGE_KEYS.COUNTRIES,
     );
     if (countriesFromStorage) {
       return z.array(CountrySchema).parse(JSON.parse(countriesFromStorage));
     }
     const response = await fetch(
-      `https://secure.geonames.org/countryInfoJSON?username=${username}`
+      `https://secure.geonames.org/countryInfoJSON?username=${username}`,
     );
 
     const json = await response.json();
@@ -39,7 +39,7 @@ export async function getCountries(): Promise<Country[]> {
     // ✅ Enregistrement dans AsyncStorage
     await AsyncStorage.setItem(
       STORAGE_KEYS.COUNTRIES,
-      JSON.stringify(json.geonames)
+      JSON.stringify(json.geonames),
     );
     return z.array(CountrySchema).parse(json.geonames);
   } catch (error) {
@@ -49,11 +49,11 @@ export async function getCountries(): Promise<Country[]> {
 }
 
 export async function getSubdivisions(
-  geonameId: number
+  geonameId: number,
 ): Promise<Subdivision[]> {
   try {
     const response = await fetch(
-      `https://secure.geonames.org/childrenJSON?geonameId=${geonameId}&username=${username}`
+      `https://secure.geonames.org/childrenJSON?geonameId=${geonameId}&username=${username}`,
     );
 
     const json = await response.json();
@@ -66,7 +66,7 @@ export async function getSubdivisions(
   } catch (error) {
     console.error(
       `❌ getSubdivisions error for geonameId ${geonameId}:`,
-      error
+      error,
     );
     return [];
   }
@@ -79,7 +79,7 @@ type TreeNode = {
 };
 
 export const buildCountryTreeByName = async (
-  countryName: string
+  countryName: string,
 ): Promise<TreeNode | null> => {
   try {
     const countries = await getCountries();
@@ -120,14 +120,14 @@ export const buildCountryTreeByName = async (
   } catch (error) {
     console.error(
       `❌ Erreur lors de la génération du tree pour ${countryName}:`,
-      error
+      error,
     );
     return null;
   }
 };
 
 export const loadCountryTreeFromStorage = async (
-  countryName: string
+  countryName: string,
 ): Promise<TreeNode | null> => {
   try {
     const key = `country_tree:${countryName}`;
@@ -139,7 +139,7 @@ export const loadCountryTreeFromStorage = async (
   } catch (error) {
     console.error(
       `❌ Erreur lors du chargement du tree depuis le storage (${countryName}) :`,
-      error
+      error,
     );
     return null;
   }

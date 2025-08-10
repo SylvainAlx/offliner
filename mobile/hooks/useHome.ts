@@ -2,7 +2,7 @@ import { GOALS } from "@/constants/Goals";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
 import { useSyncSession } from "@/hooks/useSyncSession";
-import { formatDuration } from "@/utils/formatDuration";
+import { formatDuration } from "shared/utils/formatDuration";
 import { confirmDialog, showMessage } from "@/utils/formatNotification";
 import { getLastOpenPeriod } from "@/utils/getOfflineTime";
 import { useEffect, useRef, useState } from "react";
@@ -17,7 +17,7 @@ export const useHome = () => {
   const { syncMeasures } = useSyncSession(session);
   const { totalUnsync, isOnline } = useOfflineProgress();
   const [nextGoal, setNextGoal] = useState<(typeof GOALS)[0] | undefined>(
-    undefined
+    undefined,
   );
   const [isLoading, setIsLoading] = useState(false);
 
@@ -25,7 +25,7 @@ export const useHome = () => {
     if (!session) return;
 
     const confirmed = await confirmDialog(
-      "Es-tu sûr de vouloir synchroniser les périodes non synchronisées ?"
+      "Es-tu sûr de vouloir synchroniser les périodes non synchronisées ?",
     );
 
     if (!confirmed) return;
@@ -48,7 +48,7 @@ export const useHome = () => {
       if (startTime) {
         setSince(new Date(startTime));
         const diff = Math.floor(
-          (now.getTime() - new Date(startTime).getTime()) / 1000
+          (now.getTime() - new Date(startTime).getTime()) / 1000,
         );
         setElapsed(formatDuration(diff));
       }
@@ -58,7 +58,7 @@ export const useHome = () => {
 
   useEffect(() => {
     const goal = GOALS.find(
-      (goal) => totalSyncSeconds + totalUnsync < goal.targetSeconds
+      (goal) => totalSyncSeconds + totalUnsync < goal.targetSeconds,
     );
     setNextGoal(goal);
   }, [totalSyncSeconds, totalUnsync]);

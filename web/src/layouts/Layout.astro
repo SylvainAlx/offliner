@@ -1,0 +1,32 @@
+---
+const { title, description } = Astro.props;
+import Header from "../components/header.astro";
+import "../styles/global.css";
+---
+
+<!doctype html>
+<html lang="fr" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <!-- Open Graph pour réseaux sociaux -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:image" content="/og-image.jpg" />
+
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" />
+  </head>
+  <body class="transition-all bg-background min-h-screen">
+    <Header />
+    <main class="flex flex-col items-center justify-center">
+      <slot />
+    </main>
+  </body>
+</html>

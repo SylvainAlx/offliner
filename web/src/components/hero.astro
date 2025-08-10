@@ -1,20 +1,22 @@
 ---
 import { PROJECT } from "shared/config";
+import H1 from "./h1.astro";
 ---
 
-<div class="hero bg-background min-h-screen">
+<div class="hero">
   <div class="hero-content text-center">
     <div class="max-w-md">
-      <h1 class="text-5xl text-primary font-title">
-        {PROJECT.TITLE}
-      </h1>
+      <H1 title={`Bienvenue sur ${PROJECT.TITLE}`} />
       <p class="py-6">
         Provident cupiditate voluptatem et in. Quaerat fugiat ut assumenda
         excepturi exercitationem quasi. In deleniti eaque aut repudiandae et a
         id nisi.
       </p>
-      <button class="btn btn-soft bg-secondary text-dark rounded-full"
-        >Get Started</button
+      <a href="/" class="btn btn-soft bg-accent text-dark rounded-full"
+        >Télécharger l'application</a
+      >
+      <a href="/ranking" class="btn btn-soft bg-accent text-dark rounded-full"
+        >Voir le classement</a
       >
     </div>
   </div>

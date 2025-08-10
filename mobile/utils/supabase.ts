@@ -15,7 +15,7 @@ export const supabase = createClient(
       detectSessionInUrl: false,
       lock: processLock,
     },
-  }
+  },
 );
 // Tells Supabase Auth to continuously refresh the session automatically
 // if the app is in the foreground. When this is added, you will continue

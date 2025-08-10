@@ -1,5 +1,12 @@
 {
   "compilerOptions": {
+     "target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "composite": true, // nécessaire si tu veux build ou référencer
     "declaration": true,
     "declarationMap": true,
@@ -7,5 +14,5 @@
     "outDir": "dist",
     "baseUrl": "."
   },
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": ["**/*.ts", "**/*.tsx", "**/*.d.ts"]
 }

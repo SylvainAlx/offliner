@@ -6,10 +6,11 @@ import { Link } from "expo-router";
 import React from "react";
 import { FlatList, Text, View } from "react-native";
 import { useHistory } from "@/hooks/useHistory";
+import { formatDuration } from "shared/utils/formatDuration";
 
 export default function HistoryScreen() {
   const { session } = useSession();
-  const { dailyData, loadSlots, formatDuration } = useHistory();
+  const { dailyData, loadSlots } = useHistory();
 
   return (
     <FlatList
