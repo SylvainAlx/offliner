@@ -1,8 +1,8 @@
-import { env } from "@/config/env";
 import { STORAGE_KEYS } from "@/constants/Labels";
 import { showMessage } from "@/utils/formatNotification";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { OfflinePeriod } from "../types/OfflinePeriod";
+import { config } from "@/config/env";
 
 async function getPeriods(): Promise<OfflinePeriod[]> {
   const json = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_PERIODS);
@@ -29,7 +29,7 @@ export async function closeLastPeriod(to: string) {
   const toDate = new Date(to);
   const duration = toDate.getTime() - fromDate.getTime();
 
-  if (duration >= env.minimumDurationMs) {
+  if (duration >= config.minimumDurationMs) {
     last.to = to;
   } else {
     // Supprimer la période si elle est trop courte

@@ -1,5 +1,5 @@
 export const config = {
-  websiteUrl: process.env.EXPO_PUBLIC_WEBSITE_URL ?? "http://localhost:4321/",
+  websiteUrl: process.env.EXPO_PUBLIC_WEBSITE_URL ?? "http://localhost:4321",
   supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL ?? "",
   supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "",
   geonamesUsername: process.env.EXPO_PUBLIC_GEONAMES_USERNAME ?? "",

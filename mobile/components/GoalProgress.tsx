@@ -25,20 +25,24 @@ export default function GoalProgress({ goal, totalSeconds, bgColor }: Props) {
       </Text>
 
       {!isAchieved && (
-        <>
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+        >
           <Progress.Bar
             progress={percent}
             // width={null}
-            color={COLORS.secondary}
+            color={COLORS.primary}
             height={12}
             borderRadius={10}
-            borderColor={COLORS.primary}
-            borderWidth={2}
           />
           <Text style={goalProgressStyles.percentText}>
-            {(percent * 100).toFixed(0)}% complété
+            {(percent * 100).toFixed(2)}% complété
           </Text>
-        </>
+        </View>
       )}
 
       {isAchieved && (

@@ -1,70 +1,67 @@
 ---
+export const prerender = false; // ⚡ Rend la page à la demande (SSR)
+
 import H1 from "../components/h1.astro";
 import Layout from "../layouts/Layout.astro";
 import { PROJECT } from "shared/config";
+import { getUsersRanking } from "src/api/users";
+import { formatDuration } from "shared/utils/formatDuration";
+
+// 📡 Récupération des données côté serveur
+const data = await getUsersRanking();
 ---
 
 <Layout
   title={`${PROJECT.TITLE} | Classement`}
   description={PROJECT.DESCRIPTION}
 >
-  <H1 title="Classement des utilisateurs" />
-
-  <div class="overflow-x-auto w-full max-w-full mt-4">
-    <table class="table table-zebra text-base">
-      <thead class="sticky top-0 bg-base-200 z-10">
-        <tr>
-          <th class="text-right">Rang</th>
-          <th>Utilisateur</th>
-          <th class="text-right">Durée totale</th>
-          <th>Pays</th>
-          <th>Région</th>
-          <th>Sous-région</th>
-        </tr>
-      </thead>
-      <tbody id="ranking-list"></tbody>
-    </table>
-  </div>
+  <section class="flex flex-col items-center w-full max-w-5xl px-4">
+    <H1 title="Classement des utilisateurs" />
+    <a href="/" class="btn text-secondary btn-lg rounded-full"> Accueil </a>
+    <div class="overflow-x-auto w-full max-w-3xl mt-4">
+      <table class="table table-zebra text-base bg-sub-card">
+        <thead class="sticky top-0 bg-card z-10">
+          <tr>
+            <th class="text-right">Rang</th>
+            <th>Utilisateur</th>
+            <th class="text-right">Durée totale</th>
+            <th>Pays</th>
+            <th>Région</th>
+            <th>Département</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            data && data.length > 0 ? (
+              data.map((user, index) => (
+                <tr>
+                  <th class="text-right">{index + 1}</th>
+                  <td>
+                    <a
+                      href={`/${user.username}`}
+                      class="text-primary font-bold hover:underline"
+                    >
+                      {user.username || "Utilisateur anonyme"}
+                    </a>
+                  </td>
+                  <td class="text-right">
+                    {formatDuration(user.total_duration || 0)}
+                  </td>
+                  <td>{user.country || "-"}</td>
+                  <td>{user.region || "-"}</td>
+                  <td>{user.subregion || "-"}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colspan="6" class="text-center">
+                  Aucun utilisateur trouvé.
+                </td>
+              </tr>
+            )
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
 </Layout>
-
-<script>
-  import { supabase } from "../lib/supabase";
-  import { formatDuration } from "shared/utils/formatDuration";
-
-  async function fetchRanking() {
-    const rankingList = document.getElementById("ranking-list");
-    if (!rankingList) return;
-
-    const { data, error } = await supabase
-      .from("users")
-      .select("username, total_duration, country, region, subregion")
-      .order("total_duration", { ascending: false });
-
-    if (error) {
-      console.error("Erreur Supabase :", error);
-      rankingList.innerHTML = `<tr><td colspan="6">Erreur de chargement du classement.</td></tr>`;
-      return;
-    }
-
-    if (data) {
-      rankingList.innerHTML = data
-        .map((user, index) => {
-          const totalDuration = user.total_duration || 0;
-
-          return `
-            <tr class="hover cursor-pointer">
-              <th class="text-right">${index + 1}</th>
-              <td>${user.username || "Utilisateur anonyme"}</td>
-              <td class="text-right">${formatDuration(totalDuration)}</td>
-              <td>${user.country || "-"}</td>
-              <td>${user.region || "-"}</td>
-              <td>${user.subregion || "-"}</td>
-            </tr>
-          `;
-        })
-        .join("");
-    }
-  }
-
-  fetchRanking();
-</script>

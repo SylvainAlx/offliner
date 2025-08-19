@@ -5,12 +5,18 @@ import { COLORS } from "shared/theme";
 import { router, Tabs, usePathname } from "expo-router";
 import React from "react";
 import { Linking, Platform, Pressable, View } from "react-native";
-import { env } from "@/config/env";
+import { config } from "@/config/env";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function TabLayout() {
   const pathname = usePathname();
+  const { username } = useSession();
   const openExternalLink = () => {
-    Linking.openURL(env.websiteUrl);
+    let link = config.websiteUrl;
+    if (username) {
+      link = link + "/" + username;
+    }
+    Linking.openURL(link);
   };
   return (
     <Tabs
@@ -27,11 +33,14 @@ export default function TabLayout() {
           },
           default: {
             backgroundColor: COLORS.tabs,
+            borderTopWidth: 0, // enlève la bordure en haut du footer
+            elevation: 0, // enlève l’ombre sur Android
           },
         }),
         headerStyle: {
           backgroundColor: COLORS.tabs,
         },
+        headerShadowVisible: false, // enlève la bordure du header sur iOS
         headerTitleStyle: {
           fontWeight: "bold",
           fontSize: 18,

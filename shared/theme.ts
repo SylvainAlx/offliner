@@ -1,9 +1,9 @@
 export const COLORS = {
-  primary: "#ffd157",
-  secondary: "#ffc6ff",
-  accent: "#f8efcf",
+  primary: "#ff89ff",
+  secondary: "#00abff",
+  accent: "#ffffa8",
   tabs: "#264653",
-  background: "#2a9d8f",
+  background: "#222222",
   card: "#4a5759",
   subCard: "#666666",
   text: "#ffffff",
@@ -15,6 +15,24 @@ export const COLORS = {
   warning: "#FFA600",
   info: "#118AB2",
 };
+
+// export const COLORS = {
+//   primary: "#ffd157",
+//   secondary: "#ffc6ff",
+//   accent: "#f8efcf",
+//   tabs: "#264653",
+//   background: "#2a9d8f",
+//   card: "#4a5759",
+//   subCard: "#666666",
+//   text: "#ffffff",
+//   dark: "#000000",
+//   border: "#ffffff",
+//   notification: "#EF476F",
+//   succes: "#06D6A0",
+//   danger: "#D72638",
+//   warning: "#FFA600",
+//   info: "#118AB2",
+// };
 
 export const SIZES = {
   text_sm: 8,

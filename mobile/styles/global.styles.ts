@@ -76,6 +76,7 @@ export const globalStyles = StyleSheet.create({
   },
   input: {
     borderWidth: 2,
+    height: 40,
     borderColor: COLORS.primary,
     color: COLORS.text,
     fontFamily: "Montserrat",

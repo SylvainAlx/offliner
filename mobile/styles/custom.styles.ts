@@ -15,7 +15,7 @@ export const indexStyles = StyleSheet.create({
     fontFamily: "Montserrat",
   },
   message: {
-    fontSize: SIZES.text_md,
+    fontSize: SIZES.text_lg,
     color: COLORS.text,
     textAlign: "center",
     fontFamily: "Montserrat",
@@ -75,7 +75,7 @@ export const goalProgressStyles = StyleSheet.create({
   percentText: {
     marginTop: SIZES.margin,
     fontSize: SIZES.text_lg,
-    color: COLORS.secondary,
+    color: COLORS.text,
     fontFamily: "Montserrat",
   },
   achievedText: {

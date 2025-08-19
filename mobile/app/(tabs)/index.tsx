@@ -28,10 +28,7 @@ export default function Home() {
       contentContainerStyle={globalStyles.container}
       showsVerticalScrollIndicator={true}
     >
-      <Text style={globalStyles.title}>
-        Bienvenue{" "}
-        {username && <Text style={{ color: COLORS.accent }}>{username}</Text>} !
-      </Text>
+      <Text style={globalStyles.title}>Bienvenue {username && username}</Text>
 
       <View style={globalStyles.card}>
         <Text

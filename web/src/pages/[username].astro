@@ -1,0 +1,103 @@
+---
+export const prerender = false; // 🚀 SSR activé
+
+import { formatDuration } from "shared/utils/formatDuration";
+import Layout from "../layouts/Layout.astro";
+import H1 from "../components/h1.astro";
+import { PROJECT } from "shared/config";
+import { getRanking, getUser } from "src/api/users";
+import DataCard from "src/components/dataCard.astro";
+
+const { username } = Astro.params;
+
+const user = await getUser(username);
+
+let rankingCountry = null;
+let rankingRegion = null;
+let rankingDepartment = null;
+
+if (user) {
+  rankingCountry = await getRanking(
+    { column: "country", value: user.country },
+    username,
+  );
+  rankingRegion = await getRanking(
+    { column: "region", value: user.region },
+    username,
+  );
+  rankingDepartment = await getRanking(
+    {
+      column: "subregion",
+      value: user.subregion,
+    },
+    username,
+  );
+}
+---
+
+<Layout
+  title={`${PROJECT.TITLE} | Profil ${username}`}
+  description={PROJECT.DESCRIPTION}
+>
+  <section class="flex flex-col items-center w-full max-w-5xl px-4">
+    <H1 title={`Profil de ${username}`} />
+    {
+      user ? (
+        <div class="p-4 rounded-lg flex justify-center flex-wrap gap-4 w-full">
+          <DataCard
+            title="Date d'inscription"
+            data={new Date(user.created_at).toLocaleDateString()}
+          />
+          <DataCard
+            title="Dernière activité"
+            data={new Date(user.updated_at).toLocaleDateString()}
+          />
+          <DataCard
+            title="Durée totale"
+            data={formatDuration(user.total_duration)}
+          />
+          {rankingCountry ? (
+            <DataCard
+              title={user.country || "-"}
+              data={rankingCountry.rank}
+              dataSup={rankingCountry.rank > 1 ? "ème" : "er"}
+              info={`sur ${rankingCountry.total} utilisateur(s)`}
+            />
+          ) : (
+            <p>"N/A"</p>
+          )}
+          {rankingRegion ? (
+            <DataCard
+              title={user.region || "-"}
+              data={rankingRegion.rank}
+              dataSup={rankingRegion.rank > 1 ? "ème" : "er"}
+              info={`sur ${rankingRegion.total} utilisateur(s)`}
+            />
+          ) : (
+            <p>"N/A"</p>
+          )}
+          {rankingDepartment ? (
+            <DataCard
+              title={user.subregion || "-"}
+              data={rankingDepartment.rank}
+              dataSup={rankingDepartment.rank > 1 ? "ème" : "er"}
+              info={`sur ${rankingDepartment.total} utilisateur(s)`}
+            />
+          ) : (
+            <p>"N/A"</p>
+          )}
+        </div>
+      ) : (
+        <p>Utilisateur introuvable.</p>
+      )
+    }
+    <div
+      class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
+    >
+      <a href="/ranking" class="btn text-secondary btn-lg rounded-full">
+        Les meilleurs offliners
+      </a>
+      <a href="/" class="btn text-secondary btn-lg rounded-full"> Accueil </a>
+    </div>
+  </section>
+</Layout>
