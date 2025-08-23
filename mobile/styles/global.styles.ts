@@ -1,10 +1,11 @@
 import { COLORS, SIZES } from "shared/theme";
-import { Platform, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 
 export const globalStyles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: SIZES.padding,
+    paddingVertical: SIZES.padding,
+    paddingHorizontal: SIZES.padding * 4,
     flexGrow: 1, // important pour ScrollView
     backgroundColor: COLORS.background,
     display: "flex",
@@ -21,24 +22,30 @@ export const globalStyles = StyleSheet.create({
   },
   card: {
     backgroundColor: COLORS.card,
-    borderRadius: SIZES.borderRadius,
+    borderRadius: SIZES.borderRadius / 2,
     padding: SIZES.padding,
-    display: "flex",
     flexDirection: "column",
-    gap: SIZES.margin,
     alignItems: "center",
-    ...Platform.select({
-      ios: {
-        boxShadow: "0px 2px 3.84px rgba(0,0,0,0.25)",
-      },
-      android: {
-        elevation: 5,
-      },
-      web: {
-        boxShadow: "0px 2px 3.84px rgba(0,0,0,0.25)",
-      },
-    }),
+    gap: SIZES.margin / 2,
+    borderWidth: SIZES.borderWidth,
+    borderColor: COLORS.border, // bordure légère
+    // ...Platform.select({
+    //   ios: {
+    //     shadowColor: "#000",
+    //     shadowOpacity: 0.2,
+    //     shadowRadius: 8,
+    //     shadowOffset: { width: 0, height: 4 },
+    //   },
+    //   android: {
+    //     elevation: 6,
+    //   },
+    //   web: {
+    //     boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+    //     backdropFilter: "blur(10px)", // dispo uniquement sur web
+    //   },
+    // }),
   },
+
   cardTitle: {
     fontSize: SIZES.text_lg,
     color: COLORS.text,
@@ -55,8 +62,7 @@ export const globalStyles = StyleSheet.create({
     paddingVertical: SIZES.padding / 2,
   },
   verticallySpaced: {
-    paddingTop: 4,
-    paddingBottom: 4,
+    paddingVertical: SIZES.padding / 4,
     alignSelf: "stretch",
   },
   buttonContainer: {
@@ -76,13 +82,13 @@ export const globalStyles = StyleSheet.create({
   },
   input: {
     borderWidth: 2,
-    height: 40,
+    height: 50,
     borderColor: COLORS.primary,
     color: COLORS.text,
     fontFamily: "Montserrat",
     borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: SIZES.padding,
+    paddingVertical: SIZES.padding / 2,
     backgroundColor: COLORS.tabs,
   },
 });

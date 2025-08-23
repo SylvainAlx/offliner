@@ -16,9 +16,8 @@ export default function HistoryScreen() {
     <FlatList
       data={dailyData}
       keyExtractor={(item) => item.date}
-      style={{ flex: 1, backgroundColor: COLORS.background }}
+      style={globalStyles.container}
       contentContainerStyle={{
-        padding: SIZES.padding,
         gap: SIZES.margin,
       }}
       showsVerticalScrollIndicator

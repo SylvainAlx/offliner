@@ -45,15 +45,7 @@ if (user) {
       user ? (
         <div class="p-4 rounded-lg flex justify-center flex-wrap gap-4 w-full">
           <DataCard
-            title="Date d'inscription"
-            data={new Date(user.created_at).toLocaleDateString()}
-          />
-          <DataCard
-            title="Dernière activité"
-            data={new Date(user.updated_at).toLocaleDateString()}
-          />
-          <DataCard
-            title="Durée totale"
+            title="Temps passé hors-ligne"
             data={formatDuration(user.total_duration)}
           />
           {rankingCountry ? (
@@ -86,6 +78,14 @@ if (user) {
           ) : (
             <p>"N/A"</p>
           )}
+          <DataCard
+            title="Date d'inscription"
+            data={new Date(user.created_at).toLocaleDateString()}
+          />
+          <DataCard
+            title="Dernière activité"
+            data={new Date(user.updated_at).toLocaleDateString()}
+          />
         </div>
       ) : (
         <p>Utilisateur introuvable.</p>

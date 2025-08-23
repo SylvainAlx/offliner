@@ -24,12 +24,10 @@ export default function Home() {
 
   return (
     <ScrollView
-      style={globalStyles.container}
       contentContainerStyle={globalStyles.container}
       showsVerticalScrollIndicator={true}
     >
       <Text style={globalStyles.title}>Bienvenue {username && username}</Text>
-
       <View style={globalStyles.card}>
         <Text
           style={[

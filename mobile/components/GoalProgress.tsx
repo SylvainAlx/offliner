@@ -17,12 +17,8 @@ export default function GoalProgress({ goal, totalSeconds, bgColor }: Props) {
   const percent = Math.min(1, totalSeconds / goal.targetSeconds);
 
   return (
-    <View
-      style={[globalStyles.card, { backgroundColor: bgColor || COLORS.card }]}
-    >
-      <Text style={globalStyles.cardTitle}>
-        {goal.label} {isAchieved ? "✅" : ""}
-      </Text>
+    <View style={[globalStyles.card, { backgroundColor: bgColor && bgColor }]}>
+      <Text style={globalStyles.cardTitle}>{goal.label}</Text>
 
       {!isAchieved && (
         <View
@@ -34,7 +30,6 @@ export default function GoalProgress({ goal, totalSeconds, bgColor }: Props) {
         >
           <Progress.Bar
             progress={percent}
-            // width={null}
             color={COLORS.primary}
             height={12}
             borderRadius={10}
@@ -47,7 +42,7 @@ export default function GoalProgress({ goal, totalSeconds, bgColor }: Props) {
 
       {isAchieved && (
         <Text style={goalProgressStyles.achievedText}>
-          🎉 Objectif atteint !
+          ✅ Objectif atteint !
         </Text>
       )}
     </View>

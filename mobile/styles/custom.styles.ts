@@ -55,14 +55,15 @@ export const accountStyles = StyleSheet.create({
 
 export const headerStyles = StyleSheet.create({
   headerTitle: {
-    fontSize: 30,
+    fontSize: SIZES.text_4xl,
     color: COLORS.primary,
     fontFamily: "Knewave",
   },
   version: {
     position: "absolute",
-    top: 37,
-    fontSize: 12,
+    top: 15,
+    right: 0,
+    fontSize: SIZES.text_sm,
     color: COLORS.primary,
     textAlign: "center",
     alignSelf: "flex-end",

@@ -5,7 +5,7 @@ export async function getUser(username: string | undefined) {
     .from("users")
     .select("*")
     .eq("username", username)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error("Erreur Supabase :", error);

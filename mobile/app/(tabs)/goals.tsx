@@ -1,6 +1,6 @@
 import GoalProgress from "@/components/GoalProgress";
 import { GOALS } from "@/constants/Goals";
-import { COLORS, SIZES } from "shared/theme";
+import { SIZES } from "shared/theme";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
 import { globalStyles } from "@/styles/global.styles";
@@ -14,9 +14,8 @@ export default function GoalsScreen() {
     <FlatList
       data={GOALS}
       keyExtractor={(item) => item.id}
-      style={{ flex: 1, backgroundColor: COLORS.background }} // important ici
+      style={globalStyles.container}
       contentContainerStyle={{
-        padding: SIZES.padding,
         gap: SIZES.margin,
       }}
       showsVerticalScrollIndicator

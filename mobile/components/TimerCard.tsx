@@ -32,9 +32,10 @@ export default function TimerCard() {
       <View>
         <Text
           style={{
-            fontSize: SIZES.text_xxl,
-            fontWeight: "bold",
-            color: COLORS.primary, // ou COLORS.primary
+            fontSize: SIZES.text_3xl,
+            fontFamily: "Knewave",
+            // fontWeight: "bold",
+            color: COLORS.accent,
           }}
         >
           {formatDuration(totalAll)}

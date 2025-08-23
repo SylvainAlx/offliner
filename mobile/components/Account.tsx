@@ -32,7 +32,6 @@ export default function Account({ session }: { session: Session }) {
       <Text style={globalStyles.title}>Mon compte</Text>
       <View style={globalStyles.card}>
         <Text style={globalStyles.cardTitle}>{deviceName}</Text>
-
         <View style={globalStyles.verticallySpaced}>
           <Input
             style={globalStyles.input}
@@ -41,9 +40,6 @@ export default function Account({ session }: { session: Session }) {
             value={session?.user?.email}
             disabled
           />
-        </View>
-
-        <View style={globalStyles.verticallySpaced}>
           <Input
             style={globalStyles.input}
             label="Nom d'utilisateur"

@@ -23,6 +23,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: true,
         headerTitle: () => <AppHeaderTitle />,
+        headerTitleAlign: "center",
         tabBarButton: HapticTab,
         tabBarActiveTintColor: COLORS.secondary, // Couleur des icônes actives
         tabBarInactiveTintColor: COLORS.accent, // Couleur des icônes inactives
