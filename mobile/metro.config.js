@@ -1,5 +1,5 @@
 // metro.config.js (CommonJS)
-const { getDefaultConfig } = require("@expo/metro-config");
+const { getDefaultConfig } = require("expo/metro-config");
 const path = require("path");
 
 const projectRoot = __dirname;
