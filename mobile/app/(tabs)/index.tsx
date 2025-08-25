@@ -4,9 +4,9 @@ import { COLORS } from "shared/theme";
 import { useHome } from "@/hooks/useHome";
 import { indexStyles } from "@/styles/custom.styles";
 import { globalStyles } from "@/styles/global.styles";
-import { Button } from "@rneui/themed";
-import { Link } from "expo-router";
 import { ScrollView, Text, View } from "react-native";
+import { Button } from "react-native-paper";
+import { Link } from "expo-router";
 
 export default function Home() {
   const {
@@ -25,9 +25,10 @@ export default function Home() {
   return (
     <ScrollView
       contentContainerStyle={globalStyles.container}
-      showsVerticalScrollIndicator={true}
+      showsVerticalScrollIndicator
     >
-      <Text style={globalStyles.title}>Bienvenue {username && username}</Text>
+      <Text style={globalStyles.title}>Bienvenue {username}</Text>
+
       <View style={globalStyles.card}>
         <Text
           style={[
@@ -52,7 +53,9 @@ export default function Home() {
             : "Bien joué ! Profite de ta déconnexion pour te recentrer."}
         </Text>
       </View>
+
       <TimerCard />
+
       <View style={globalStyles.card}>
         <Text style={globalStyles.cardTitle}>Objectif en cours</Text>
         {nextGoal && (
@@ -71,25 +74,26 @@ export default function Home() {
             ? "Compte et appareil liés"
             : "Vous devez avoir un compte pour synchroniser le temps hors ligne"}
         </Text>
+
         {session ? (
           <Button
-            title="Synchroniser"
-            color={COLORS.secondary}
-            disabled={!isOnline || totalUnsync === 0 || isLoading}
+            mode="contained"
             onPress={sendPeriods}
-            radius={100}
+            disabled={!isOnline || totalUnsync === 0 || isLoading}
+            buttonColor={COLORS.secondary}
             style={globalStyles.button}
-            titleStyle={{ color: COLORS.dark }}
-          />
+          >
+            Synchroniser
+          </Button>
         ) : (
           <Link href={"/profile"} asChild>
             <Button
-              title="Accéder au profile"
-              color={COLORS.secondary}
-              radius={100}
+              mode="contained"
+              buttonColor={COLORS.secondary}
               style={globalStyles.button}
-              titleStyle={{ color: COLORS.dark }}
-            />
+            >
+              Accéder au profile
+            </Button>
           </Link>
         )}
       </View>

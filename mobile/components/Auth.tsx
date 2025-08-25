@@ -1,9 +1,9 @@
 import { COLORS } from "shared/theme";
 import { useAuth } from "@/hooks/useAuth";
 import { globalStyles } from "@/styles/global.styles";
-import { Button, Input } from "@rneui/themed";
 import React from "react";
 import { Text, View } from "react-native";
+import { TextInput, Button } from "react-native-paper";
 
 export default function Auth() {
   const {
@@ -22,57 +22,62 @@ export default function Auth() {
       <Text style={globalStyles.title}>Connexion</Text>
       <Text style={globalStyles.contentText}>
         La connexion à un compte est facultative mais conseillée si vous
-        souhaitez sauvegarder votre temps passé hors ligne et le cummuler avec
+        souhaitez sauvegarder votre temps passé hors ligne et le cumuler avec
         d&apos;autres appareils
       </Text>
       <View style={globalStyles.card}>
-        <View style={[globalStyles.verticallySpaced]}>
-          <Input
-            style={globalStyles.input}
+        <View style={globalStyles.verticallySpaced}>
+          <TextInput
             label="E-mail"
-            labelStyle={{ color: COLORS.text }}
-            leftIcon={{ type: "font-awesome", name: "envelope" }}
-            onChangeText={(text) => setEmail(text)}
             value={email}
+            onChangeText={setEmail}
+            style={globalStyles.input}
             placeholder="adresse e-mail"
-            placeholderTextColor={COLORS.text}
-            autoCapitalize={"none"}
-            onSubmitEditing={() => passwordRef.current?.focus()}
+            textColor={COLORS.text}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            returnKeyType="next"
+            ref={passwordRef}
           />
         </View>
+
         <View style={globalStyles.verticallySpaced}>
-          <Input
-            style={globalStyles.input}
+          <TextInput
             label="Mot de passe"
-            labelStyle={{ color: COLORS.text }}
-            leftIcon={{ type: "font-awesome", name: "lock" }}
-            onChangeText={(text) => setPassword(text)}
             value={password}
-            secureTextEntry={true}
+            onChangeText={setPassword}
+            style={globalStyles.input}
             placeholder="Mot de passe"
-            placeholderTextColor={COLORS.text}
-            autoCapitalize={"none"}
+            textColor={COLORS.text}
+            secureTextEntry
+            autoCapitalize="none"
             returnKeyType="done"
             onSubmitEditing={signIn}
+            ref={passwordRef}
+            theme={{ colors: { text: COLORS.text, placeholder: COLORS.text } }}
           />
         </View>
-        <View style={[globalStyles.buttonContainer]}>
+
+        <View style={globalStyles.buttonContainer}>
           <Button
-            title="Se connecter"
-            disabled={loading}
+            mode="contained"
             onPress={signIn}
-            color={COLORS.primary}
-            radius={100}
-            style={globalStyles.button}
-          />
-          <Button
-            title="Créer un compte"
             disabled={loading}
-            onPress={() => signUp()}
-            color={COLORS.primary}
-            radius={100}
-            style={globalStyles.button}
-          />
+            buttonColor={COLORS.primary}
+            style={[globalStyles.button, { borderRadius: 100 }]}
+          >
+            Se connecter
+          </Button>
+
+          <Button
+            mode="contained"
+            onPress={signUp}
+            disabled={loading}
+            buttonColor={COLORS.primary}
+            style={[globalStyles.button, { borderRadius: 100 }]}
+          >
+            Créer un compte
+          </Button>
         </View>
       </View>
     </View>

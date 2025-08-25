@@ -1,9 +1,9 @@
 import { COLORS } from "shared/theme";
 import { globalStyles } from "@/styles/global.styles";
 import { Picker } from "@react-native-picker/picker";
-import { Button, Input } from "@rneui/themed";
-import { Session } from "@supabase/supabase-js";
 import { ScrollView, Text, View } from "react-native";
+import { TextInput, Button } from "react-native-paper";
+import { Session } from "@supabase/supabase-js";
 import { useAccount } from "@/hooks/useAccount";
 import PickerInput from "./PickerInput";
 
@@ -33,19 +33,19 @@ export default function Account({ session }: { session: Session }) {
       <View style={globalStyles.card}>
         <Text style={globalStyles.cardTitle}>{deviceName}</Text>
         <View style={globalStyles.verticallySpaced}>
-          <Input
-            style={globalStyles.input}
+          <TextInput
             label="E-mail"
-            labelStyle={{ color: COLORS.text }}
             value={session?.user?.email}
             disabled
-          />
-          <Input
             style={globalStyles.input}
+            textColor={COLORS.background}
+          />
+          <TextInput
             label="Nom d'utilisateur"
-            labelStyle={{ color: COLORS.text }}
             value={username || ""}
             onChangeText={setUsername}
+            style={globalStyles.input}
+            textColor={COLORS.text}
           />
         </View>
 
@@ -94,28 +94,32 @@ export default function Account({ session }: { session: Session }) {
 
         <View style={globalStyles.buttonContainer}>
           <Button
-            title={loading ? "Chargement ..." : "Mettre à jour"}
+            mode="contained"
             onPress={() => updateProfile({ username: username ?? "" })}
             disabled={loading}
-            color={COLORS.secondary}
-            radius={100}
+            buttonColor={COLORS.secondary}
             style={globalStyles.button}
-            titleStyle={{ color: COLORS.dark }} // couleur du texte
-          />
+          >
+            {loading ? "Chargement ..." : "Mettre à jour"}
+          </Button>
+
           <Button
-            title="Se déconnecter"
-            color={COLORS.warning}
+            mode="contained"
             onPress={handleLogout}
-            radius={100}
+            buttonColor={COLORS.warning}
             style={globalStyles.button}
-          />
+          >
+            Se déconnecter
+          </Button>
+
           <Button
-            title="Supprimer le compte"
-            color={COLORS.danger}
+            mode="contained"
             onPress={handleDeleteAccount}
-            radius={100}
+            buttonColor={COLORS.danger}
             style={globalStyles.button}
-          />
+          >
+            Supprimer le compte
+          </Button>
         </View>
       </View>
     </ScrollView>

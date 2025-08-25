@@ -79,12 +79,12 @@ export const globalStyles = StyleSheet.create({
     paddingVertical: SIZES.padding / 2,
     paddingHorizontal: SIZES.padding,
     alignItems: "center",
+    borderRadius: 100,
   },
   input: {
     borderWidth: 2,
     height: 50,
     borderColor: COLORS.primary,
-    color: COLORS.text,
     fontFamily: "Montserrat",
     borderRadius: 8,
     paddingHorizontal: SIZES.padding,

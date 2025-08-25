@@ -1,10 +1,10 @@
 import { COLORS, SIZES } from "shared/theme";
 import { useSession } from "@/contexts/SessionContext";
 import { globalStyles } from "@/styles/global.styles";
-import { Button } from "@rneui/themed";
+import { FlatList, Text, View } from "react-native";
+import { Button } from "react-native-paper";
 import { Link } from "expo-router";
 import React from "react";
-import { FlatList, Text, View } from "react-native";
 import { useHistory } from "@/hooks/useHistory";
 import { formatDuration } from "shared/utils/formatDuration";
 
@@ -12,52 +12,52 @@ export default function HistoryScreen() {
   const { session } = useSession();
   const { dailyData, loadSlots } = useHistory();
 
+  const renderHeader = () => (
+    <>
+      <Text style={globalStyles.title}>
+        Historique des mesures synchronisées
+      </Text>
+      {dailyData.length === 0 && (
+        <Text style={[globalStyles.contentText, { textAlign: "center" }]}>
+          Aucune mesure hors ligne enregistrée.
+        </Text>
+      )}
+
+      {session ? (
+        <Button
+          mode="contained"
+          onPress={() => session && loadSlots(session)}
+          buttonColor={COLORS.primary}
+          style={globalStyles.button}
+        >
+          Actualiser
+        </Button>
+      ) : (
+        <Link href={"/profile"} asChild>
+          <Button
+            mode="contained"
+            buttonColor={COLORS.primary}
+            style={globalStyles.button}
+          >
+            Se connecter
+          </Button>
+        </Link>
+      )}
+    </>
+  );
+
   return (
     <FlatList
       data={dailyData}
       keyExtractor={(item) => item.date}
       style={globalStyles.container}
-      contentContainerStyle={{
-        gap: SIZES.margin,
-      }}
+      contentContainerStyle={{ gap: SIZES.margin }}
       showsVerticalScrollIndicator
-      ListHeaderComponent={
-        <>
-          <Text style={globalStyles.title}>
-            Historique des mesures synchronisées
-          </Text>
-          {dailyData.length === 0 && (
-            <Text style={[globalStyles.contentText, { textAlign: "center" }]}>
-              Aucune mesure hors ligne enregistrée.
-            </Text>
-          )}
-          {session ? (
-            <Button
-              title="Actualiser"
-              onPress={() => session && loadSlots(session)}
-              color={COLORS.primary}
-              radius={100}
-              style={globalStyles.button}
-              titleStyle={{ color: COLORS.dark }}
-            />
-          ) : (
-            <Link href={"/profile"} asChild>
-              <Button
-                title="Se connecter"
-                color={COLORS.primary}
-                radius={100}
-                style={globalStyles.button}
-                titleStyle={{ color: COLORS.dark }}
-              />
-            </Link>
-          )}
-        </>
-      }
+      ListHeaderComponent={renderHeader}
       renderItem={({ item }) => (
         <View style={globalStyles.card}>
           <Text style={globalStyles.cardTitle}>
-            📅 {item.totalSeconds > 86400 && "à partir du "}
-            {item.displayDate}
+            📅 {item.totalSeconds > 86400 && "à partir du "} {item.displayDate}
           </Text>
           <Text style={globalStyles.contentText}>
             Total : {formatDuration(item.totalSeconds)}
