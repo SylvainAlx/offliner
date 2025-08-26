@@ -1,4 +1,5 @@
 import { signInWithEmail, signUpWithEmail } from "@/api/auth";
+import { showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
 import { useEffect, useRef, useState } from "react";
 import { AppState, TextInput } from "react-native";
@@ -9,15 +10,19 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(false);
 
   const passwordRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
 
   useEffect(() => {
-    const appStateSubscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") {
-        supabase.auth.startAutoRefresh();
-      } else {
-        supabase.auth.stopAutoRefresh();
-      }
-    });
+    const appStateSubscription = AppState.addEventListener(
+      "change",
+      (state) => {
+        if (state === "active") {
+          supabase.auth.startAutoRefresh();
+        } else {
+          supabase.auth.stopAutoRefresh();
+        }
+      },
+    );
 
     return () => {
       appStateSubscription.remove();
@@ -28,8 +33,10 @@ export const useAuth = () => {
     setLoading(true);
     try {
       await signInWithEmail(email, password);
-    } catch (e) {
-      // Errors are handled in the signInWithEmail function
+    } catch (error) {
+      if (error instanceof Error) {
+        showMessage(error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -39,8 +46,10 @@ export const useAuth = () => {
     setLoading(true);
     try {
       await signUpWithEmail(email, password);
-    } catch (e) {
-      // Errors are handled in the signUpWithEmail function
+    } catch (error) {
+      if (error instanceof Error) {
+        showMessage(error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -53,6 +62,7 @@ export const useAuth = () => {
     setPassword,
     loading,
     passwordRef,
+    emailRef,
     signIn,
     signUp,
   };

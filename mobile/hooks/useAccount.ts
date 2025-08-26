@@ -108,14 +108,17 @@ export const useAccount = (session: Session) => {
     }
   }
 
-  const handleLogout = () => {
-    logout();
-    setTotalSyncSeconds(0);
+  const handleLogout = async () => {
+    const result = await logout();
+    if (result) {
+      setUsername("");
+      setTotalSyncSeconds(0);
+    }
   };
 
-  const handleDeleteAccount = () => {
-    deleteAccount();
-    setTotalSyncSeconds(0);
+  const handleDeleteAccount = async () => {
+    const confirmed = await deleteAccount();
+    if (confirmed) setTotalSyncSeconds(0);
   };
 
   return {

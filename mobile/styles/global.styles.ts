@@ -90,5 +90,6 @@ export const globalStyles = StyleSheet.create({
     paddingHorizontal: SIZES.padding,
     paddingVertical: SIZES.padding / 2,
     backgroundColor: COLORS.tabs,
+    color: COLORS.text,
   },
 });

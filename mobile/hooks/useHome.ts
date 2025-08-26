@@ -13,7 +13,7 @@ export const useHome = () => {
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const { totalSyncSeconds, session, username } = useSession();
+  const { totalSyncSeconds, session } = useSession();
   const { syncMeasures } = useSyncSession(session);
   const { totalUnsync, isOnline } = useOfflineProgress();
   const [nextGoal, setNextGoal] = useState<(typeof GOALS)[0] | undefined>(
@@ -84,7 +84,6 @@ export const useHome = () => {
     nextGoal,
     isLoading,
     sendPeriods,
-    username,
     session,
     totalUnsync,
     totalSyncSeconds,

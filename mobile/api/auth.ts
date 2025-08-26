@@ -39,7 +39,7 @@ export async function signUpWithEmail(email: string, password: string) {
 
     if (!session) {
       showMessage(
-        "Veuillez vérifier votre boîte mail pour activer votre compte."
+        "Veuillez vérifier votre boîte mail pour activer votre compte.",
       );
     } else {
       showMessage("Inscription réussie 🎉");
@@ -56,18 +56,19 @@ export async function signUpWithEmail(email: string, password: string) {
 
 export async function logout() {
   const confirmed = await confirmDialog(
-    "Es-tu sûr de vouloir te déconnecter ?"
+    "Es-tu sûr de vouloir te déconnecter ?",
   );
 
   if (confirmed) {
     await supabase.auth.signOut();
     showMessage("Déconnexion réussie");
+    return true;
   }
 }
 
 export async function deleteAccount() {
   const confirmed = await confirmDialog(
-    "Es-tu sûr de vouloir supprimer ton compte ? Cette action est irréversible."
+    "Es-tu sûr de vouloir supprimer ton compte ? Cette action est irréversible.",
   );
 
   if (!confirmed) return;
@@ -84,7 +85,7 @@ export async function deleteAccount() {
 
     // Appel de l'Edge Function avec le token dans les headers
     const { error } = await supabase.functions.invoke("delete-user-and-data", {
-      body: { name: "Functions" }, // Tu peux enlever ce body si ta fonction ne l'utilise pas
+      method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
@@ -92,7 +93,7 @@ export async function deleteAccount() {
     });
 
     if (error) {
-      showMessage(error.message);
+      showMessage("suppression impossible : " + error.message);
       return;
     }
 
@@ -100,8 +101,9 @@ export async function deleteAccount() {
     await supabase.auth.signOut();
 
     showMessage(
-      "Compte supprimé (données supprimées, utilisateur déconnecté)."
+      "Compte supprimé (données supprimées, utilisateur déconnecté).",
     );
+    return true;
   } catch (error) {
     if (error instanceof Error) {
       showMessage(error.message);

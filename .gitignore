@@ -12,6 +12,7 @@ mobile/.expo-shared/
 mobile/dist/
 mobile/web-build/
 mobile/expo-env.d.ts
+mobile/help.md
 
 # Environment files
 mobile/.env

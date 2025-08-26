@@ -31,7 +31,7 @@ export const useSyncSession = (session: Session | null) => {
           session,
           modelName,
           start.toDateString(),
-          duration
+          duration,
         );
         if (success) {
           await clearPeriod(i);

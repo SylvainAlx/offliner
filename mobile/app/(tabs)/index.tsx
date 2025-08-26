@@ -16,7 +16,6 @@ export default function Home() {
     nextGoal,
     isLoading,
     sendPeriods,
-    username,
     session,
     totalUnsync,
     totalSyncSeconds,
@@ -27,7 +26,7 @@ export default function Home() {
       contentContainerStyle={globalStyles.container}
       showsVerticalScrollIndicator
     >
-      <Text style={globalStyles.title}>Bienvenue {username}</Text>
+      <Text style={globalStyles.title}>Bienvenue</Text>
 
       <View style={globalStyles.card}>
         <Text

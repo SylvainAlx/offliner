@@ -32,13 +32,18 @@ export default function Account({ session }: { session: Session }) {
       <Text style={globalStyles.title}>Mon compte</Text>
       <View style={globalStyles.card}>
         <Text style={globalStyles.cardTitle}>{deviceName}</Text>
-        <View style={globalStyles.verticallySpaced}>
+        <View
+          style={[
+            globalStyles.verticallySpaced,
+            { display: "flex", flexDirection: "column", gap: "10" },
+          ]}
+        >
           <TextInput
             label="E-mail"
             value={session?.user?.email}
             disabled
             style={globalStyles.input}
-            textColor={COLORS.background}
+            textColor={COLORS.secondary}
           />
           <TextInput
             label="Nom d'utilisateur"

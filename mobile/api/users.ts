@@ -74,3 +74,15 @@ export async function updateUser({
     }
   }
 }
+export async function updateTotalDuration(user_id: string, amount: number) {
+  // Mise à jour du total_duration
+  const duration = Math.floor(amount);
+  const { error: updateUserError } = await supabase.rpc(
+    "increment_total_duration",
+    {
+      user_id,
+      amount: duration,
+    },
+  );
+  if (updateUserError) throw updateUserError;
+}

@@ -3,6 +3,7 @@ import { supabase } from "@/utils/supabase";
 import { Session } from "@supabase/supabase-js";
 import { getDeviceId } from "./devices";
 import { z } from "zod";
+import { updateTotalDuration } from "./users";
 
 const MeasureSchema = z.object({
   date: z.string(),
@@ -107,16 +108,7 @@ export async function insertMeasure(
       if (updateMeasureError) {
         throw updateMeasureError;
       }
-
-      // Mise à jour du total_duration
-      const { error: updateUserError } = await supabase.rpc(
-        "increment_total_duration",
-        {
-          user_id: userId,
-          amount: duration,
-        },
-      );
-      if (updateUserError) throw updateUserError;
+      updateTotalDuration(userId, duration);
     } else {
       // Insertion classique
       const { error: insertError } = await supabase.from("measures").insert([
@@ -129,15 +121,7 @@ export async function insertMeasure(
       ]);
       if (insertError) throw insertError;
 
-      // Mise à jour du total_duration
-      const { error: updateUserError } = await supabase.rpc(
-        "increment_total_duration",
-        {
-          user_id: userId,
-          amount: duration,
-        },
-      );
-      if (updateUserError) throw updateUserError;
+      updateTotalDuration(userId, duration);
     }
 
     showMessage("Synchronisation réussie 🎉");

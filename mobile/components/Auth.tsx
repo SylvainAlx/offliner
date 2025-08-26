@@ -13,6 +13,7 @@ export default function Auth() {
     setPassword,
     loading,
     passwordRef,
+    emailRef,
     signIn,
     signUp,
   } = useAuth();
@@ -37,7 +38,8 @@ export default function Auth() {
             autoCapitalize="none"
             keyboardType="email-address"
             returnKeyType="next"
-            ref={passwordRef}
+            ref={emailRef}
+            onSubmitEditing={() => passwordRef.current?.focus()} // pour passer au mot de passe
           />
         </View>
 

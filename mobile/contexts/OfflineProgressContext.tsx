@@ -18,11 +18,13 @@ import { showMessage } from "@/utils/formatNotification";
 
 type OfflineProgressContextType = {
   totalUnsync: number;
+  setTotalUnsync: (value: number) => void;
   isOnline: boolean;
 };
 
 const OfflineProgressContext = createContext<OfflineProgressContextType>({
   totalUnsync: 0,
+  setTotalUnsync: () => {},
   isOnline: true,
 });
 
@@ -110,7 +112,9 @@ export const OfflineProgressProvider = ({
   }, []);
 
   return (
-    <OfflineProgressContext.Provider value={{ totalUnsync, isOnline }}>
+    <OfflineProgressContext.Provider
+      value={{ totalUnsync, setTotalUnsync, isOnline }}
+    >
       {children}
     </OfflineProgressContext.Provider>
   );
