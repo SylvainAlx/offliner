@@ -1,5 +1,8 @@
 {
   "expo": {
+    "updates": {
+      "enabled": false
+    },
     "name": "Offliner",
     "slug": "Offliner",
     "version": "1.0.0",

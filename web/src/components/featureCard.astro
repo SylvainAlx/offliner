@@ -4,7 +4,7 @@ const { badge, title, content } = Astro.props;
 
 <div class="w-xs card glass hover:shadow-xl transition">
   <div class="card-body items-start">
-    <div class="badge text-accent badge-outline">{badge}</div>
+    {badge && <div class="badge text-accent badge-outline">{badge}</div>}
     <h3 class="card-title text-left">{title}</h3>
     <p class="text-left text-base-content/70">
       {content}

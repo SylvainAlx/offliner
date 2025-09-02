@@ -1,11 +1,5 @@
-# Global node modules
-node_modules
-.env
-
 # App React Native
 mobile/node_modules/
-
-# Expo
 mobile/.expo/
 mobile/android/
 mobile/.expo-shared/
@@ -13,11 +7,9 @@ mobile/dist/
 mobile/web-build/
 mobile/expo-env.d.ts
 mobile/help.md
-
 # Environment files
 mobile/.env
 mobile/.env*.local
-
 # Native credentials and keys
 mobile/.kotlin/
 mobile/*.orig.*
@@ -26,33 +18,47 @@ mobile/*.p8
 mobile/*.p12
 mobile/*.key
 mobile/*.mobileprovision
-
 # Metro bundler cache
 mobile/.metro/
 mobile/.metro-health-check*
-
 # Debug logs
 mobile/npm-debug.*
 mobile/yarn-debug.*
 mobile/yarn-error.*
 mobile/*.log
-
 # macOS
 .DS_Store
 *.pem
-
 # TypeScript build cache
 mobile/*.tsbuildinfo
-
 # Example mobile folder
 mobile/app-example
-
 # Optional lock files if relevant
 mobile/pnpm-lock.yaml
 mobile/yarn.lock
-
 # Coverage folder if tests are present
 mobile/coverage/
+
+# Web project
+# build output
+web/dist/
+# generated types
+web/.astro/
+# dependencies
+web/node_modules/
+# logs
+web/npm-debug.log*
+web/yarn-debug.log*
+web/yarn-error.log*
+web/pnpm-debug.log*
+# environment variables
+web/.env
+web/.env.production
+# macOS-specific files
+web/.DS_Store
+# jetbrains setting folder
+web/.idea/
+
 
 # IDE and editor files
 .vscode/

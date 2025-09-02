@@ -6,6 +6,7 @@ import Layout from "../layouts/Layout.astro";
 import { PROJECT } from "shared/config";
 import { getUsersRanking } from "src/api/users";
 import { formatDuration } from "shared/utils/formatDuration";
+import AnchorButton from "src/components/anchorButton.astro";
 
 // 📡 Récupération des données côté serveur
 const data = await getUsersRanking();
@@ -17,10 +18,10 @@ const data = await getUsersRanking();
 >
   <section class="flex flex-col items-center w-full max-w-5xl px-4">
     <H1 title="Classement des utilisateurs" />
-    <a href="/" class="btn text-secondary btn-lg rounded-full"> Accueil </a>
+    <AnchorButton url="/" label="Accueil" />
     <div class="overflow-x-auto w-full max-w-3xl mt-4">
-      <table class="table table-zebra text-base bg-sub-card">
-        <thead class="sticky top-0 bg-card z-10">
+      <table class="table table-zebra text-base bg-sub-card/50">
+        <thead class="sticky top-0 bg-primary z-10 text-black">
           <tr>
             <th class="text-right">Rang</th>
             <th>Utilisateur</th>

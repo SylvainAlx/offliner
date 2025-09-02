@@ -3,12 +3,12 @@ const { title, data, dataSup, info } = Astro.props;
 ---
 
 <div
-  class="w-xs py-4 card glass hover:shadow-xl transition flex flex-col items-center gap-2"
+  class="w-2xs py-4 card glass hover:shadow-xl transition flex flex-col items-center gap-2"
 >
   <span class="badge badge-outline text-sm font-semibold text-accent"
     >{title}</span
   >
-  <span class="text-3xl font-bold text-primary"
+  <span class="px-4 text-2xl font-bold text-primary text-clip"
     >{data}{dataSup && <sup>{dataSup}</sup>}</span
   >
   <span class="text-sm text-secondary/90">{info}</span>

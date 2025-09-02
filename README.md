@@ -20,13 +20,11 @@
 - **Déploiement :** non déployé
 - Ce projet est actuellement en cours de développement actif. Des fonctionnalités peuvent être instables ou incomplètes.
 
-## 📁 Structure du monorepo
+## 📁 Structure
 
 ```txt
 offliner/
 ├─ mobile/   → App mobile (Expo)
 ├─ web/      → Site web (Astro + DaisyUI)
 ├─ shared/   → (optionnel) Code partagé
-├─ package.json
-├─ pnpm-workspace.yaml
 ```

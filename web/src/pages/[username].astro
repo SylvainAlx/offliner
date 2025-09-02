@@ -5,18 +5,27 @@ import { formatDuration } from "shared/utils/formatDuration";
 import Layout from "../layouts/Layout.astro";
 import H1 from "../components/h1.astro";
 import { PROJECT } from "shared/config";
+import { getActiveGoal } from "shared/goals";
 import { getRanking, getUser } from "src/api/users";
 import DataCard from "src/components/dataCard.astro";
+import AnchorButton from "src/components/anchorButton.astro";
+import { getLatestDeviceNameByUserId } from "src/api/devices";
 
 const { username } = Astro.params;
 
 const user = await getUser(username);
 
+let rankingWorld = null;
 let rankingCountry = null;
 let rankingRegion = null;
 let rankingDepartment = null;
+let devices = null;
+let activeGoal = null;
 
 if (user) {
+  activeGoal = getActiveGoal(user.total_duration);
+  devices = await getLatestDeviceNameByUserId(user.id);
+  rankingWorld = await getRanking(null, username);
   rankingCountry = await getRanking(
     { column: "country", value: user.country },
     username,
@@ -39,15 +48,30 @@ if (user) {
   title={`${PROJECT.TITLE} | Profil ${username}`}
   description={PROJECT.DESCRIPTION}
 >
-  <section class="flex flex-col items-center w-full max-w-5xl px-4">
+  <section class="flex flex-col items-center w-full max-w-7xl px-4">
     <H1 title={`Profil de ${username}`} />
     {
       user ? (
+        <div class="divider">Informations</div>
         <div class="p-4 rounded-lg flex justify-center flex-wrap gap-4 w-full">
           <DataCard
             title="Temps passé hors-ligne"
             data={formatDuration(user.total_duration)}
           />
+          <DataCard title="Objectif en cours" data={activeGoal?.label} />
+          </div>
+          <div class="divider">Classement</div>
+          <div class="p-4 rounded-lg flex justify-center flex-wrap gap-4 w-full">
+            {rankingWorld ? (
+            <DataCard
+              title="Monde"
+              data={rankingWorld.rank}
+              dataSup={rankingWorld.rank > 1 ? "ème" : "er"}
+              info={`sur ${rankingWorld.total} utilisateur(s)`}
+            />
+          ) : (
+            <p>"N/A"</p>
+          )}
           {rankingCountry ? (
             <DataCard
               title={user.country || "-"}
@@ -78,26 +102,28 @@ if (user) {
           ) : (
             <p>"N/A"</p>
           )}
-          <DataCard
-            title="Date d'inscription"
-            data={new Date(user.created_at).toLocaleDateString()}
-          />
-          <DataCard
-            title="Dernière activité"
-            data={new Date(user.updated_at).toLocaleDateString()}
-          />
-        </div>
+          </div>
+          <div class="divider">Détails</div>
+          <div class="p-4 rounded-lg flex justify-center flex-wrap gap-4 w-full">
+            <DataCard title="Appareil utilisé" data={devices} />
+            <DataCard
+              title="Date d'inscription"
+              data={new Date(user.created_at).toLocaleDateString()}
+            />
+            <DataCard
+              title="Dernière activité"
+              data={new Date(user.updated_at).toLocaleDateString()}
+            />
+          </div>
       ) : (
         <p>Utilisateur introuvable.</p>
       )
     }
     <div
-      class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
+      class="my-8 flex flex-col sm:flex-row items-center justify-center gap-3"
     >
-      <a href="/ranking" class="btn text-secondary btn-lg rounded-full">
-        Les meilleurs offliners
-      </a>
-      <a href="/" class="btn text-secondary btn-lg rounded-full"> Accueil </a>
+      <AnchorButton url="/ranking" label="Les meilleurs offliners" />
+      <AnchorButton url="/" label="Accueil" />
     </div>
   </section>
 </Layout>

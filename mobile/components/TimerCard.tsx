@@ -35,12 +35,13 @@ export default function TimerCard() {
             fontSize: SIZES.text_3xl,
             fontFamily: "Knewave",
             // fontWeight: "bold",
-            color: COLORS.accent,
+            color: isStarting ? COLORS.warning : COLORS.accent,
+            transitionProperty: "color",
+            transitionDuration: "300ms",
           }}
         >
           {formatDuration(totalAll)}
         </Text>
-        {isStarting && <Text style={indexStyles.totalValue}>DÉMARRAGE...</Text>}
       </View>
       <View
         style={{

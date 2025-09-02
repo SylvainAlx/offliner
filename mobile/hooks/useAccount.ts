@@ -93,7 +93,7 @@ export const useAccount = (session: Session) => {
       setLoading(true);
       await updateUser({
         session,
-        username,
+        username: username.trim(), // 👈 nettoyage ici
         country,
         region,
         subregion,

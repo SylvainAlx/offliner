@@ -1,5 +1,5 @@
 {
-  "name": "web",
+  "name": "offliner-web",
   "type": "module",
   "version": "0.0.1",
   "scripts": {
@@ -11,12 +11,15 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.53.0",
     "astro": "^5.12.8",
-    "shared": "workspace:^"
+    "shared": "file:../shared"
   },
   "devDependencies": {
     "@astrojs/vercel": "^8.2.5",
     "@tailwindcss/vite": "^4.1.11",
     "daisyui": "^5.0.50",
     "tailwindcss": "^4.1.11"
+  },
+  "overrides": {
+    "path-to-regexp": "^6.2.3"
   }
 }

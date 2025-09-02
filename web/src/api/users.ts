@@ -15,16 +15,23 @@ export async function getUser(username: string | undefined) {
 }
 
 export async function getRanking(
-  scope: { column: string; value: string | null },
+  scope: { column: string; value: string | null } | null,
   username: string | undefined,
 ) {
-  if (!scope.value) return null;
+  if (!username) return null;
 
-  const { data: users, error } = await supabase
+  // Construction de la requête
+  let query = supabase
     .from("users")
     .select("username, total_duration")
-    .eq(scope.column, scope.value)
     .order("total_duration", { ascending: false });
+
+  // Si scope défini et valeur présente, on filtre
+  if (scope?.value) {
+    query = query.eq(scope.column, scope.value);
+  }
+
+  const { data: users, error } = await query;
 
   if (error || !users) {
     console.error(error);
@@ -39,6 +46,7 @@ export async function getUsersRanking() {
   const { data, error } = await supabase
     .from("users")
     .select("username, total_duration, country, region, subregion")
+    .not("total_duration", "is", null)
     .order("total_duration", { ascending: false });
 
   if (error) {
@@ -47,4 +55,18 @@ export async function getUsersRanking() {
   }
 
   return data;
+}
+
+export async function getTotalDuration(): Promise<number> {
+  const { data, error } = await supabase.from("users").select("total_duration");
+
+  if (error) {
+    console.error("Erreur Supabase :", error);
+    return 0;
+  }
+
+  if (!data) return 0;
+
+  // somme côté JS
+  return data.reduce((acc, row) => acc + (row.total_duration ?? 0), 0);
 }

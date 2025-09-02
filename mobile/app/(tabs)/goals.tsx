@@ -1,5 +1,5 @@
 import GoalProgress from "@/components/GoalProgress";
-import { GOALS } from "@/constants/Goals";
+import { GOALS } from "shared/goals";
 import { SIZES } from "shared/theme";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
