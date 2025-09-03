@@ -1,22 +1,26 @@
 ---
 import { PROJECT } from "shared/config";
 import { GOALS } from "shared/goals";
-import AnchorButton from "src/components/anchorButton.astro";
 import FeatureCard from "src/components/featureCard.astro";
 import H1 from "src/components/h1.astro";
 import Layout from "src/layouts/Layout.astro";
 import { formatDuration } from "shared/utils/formatDuration";
+import HomeIcon from "src/components/svg/homeIcon.astro";
 ---
 
 <Layout title={`${PROJECT.TITLE}`} description={PROJECT.DESCRIPTION}>
-  <section class="flex flex-col items-center w-full max-w-5xl px-4">
+  <section class="flex flex-col items-center w-full max-w-5xl px-4 gap-4">
     <H1 title="Les objectifs" />
-    <AnchorButton url="/" label="Accueil" />
+    <a
+      href="/"
+      class="btn text-secondary btn-lg rounded-full hover:text-secondary/80"
+      ><HomeIcon /> Accueil</a
+    >
     <div class="py-10 w-full flex flex-wrap justify-center gap-2">
       {
         GOALS.map((goal) => (
           <FeatureCard
-            title={formatDuration(goal.targetSeconds)}
+            title={formatDuration(goal.targetSeconds, true)}
             content={goal.label}
           />
         ))

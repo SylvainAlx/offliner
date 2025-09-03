@@ -35,7 +35,11 @@ export default function TimerCard() {
             fontSize: SIZES.text_3xl,
             fontFamily: "Knewave",
             // fontWeight: "bold",
-            color: isStarting ? COLORS.warning : COLORS.accent,
+            color: isStarting
+              ? COLORS.warning
+              : isOnline
+              ? COLORS.accent
+              : COLORS.succes,
             transitionProperty: "color",
             transitionDuration: "300ms",
           }}

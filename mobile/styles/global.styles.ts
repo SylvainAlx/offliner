@@ -3,10 +3,10 @@ import { StyleSheet } from "react-native";
 
 export const globalStyles = StyleSheet.create({
   container: {
-    flex: 1,
+    // flex: 1,
     paddingVertical: SIZES.padding,
     paddingHorizontal: SIZES.padding * 4,
-    flexGrow: 1, // important pour ScrollView
+    // flexGrow: 1, // important pour ScrollView
     backgroundColor: COLORS.background,
     display: "flex",
     flexDirection: "column",
@@ -86,9 +86,9 @@ export const globalStyles = StyleSheet.create({
     height: 50,
     borderColor: COLORS.primary,
     fontFamily: "Montserrat",
-    borderRadius: 8,
+    borderRadius: SIZES.borderRadius / 2,
+    marginBottom: SIZES.margin,
     paddingHorizontal: SIZES.padding,
-    paddingVertical: SIZES.padding / 2,
     backgroundColor: COLORS.tabs,
     color: COLORS.text,
   },

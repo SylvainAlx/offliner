@@ -1,10 +1,17 @@
 import { Alert, Platform } from "react-native";
+import * as Notifications from "expo-notifications";
 
-export function showMessage(text: string) {
+export async function showMessage(text: string) {
   if (Platform.OS === "web") {
     alert(text);
   } else {
-    Alert.alert("Info", text);
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Info",
+        body: text,
+      },
+      trigger: null, // affichage immédiat
+    });
   }
 }
 
@@ -30,7 +37,7 @@ export async function confirmDialog(message: string): Promise<boolean> {
           onPress: () => resolve(true),
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   });
 }

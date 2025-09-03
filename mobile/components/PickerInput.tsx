@@ -3,7 +3,6 @@ import { globalStyles } from "@/styles/global.styles";
 import { Picker } from "@react-native-picker/picker";
 import { ReactNode } from "react";
 import { View, Text } from "react-native";
-import { SIZES } from "shared/theme";
 
 interface PickerInputProps {
   value: string | null;
@@ -23,12 +22,7 @@ export default function PickerInput({
   enabled,
 }: PickerInputProps) {
   return (
-    <View
-      style={[
-        globalStyles.verticallySpaced,
-        { paddingHorizontal: SIZES.padding },
-      ]}
-    >
+    <View style={globalStyles.verticallySpaced}>
       <Text style={accountStyles.label}>{label}</Text>
       <Picker
         style={globalStyles.input}

@@ -45,7 +45,8 @@
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
     "shared": "file:../shared",
-    "zod": "^4.0.15"
+    "zod": "^4.0.15",
+    "expo-notifications": "~0.31.4"
   },
   "devDependencies": {
     "@types/react": "~19.0.14",

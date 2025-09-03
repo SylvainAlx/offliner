@@ -38,6 +38,7 @@ export default function TabLayout() {
             elevation: 0, // enlève l’ombre sur Android
           },
         }),
+        sceneStyle: { backgroundColor: COLORS.background },
         headerStyle: {
           backgroundColor: COLORS.tabs,
         },
@@ -46,11 +47,9 @@ export default function TabLayout() {
           fontWeight: "bold",
           fontSize: 18,
         },
-        headerRight: () => {
-          const isProfile = pathname === "/profile";
-
+        headerLeft: () => {
           return (
-            <View style={{ flexDirection: "row", gap: 12, marginRight: 16 }}>
+            <View style={{ flexDirection: "row", gap: 12, marginLeft: 16 }}>
               {/* Bouton vers page web externe */}
               <Pressable
                 onPress={openExternalLink}
@@ -65,7 +64,14 @@ export default function TabLayout() {
                   />
                 )}
               </Pressable>
+            </View>
+          );
+        },
+        headerRight: () => {
+          const isProfile = pathname === "/profile";
 
+          return (
+            <View style={{ flexDirection: "row", gap: 12, marginRight: 16 }}>
               {/* Bouton profil */}
               <Pressable
                 onPress={() => router.push("/profile")}
