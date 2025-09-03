@@ -18,7 +18,12 @@ export default function HistoryScreen() {
         Historique des mesures synchronisées
       </Text>
       {dailyData.length === 0 && (
-        <Text style={[globalStyles.contentText, { textAlign: "center" }]}>
+        <Text
+          style={[
+            globalStyles.contentText,
+            { textAlign: "center", marginVertical: SIZES.margin },
+          ]}
+        >
           Aucune mesure hors ligne enregistrée.
         </Text>
       )}

@@ -4,6 +4,7 @@ export const COLORS = {
   accent: "#ffffa8",
   tabs: "#222222",
   background: "#222222",
+  backgroundAlpha: "rgba(34, 34, 34, 0.8)",
   card: "rgba(255, 255, 255, 0.15)",
   subCard: "#666666",
   text: "#ffffff",
