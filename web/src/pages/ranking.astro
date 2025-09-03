@@ -4,21 +4,31 @@ export const prerender = false; // ⚡ Rend la page à la demande (SSR)
 import H1 from "../components/h1.astro";
 import Layout from "../layouts/Layout.astro";
 import { PROJECT } from "shared/config";
-import { getUsersRanking } from "src/api/users";
+import { getTotalDuration, getUsersRanking } from "src/api/users";
 import { formatDuration } from "shared/utils/formatDuration";
-import AnchorButton from "src/components/anchorButton.astro";
+import HomeIcon from "src/components/svg/homeIcon.astro";
 
 // 📡 Récupération des données côté serveur
 const data = await getUsersRanking();
+const totalDuration = await getTotalDuration();
 ---
 
 <Layout
   title={`${PROJECT.TITLE} | Classement`}
   description={PROJECT.DESCRIPTION}
 >
-  <section class="flex flex-col items-center w-full max-w-5xl px-4">
+  <section class="flex flex-col items-center w-full max-w-5xl px-4 gap-4">
     <H1 title="Classement des utilisateurs" />
-    <AnchorButton url="/" label="Accueil" />
+    <a
+      href="/"
+      class="btn text-secondary btn-lg rounded-full hover:text-secondary/80"
+      ><HomeIcon /> Accueil</a
+    >
+    <div>
+      Les utilisateur de {PROJECT.TITLE} ont, en totalité, passé <span
+        class="text-accent">{formatDuration(totalDuration, true)}</span
+      > hors ligne !
+    </div>
     <div class="overflow-x-auto w-full max-w-3xl mt-4">
       <table class="table table-zebra text-base bg-sub-card/50">
         <thead class="sticky top-0 bg-primary z-10 text-black">

@@ -8,8 +8,10 @@ import { PROJECT } from "shared/config";
 import { getActiveGoal } from "shared/goals";
 import { getRanking, getUser } from "src/api/users";
 import DataCard from "src/components/dataCard.astro";
-import AnchorButton from "src/components/anchorButton.astro";
 import { getLatestDeviceNameByUserId } from "src/api/devices";
+import Devider from "src/components/devider.astro";
+import RankingIcon from "src/components/svg/rankingIcon.astro";
+import HomeIcon from "src/components/svg/homeIcon.astro";
 
 const { username } = Astro.params;
 
@@ -52,15 +54,7 @@ if (user) {
     <H1 title={`Profil de ${username}`} />
     {
       user ? (
-        <div class="divider">Informations</div>
-        <div class="p-4 rounded-lg flex justify-center flex-wrap gap-4 w-full">
-          <DataCard
-            title="Temps passé hors-ligne"
-            data={formatDuration(user.total_duration)}
-          />
-          <DataCard title="Objectif en cours" data={activeGoal?.label} />
-          </div>
-          <div class="divider">Classement</div>
+          <Devider label="Classement" />
           <div class="p-4 rounded-lg flex justify-center flex-wrap gap-4 w-full">
             {rankingWorld ? (
             <DataCard
@@ -103,9 +97,14 @@ if (user) {
             <p>"N/A"</p>
           )}
           </div>
-          <div class="divider">Détails</div>
-          <div class="p-4 rounded-lg flex justify-center flex-wrap gap-4 w-full">
-            <DataCard title="Appareil utilisé" data={devices} />
+          <Devider label="Informations" />
+        <div class="p-4 rounded-lg flex justify-center flex-wrap gap-4 w-full">
+          <DataCard
+            title="Temps passé hors-ligne"
+            data={formatDuration(user.total_duration)}
+          />
+          <DataCard title="Objectif en cours" data={activeGoal?.label} />
+          <DataCard title="Appareil utilisé" data={devices} />
             <DataCard
               title="Date d'inscription"
               data={new Date(user.created_at).toLocaleDateString()}
@@ -122,8 +121,16 @@ if (user) {
     <div
       class="my-8 flex flex-col sm:flex-row items-center justify-center gap-3"
     >
-      <AnchorButton url="/ranking" label="Les meilleurs offliners" />
-      <AnchorButton url="/" label="Accueil" />
+      <a
+        href="/ranking"
+        class="btn text-secondary btn-lg rounded-full hover:text-secondary/80"
+        ><RankingIcon /> Les meilleurs offliners</a
+      >
+      <a
+        href="/"
+        class="btn text-secondary btn-lg rounded-full hover:text-secondary/80"
+        ><HomeIcon /> Accueil</a
+      >
     </div>
   </section>
 </Layout>
