@@ -16,7 +16,6 @@ export default function Account({ session }: { session: Session }) {
     region,
     subregion,
     setSubregion,
-    deviceName,
     countries,
     regions,
     subregions,
@@ -31,7 +30,6 @@ export default function Account({ session }: { session: Session }) {
     <ScrollView contentContainerStyle={globalStyles.container}>
       <Text style={globalStyles.title}>Mon compte</Text>
       <View style={globalStyles.card}>
-        <Text style={globalStyles.cardTitle}>{deviceName}</Text>
         <View
           style={[
             globalStyles.verticallySpaced,

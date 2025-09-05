@@ -1,17 +1,11 @@
 import { Alert, Platform } from "react-native";
-import * as Notifications from "expo-notifications";
 
-export async function showMessage(text: string) {
+
+export function showMessage(text: string) {
   if (Platform.OS === "web") {
     alert(text);
   } else {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "Info",
-        body: text,
-      },
-      trigger: null, // affichage immédiat
-    });
+    Alert.alert("Info", text);
   }
 }
 

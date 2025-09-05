@@ -25,7 +25,6 @@ export const useAccount = (session: Session) => {
     setRegion,
     subregion,
     setSubregion,
-    deviceName,
   } = useSession();
 
   const [countries, setCountries] = useState<Country[]>([]);
@@ -129,7 +128,6 @@ export const useAccount = (session: Session) => {
     region,
     subregion,
     setSubregion,
-    deviceName,
     countries,
     regions,
     subregions,
