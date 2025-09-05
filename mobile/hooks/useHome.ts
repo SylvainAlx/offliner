@@ -6,10 +6,12 @@ import { formatDuration } from "shared/utils/formatDuration";
 import { confirmDialog, showMessage } from "@/utils/formatNotification";
 import { getLastOpenPeriod } from "@/utils/getOfflineTime";
 import { useEffect, useRef, useState } from "react";
+import { getReadableDeviceName } from "@/utils/deviceModelMap";
 
 export const useHome = () => {
   const [since, setSince] = useState<Date | null>(null);
   const [elapsed, setElapsed] = useState<string>("0s");
+  const [deviceName, setDeviceName] = useState<string>("");
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -20,6 +22,11 @@ export const useHome = () => {
     undefined,
   );
   const [isLoading, setIsLoading] = useState(false);
+
+  const getDeviceName = async () => {
+    const name = await getReadableDeviceName();
+    setDeviceName(name);
+  };
 
   const sendPeriods = async () => {
     if (!session) return;
@@ -42,6 +49,7 @@ export const useHome = () => {
   };
 
   useEffect(() => {
+    getDeviceName();
     const loadStartTime = async () => {
       const now = new Date();
       const startTime = await getLastOpenPeriod(); // Assume this function fetches the start time from storage
@@ -87,5 +95,6 @@ export const useHome = () => {
     session,
     totalUnsync,
     totalSyncSeconds,
+    deviceName,
   };
 };

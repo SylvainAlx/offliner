@@ -1,7 +1,6 @@
 import { getTotalDuration, insertMeasure } from "@/api/measures";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
-import { getAndUpdateLocalDevice } from "@/services/devices";
 import { clearPeriod, getUnsyncedPeriods } from "@/storage/offlineStorage";
 import { getReadableDeviceName } from "@/utils/deviceModelMap";
 import { showMessage } from "@/utils/formatNotification";
@@ -61,7 +60,6 @@ export const useSyncSession = (session: Session | null) => {
 
     if (session != null) {
       loadTotalSyncTime(session);
-      getAndUpdateLocalDevice(session);
     }
 
     return () => {

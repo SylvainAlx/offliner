@@ -20,7 +20,8 @@ import HomeIcon from "src/components/svg/homeIcon.astro";
       {
         GOALS.map((goal) => (
           <FeatureCard
-            title={formatDuration(goal.targetSeconds, true)}
+            badge={formatDuration(goal.targetSeconds, true)}
+            title={goal.id}
             content={goal.label}
           />
         ))

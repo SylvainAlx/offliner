@@ -1,10 +1,6 @@
 import * as Device from "expo-device";
 
-export async function getReadableDeviceName(): Promise<string> {
-  const modelId = Device.modelId ?? "unknown";
-  return deviceModelMap[modelId] || Device.modelName || "Unknown Device";
-}
-
+// Mapping utile uniquement pour Apple (iPhone/iPad)
 const deviceModelMap: Record<string, string> = {
   // iPhone
   "iPhone10,3": "iPhone X",
@@ -61,8 +57,28 @@ const deviceModelMap: Record<string, string> = {
   "iPad13,9": "iPad Pro 12.9-inch (5th Gen)",
   "iPad13,10": "iPad Pro 12.9-inch (5th Gen)",
   "iPad13,11": "iPad Pro 12.9-inch (5th Gen)",
-
-  // Autres (valeurs par défaut)
-  i386: "Simulator",
-  x86_64: "Simulator",
 };
+
+export async function getReadableDeviceName(): Promise<string> {
+  const modelId = Device.modelId;
+  const modelName = Device.modelName;
+
+  // iOS uniquement (sinon c’est null)
+  if (modelId && deviceModelMap[modelId]) {
+    return deviceModelMap[modelId];
+  }
+
+  // Android → modelName est déjà lisible
+  if (modelName) {
+    if (modelName === "sdk_gphone64_x86_64") {
+      return "Émulateur Android";
+    }
+    return modelName;
+  }
+
+  return "Unknown Device";
+}
+
+export async function getLocalDeviceId(): Promise<string> {
+  return Device.modelId ?? "Unknown Device";
+}
