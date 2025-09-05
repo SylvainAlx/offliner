@@ -11,7 +11,7 @@ import GoalIcon from "src/components/svg/goalIcon.astro";
 
 <Layout title={`${PROJECT.TITLE}`} description={PROJECT.DESCRIPTION}>
   <section class="flex flex-col items-center w-full max-w-5xl px-4 gap-4">
-    <H1 title={`Bienvenue sur ${PROJECT.TITLE}`} />
+    <H1 title={PROJECT.DESCRIPTION} />
     <!-- Accroche -->
     <p class="mt-4 text-lg md:text-xl text-base-content/70">
       Dans un monde hyperconnecté, {PROJECT.TITLE} vous aide à
@@ -23,8 +23,11 @@ import GoalIcon from "src/components/svg/goalIcon.astro";
       >.
     </p>
     <p class="mt-2 text-lg md:text-xl text-base-content/70">
-      Inspirée par les recommandations de la communauté scientifique,
-      l’application vous accompagne pour une <span
+      Inspirée par les <a
+        href="https://academic.oup.com/pnasnexus/article/4/2/pgaf017/8016017"
+        target="_blank"
+        class="text-secondary">recommandations de la communauté scientifique</a
+      >, l’application vous accompagne pour une <span
         class="font-semibold text-accent"
         >relation plus saine avec le numérique</span
       >
