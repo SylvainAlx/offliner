@@ -39,7 +39,7 @@ import GoalIcon from "src/components/svg/goalIcon.astro";
       class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
     >
       <a
-        href={PROJECT.DOWNLOAD_URL}
+        href={import.meta.env.PUBLIC_DOWNLOADS_URL}
         class="btn bg-primary text-dark btn-lg rounded-full gap-2 hover:bg-primary/80"
       >
         <Download />
