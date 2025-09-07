@@ -12,6 +12,7 @@ import { getLatestDeviceNameByUserId } from "src/api/devices";
 import Devider from "src/components/devider.astro";
 import RankingIcon from "src/components/svg/rankingIcon.astro";
 import HomeIcon from "src/components/svg/homeIcon.astro";
+import { getPowerSavingEstimate } from "shared/utils/powerSaving";
 
 const { username } = Astro.params;
 
@@ -102,6 +103,10 @@ if (user) {
           <DataCard
             title="Temps passé hors-ligne"
             data={formatDuration(user.total_duration)}
+          />
+          <DataCard
+            title="Économie d'énergie estimée"
+            data={getPowerSavingEstimate(user.total_duration)}
           />
           <DataCard title="Objectif en cours" data={activeGoal?.id} />
           <DataCard title="Appareil utilisé" data={devices} />

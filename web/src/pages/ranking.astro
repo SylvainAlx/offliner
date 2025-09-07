@@ -4,6 +4,7 @@ export const prerender = false; // ⚡ Rend la page à la demande (SSR)
 import H1 from "../components/h1.astro";
 import Layout from "../layouts/Layout.astro";
 import { PROJECT } from "shared/config";
+import { getPowerSavingEstimate } from "shared/utils/powerSaving";
 import { getTotalDuration, getUsersRanking } from "src/api/users";
 import { formatDuration } from "shared/utils/formatDuration";
 import HomeIcon from "src/components/svg/homeIcon.astro";
@@ -11,6 +12,7 @@ import HomeIcon from "src/components/svg/homeIcon.astro";
 // 📡 Récupération des données côté serveur
 const data = await getUsersRanking();
 const totalDuration = await getTotalDuration();
+const powerSavingEstimate = getPowerSavingEstimate(totalDuration);
 ---
 
 <Layout
@@ -24,11 +26,13 @@ const totalDuration = await getTotalDuration();
       class="btn text-secondary btn-lg rounded-full hover:text-secondary/80"
       ><HomeIcon /> Accueil</a
     >
-    <div>
+    <p>
       Les utilisateur de {PROJECT.TITLE} ont, en totalité, passé <span
         class="text-accent">{formatDuration(totalDuration, true)}</span
-      > hors ligne !
-    </div>
+      > hors ligne et économisé environ <span class="text-accent"
+        >{powerSavingEstimate}</span
+      >.
+    </p>
     <div class="overflow-x-auto w-full max-w-3xl mt-4">
       <table class="table table-zebra text-base bg-sub-card/50">
         <thead class="sticky top-0 bg-primary z-10 text-black">

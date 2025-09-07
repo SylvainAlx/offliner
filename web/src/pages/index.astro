@@ -22,6 +22,13 @@ import GoalIcon from "src/components/svg/goalIcon.astro";
         >loin du téléphone et d’internet</span
       >.
     </p>
+    <a
+      href={import.meta.env.PUBLIC_DOWNLOADS_URL}
+      class="btn bg-primary text-dark btn-lg rounded-full gap-2 hover:bg-primary/80"
+    >
+      <Download />
+      Télécharger {PROJECT.TITLE}
+    </a>
     <p class="mt-2 text-lg md:text-xl text-base-content/70">
       Inspirée par les <a
         href="https://academic.oup.com/pnasnexus/article/4/2/pgaf017/8016017"
@@ -33,18 +40,19 @@ import GoalIcon from "src/components/svg/goalIcon.astro";
       >
       et des respirations indispensables pour votre bien‑être.
     </p>
+    <p class="mt-2 text-lg md:text-xl text-base-content/70">
+      En limitant l’utilisation du Wi-Fi et des données mobiles, vous réalisez
+      aussi des <span class="font-semibold text-accent"
+        >économies d’énergie</span
+      >, contribuant à réduire l’empreinte carbone du numérique tout en
+      allégeant vos
+      <span class="font-semibold text-accent">dépenses énergétiques</span>.
+    </p>
 
     <!-- CTA -->
     <div
       class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
     >
-      <a
-        href={import.meta.env.PUBLIC_DOWNLOADS_URL}
-        class="btn bg-primary text-dark btn-lg rounded-full gap-2 hover:bg-primary/80"
-      >
-        <Download />
-        Télécharger {PROJECT.TITLE}
-      </a>
       <a
         href="/ranking"
         class="btn text-secondary btn-lg rounded-full hover:text-secondary/80"
