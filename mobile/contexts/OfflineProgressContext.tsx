@@ -39,6 +39,15 @@ export const OfflineProgressProvider = ({
   const appState = useRef<AppStateStatus>(AppState.currentState);
   const liveInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const isNightTime = () => {
+    const hour = new Date().getHours(); // récupère l'heure locale (0-23)
+    if (hour >= 0 && hour < 6) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   // Charger l'état initial
   useEffect(() => {
     const init = async () => {
@@ -62,6 +71,12 @@ export const OfflineProgressProvider = ({
   useEffect(() => {
     const handleOfflinePeriod = async () => {
       if (!isOnline && !wasOffline.current) {
+        // Ne pas activer la gestion offline entre 00:00 et 06:00
+        if (isNightTime()) {
+          showMessage("🌙 Période hors ligne non comptée entre 00:00 et 06:00");
+          return;
+        }
+
         // Début période offline
         wasOffline.current = true;
         await addPeriod({ from: new Date().toISOString() });
