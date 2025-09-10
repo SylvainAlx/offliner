@@ -10,7 +10,6 @@ export async function getUser(username: string | undefined) {
   if (error) {
     console.error("Erreur Supabase :", error);
   }
-
   return user;
 }
 

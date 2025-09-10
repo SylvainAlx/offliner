@@ -1,3 +1,5 @@
+import { getDurationFromEnergy } from "./utils/powerSaving";
+
 export type Goal = {
   id: string;
   label: string;
@@ -60,9 +62,21 @@ export const GOALS: Goal[] = [
     targetSeconds: 7 * 86400,
   },
   {
+    id: "TV coupée",
+    label:
+      "L'énergie d'un téléviseur de 50 pouces allumé pendant 1h économisée.",
+    targetSeconds: getDurationFromEnergy(70), // 9 jours environ
+  },
+  {
     id: "Quinzaine culturelle",
     label: "Durée traditionnelle d’un festival artistique de deux semaines.",
     targetSeconds: 14 * 86400,
+  },
+  {
+    id: "Roule Marcel !",
+    label:
+      "L'énergie que dépense une voiture électique pour faire 1 km économisée.",
+    targetSeconds: getDurationFromEnergy(200), // 27 jours environ
   },
   {
     id: "Lunaison",
@@ -73,6 +87,11 @@ export const GOALS: Goal[] = [
     id: "Bilan",
     label: "Durée d'un trimestre scolaire.",
     targetSeconds: 90 * 86400,
+  },
+  {
+    id: "1 kWh économisé !",
+    label: "L'énergie d'un petit radiateur électrique (1000W) allumé 1h.",
+    targetSeconds: getDurationFromEnergy(1000), // 4 mois environ
   },
   {
     id: "Planète rouge",
@@ -94,5 +113,10 @@ export const GOALS: Goal[] = [
     id: "Vieille Dame",
     label: "Durée de la construction de la Tour Eiffel (1887–1889).",
     targetSeconds: 774 * 86400,
+  },
+  {
+    id: "6 kWh économisés !",
+    label: "La consommation électrique moyenne d'un foyer français en 1 jour.",
+    targetSeconds: getDurationFromEnergy(6000), // 2 ans et 3 mois environ
   },
 ];

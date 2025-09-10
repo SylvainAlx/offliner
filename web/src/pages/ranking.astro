@@ -15,12 +15,9 @@ const totalDuration = await getTotalDuration();
 const powerSavingEstimate = getPowerSavingEstimate(totalDuration);
 ---
 
-<Layout
-  title={`${PROJECT.TITLE} | Classement`}
-  description={PROJECT.DESCRIPTION}
->
+<Layout title={`${PROJECT.TITLE} | Top 100`} description={PROJECT.DESCRIPTION}>
   <section class="flex flex-col items-center w-full max-w-5xl px-4 gap-4">
-    <H1 title="Classement des utilisateurs" />
+    <H1 title="Classement des 100 meilleurs utilisateurs" />
     <a
       href="/"
       class="btn text-secondary btn-lg rounded-full hover:text-secondary/80"
@@ -33,13 +30,30 @@ const powerSavingEstimate = getPowerSavingEstimate(totalDuration);
         >{powerSavingEstimate}</span
       >.
     </p>
-    <div class="overflow-x-auto w-full max-w-3xl mt-4">
-      <table class="table table-zebra text-base bg-sub-card/50">
+    <fieldset class="fieldset">
+      <legend class="fieldset-legend">Rechercher un utilisateur</legend>
+      <div class="flex gap-2 items-center">
+        <input
+          id="usernameInput"
+          type="text"
+          class="input bg-secondary/30"
+          placeholder="Pseudo"
+        />
+        <button
+          id="searchBtn"
+          class="btn text-secondary btn-sm rounded-full hover:text-secondary/80"
+          >Rechercher</button
+        >
+      </div>
+      <p id="errorMsg" class="text-danger mt-2 hidden"></p>
+    </fieldset>
+    <div class="overflow-x-auto w-full max-w-5xl mt-4 border border-primary/20">
+      <table class="table text-base bg-sub-card/50 table-auto">
         <thead class="sticky top-0 bg-primary z-10 text-black">
           <tr>
             <th class="text-right">Rang</th>
-            <th>Utilisateur</th>
-            <th class="text-right">Durée totale</th>
+            <th>Pseudo</th>
+            <th class="text-right whitespace-nowrap">Durée totale</th>
             <th>Pays</th>
             <th>Région</th>
             <th>Département</th>
@@ -49,7 +63,7 @@ const powerSavingEstimate = getPowerSavingEstimate(totalDuration);
           {
             data && data.length > 0 ? (
               data.map((user, index) => (
-                <tr>
+                <tr class="hover:bg-secondary/20">
                   <th class="text-right">{index + 1}</th>
                   <td>
                     <a
@@ -80,3 +94,31 @@ const powerSavingEstimate = getPowerSavingEstimate(totalDuration);
     </div>
   </section>
 </Layout>
+
+<script>
+  import { getUser } from "src/api/users";
+
+  const input = document.getElementById("usernameInput") as HTMLInputElement;
+  const button = document.getElementById("searchBtn") as HTMLButtonElement;
+  const errorMsg = document.getElementById("errorMsg") as HTMLParagraphElement;
+
+  button.addEventListener("click", async () => {
+    const username = input.value.trim();
+    errorMsg.classList.add("hidden");
+    errorMsg.textContent = "";
+
+    if (!username) {
+      errorMsg.textContent = "Veuillez entrer un pseudo.";
+      errorMsg.classList.remove("hidden");
+      return;
+    }
+
+    const user = await getUser(username);
+    if (user) {
+      window.location.href = `/${user.username}`;
+    } else {
+      errorMsg.textContent = "Aucun utilisateur trouvé.";
+      errorMsg.classList.remove("hidden");
+    }
+  });
+</script>

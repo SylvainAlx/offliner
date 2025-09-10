@@ -11,6 +11,13 @@ export const getPowerSavingEstimate = (durationInSeconds: number): string => {
   return formatWithUnit(result);
 };
 
+export const getDurationFromEnergy = (energyInWh: number): number => {
+  const totalConsumption = ENERGY_CONSUMPTION.WIFI + ENERGY_CONSUMPTION.GSM;
+
+  // durée en secondes
+  return Math.round((energyInWh * 3600) / totalConsumption);
+};
+
 const formatWithUnit = (value: number): string => {
   const units = ["", "k", "M", "G"];
   let unitIndex = 0;
