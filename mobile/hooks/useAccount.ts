@@ -51,12 +51,13 @@ export const useAccount = (session: Session) => {
   useEffect(() => {
     if (!region || !country) return;
     (async () => {
-      const tree = await loadCountryTreeFromStorage(country);
-      const subregionList =
-        tree?.children?.find((r) => r.name === region)?.children || [];
+      const regionData = regions.find((r) => r.name === region);
+      if (!regionData) return;
+
+      const subregionList = await getSubdivisions(regionData.geonameId);
       setSubregions(subregionList);
     })();
-  }, [country, region]);
+  }, [country, region, regions]);
 
   const handleCountryChange = async (countryName: string) => {
     setCountry(countryName);

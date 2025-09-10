@@ -1,4 +1,5 @@
 import { COLORS, SIZES } from "shared/theme";
+import { getPowerSavingEstimate } from "shared/utils/powerSaving";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
 import { indexStyles } from "@/styles/custom.styles";
@@ -96,6 +97,10 @@ export default function TimerCard() {
           </Text>
         </View>
       </View>
+      <Text style={indexStyles.totalLabel}>énergie économisée</Text>
+      <Text style={indexStyles.totalValue}>
+        {getPowerSavingEstimate(totalAll)}
+      </Text>
     </View>
   );
 }
