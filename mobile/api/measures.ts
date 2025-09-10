@@ -82,7 +82,31 @@ export async function insertMeasure(
     const device = await getDeviceId(session, deviceName);
     const userId = session.user.id;
 
-    // Vérifie s'il existe déjà une mesure pour cette date / user / device
+    // Vérifie le total existant pour cette date (tous devices confondus)
+    const { data: measures, error: totalFetchError } = await supabase
+      .from("measures")
+      .select("duration")
+      .eq("user_id", userId)
+      .eq("date", date);
+
+    if (totalFetchError) throw totalFetchError;
+
+    const totalExisting =
+      measures?.reduce((sum, m) => sum + m.duration, 0) ?? 0;
+
+    // Durée encore disponible avant d'atteindre 24h
+    const remaining = 86400 - totalExisting;
+
+    if (remaining <= 0) {
+      throw new Error(
+        "Impossible d'enregistrer : la journée est déjà complète (24h atteintes).",
+      );
+    }
+
+    // Tronque la durée si elle dépasse le reste disponible
+    const durationToInsert = Math.min(duration, remaining);
+
+    // Vérifie si une mesure existe déjà pour ce device à cette date
     const { data: existing, error: fetchError } = await supabase
       .from("measures")
       .select("id, duration")
@@ -92,7 +116,6 @@ export async function insertMeasure(
       .single();
 
     if (fetchError && fetchError.code !== "PGRST116") {
-      // "PGRST116" = Pas de ligne trouvée (pas une vraie erreur ici)
       throw fetchError;
     }
 
@@ -101,14 +124,13 @@ export async function insertMeasure(
       const { error: updateMeasureError } = await supabase
         .from("measures")
         .update({
-          duration: existing.duration + duration,
+          duration: existing.duration + durationToInsert,
         })
         .eq("id", existing.id);
 
       if (updateMeasureError) {
         throw updateMeasureError;
       }
-      updateTotalDuration(userId, duration);
     } else {
       // Insertion classique
       const { error: insertError } = await supabase.from("measures").insert([
@@ -116,15 +138,22 @@ export async function insertMeasure(
           user_id: userId,
           device_id: device?.id,
           date,
-          duration,
+          duration: durationToInsert,
         },
       ]);
       if (insertError) throw insertError;
-
-      updateTotalDuration(userId, duration);
     }
 
-    showMessage("Synchronisation réussie 🎉");
+    await updateTotalDuration(userId, durationToInsert);
+
+    if (durationToInsert < duration) {
+      showMessage(
+        `Durée tronquée : seules ${durationToInsert} secondes ont été enregistrées (24h max atteintes).`,
+      );
+    } else {
+      showMessage("Synchronisation réussie 🎉");
+    }
+
     return { success: true };
   } catch (error) {
     if (error instanceof Error) {

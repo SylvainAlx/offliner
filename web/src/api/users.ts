@@ -10,7 +10,6 @@ export async function getUser(username: string | undefined) {
   if (error) {
     console.error("Erreur Supabase :", error);
   }
-
   return user;
 }
 
@@ -47,7 +46,8 @@ export async function getUsersRanking() {
     .from("users")
     .select("username, total_duration, country, region, subregion")
     .not("total_duration", "is", null)
-    .order("total_duration", { ascending: false });
+    .order("total_duration", { ascending: false })
+    .limit(100); // 👉 top 100
 
   if (error) {
     console.error("Erreur Supabase :", error);

@@ -10,7 +10,7 @@ export const globalStyles = StyleSheet.create({
     backgroundColor: COLORS.background,
     display: "flex",
     flexDirection: "column",
-    gap: SIZES.margin * 2,
+    gap: SIZES.margin,
   },
   title: {
     marginBottom: SIZES.margin,

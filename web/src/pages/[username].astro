@@ -5,13 +5,13 @@ import { formatDuration } from "shared/utils/formatDuration";
 import Layout from "../layouts/Layout.astro";
 import H1 from "../components/h1.astro";
 import { PROJECT } from "shared/config";
-import { getActiveGoal } from "shared/goals";
 import { getRanking, getUser } from "src/api/users";
 import DataCard from "src/components/dataCard.astro";
 import { getLatestDeviceNameByUserId } from "src/api/devices";
 import Devider from "src/components/devider.astro";
 import RankingIcon from "src/components/svg/rankingIcon.astro";
 import HomeIcon from "src/components/svg/homeIcon.astro";
+import { getPowerSavingEstimate } from "shared/utils/powerSaving";
 
 const { username } = Astro.params;
 
@@ -22,10 +22,8 @@ let rankingCountry = null;
 let rankingRegion = null;
 let rankingDepartment = null;
 let devices = null;
-let activeGoal = null;
 
 if (user) {
-  activeGoal = getActiveGoal(user.total_duration);
   devices = await getLatestDeviceNameByUserId(user.id);
   rankingWorld = await getRanking(null, username);
   rankingCountry = await getRanking(
@@ -103,15 +101,18 @@ if (user) {
             title="Temps passé hors-ligne"
             data={formatDuration(user.total_duration)}
           />
-          <DataCard title="Objectif en cours" data={activeGoal?.id} />
+          <DataCard
+            title="Économie d'énergie estimée"
+            data={getPowerSavingEstimate(user.total_duration)}
+          />
           <DataCard title="Appareil utilisé" data={devices} />
             <DataCard
               title="Date d'inscription"
-              data={new Date(user.created_at).toLocaleDateString()}
-            />
-            <DataCard
-              title="Dernière activité"
-              data={new Date(user.updated_at).toLocaleDateString()}
+              data={new Date(user.created_at).toLocaleDateString("fr-FR", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
             />
           </div>
       ) : (

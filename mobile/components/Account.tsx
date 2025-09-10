@@ -41,7 +41,7 @@ export default function Account({ session }: { session: Session }) {
             value={session?.user?.email}
             disabled
             style={globalStyles.input}
-            textColor={COLORS.secondary}
+            textColor={COLORS.card}
           />
           <TextInput
             label="Nom d'utilisateur"

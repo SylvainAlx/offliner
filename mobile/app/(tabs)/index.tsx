@@ -28,8 +28,6 @@ export default function Home() {
       contentContainerStyle={globalStyles.container}
       showsVerticalScrollIndicator
     >
-      <Text style={globalStyles.title}>Bienvenue</Text>
-
       <View style={globalStyles.card}>
         <Text
           style={[
@@ -63,11 +61,13 @@ export default function Home() {
       <View style={globalStyles.card}>
         <Text style={globalStyles.cardTitle}>Objectif en cours</Text>
         {nextGoal && (
-          <GoalProgress
-            goal={nextGoal}
-            totalSeconds={totalSyncSeconds + totalUnsync}
-            bgColor={COLORS.subCard}
-          />
+          <Link href={"/goals"}>
+            <GoalProgress
+              goal={nextGoal}
+              totalSeconds={totalSyncSeconds + totalUnsync}
+              bgColor={COLORS.subCard}
+            />
+          </Link>
         )}
       </View>
 
