@@ -7,52 +7,58 @@ import Download from "src/components/svg/download.astro";
 import FeatureCard from "src/components/featureCard.astro";
 import RankingIcon from "src/components/svg/rankingIcon.astro";
 import GoalIcon from "src/components/svg/goalIcon.astro";
+import H2 from "src/components/h2.astro";
+import GettingStarted from "src/components/gettingStarted.astro";
 ---
 
 <Layout title={`${PROJECT.TITLE}`} description={PROJECT.DESCRIPTION}>
-  <section class="flex flex-col items-center w-full max-w-5xl px-4 gap-4">
+  <section class="flex flex-col items-center w-full px-4 gap-4">
     <H1 title={PROJECT.DESCRIPTION} />
     <!-- Accroche -->
-    <p class="mt-4 text-lg md:text-xl text-base-content/70">
-      Dans un monde hyperconnecté, {PROJECT.TITLE} vous aide à
-      <span class="font-semibold text-accent">
-        mieux apréhender votre temps hors connexion
-      </span>
-      en comptant précisément vos pauses <span class="font-semibold text-accent"
-        >loin du téléphone et d’internet</span
-      >.
-    </p>
-    <a
-      href={import.meta.env.PUBLIC_DOWNLOADS_URL}
-      class="btn bg-primary text-dark btn-lg rounded-full gap-2 hover:bg-primary/80"
-    >
-      <Download />
-      Télécharger {PROJECT.TITLE}
-    </a>
-    <p class="mt-2 text-lg md:text-xl text-base-content/70">
-      Inspirée par les <a
-        href="https://academic.oup.com/pnasnexus/article/4/2/pgaf017/8016017"
-        target="_blank"
-        class="text-secondary">recommandations de la communauté scientifique</a
-      >, l’application vous accompagne pour une <span
-        class="font-semibold text-accent"
-        >relation plus saine avec le numérique</span
-      >
-      et des respirations indispensables pour votre bien‑être.
-    </p>
-    <p class="mt-2 text-lg md:text-xl text-base-content/70">
-      En limitant l’utilisation du Wi-Fi et des données mobiles, vous réalisez
-      aussi des <span class="font-semibold text-accent"
-        >économies d’énergie</span
-      >, contribuant à réduire l’empreinte carbone du numérique tout en
-      allégeant vos
-      <span class="font-semibold text-accent">dépenses énergétiques</span>.
-    </p>
+    <div class="max-w-5xl">
+      <p class="mt-4 text-lg md:text-xl text-base-content/70">
+        Dans un monde hyperconnecté, {PROJECT.TITLE} vous aide à
+        <span class="font-semibold text-accent">
+          mieux apréhender votre temps hors connexion
+        </span>
+        en comptant précisément vos pauses <span
+          class="font-semibold text-accent"
+          >loin du téléphone et d’internet</span
+        >.
+      </p>
 
+      <p class="mt-2 text-lg md:text-xl text-base-content/70">
+        Inspirée par les <a
+          href="https://academic.oup.com/pnasnexus/article/4/2/pgaf017/8016017"
+          target="_blank"
+          class="text-secondary"
+          >recommandations de la communauté scientifique</a
+        >, l’application vous accompagne pour une <span
+          class="font-semibold text-accent"
+          >relation plus saine avec le numérique</span
+        >
+        et des respirations indispensables pour votre bien‑être.
+      </p>
+      <p class="mt-2 text-lg md:text-xl text-base-content/70">
+        En limitant l’utilisation du Wi-Fi et des données mobiles, vous réalisez
+        aussi des <span class="font-semibold text-accent"
+          >économies d’énergie</span
+        >, contribuant à réduire l’empreinte carbone du numérique tout en
+        allégeant vos
+        <span class="font-semibold text-accent">dépenses énergétiques</span>.
+      </p>
+    </div>
     <!-- CTA -->
     <div
       class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
     >
+      <a
+        href={import.meta.env.PUBLIC_DOWNLOADS_URL}
+        class="btn bg-primary text-dark btn-lg rounded-full gap-2 hover:bg-primary/80"
+      >
+        <Download />
+        Télécharger {PROJECT.TITLE}
+      </a>
       <a
         href="/ranking"
         class="btn text-secondary btn-lg rounded-full hover:text-secondary/80"
@@ -64,24 +70,31 @@ import GoalIcon from "src/components/svg/goalIcon.astro";
         ><GoalIcon /> Les objectifs à atteindre</a
       >
     </div>
+    <div>
+      <H2 title={`Comment utiliser ${PROJECT.TITLE} ?`} />
+      <GettingStarted />
+    </div>
 
     <!-- Cartes fonctionnalités -->
-    <div class="py-10 w-full flex flex-wrap justify-center gap-2">
-      <FeatureCard
-        badge="Auto"
-        title="Suivi hors ligne"
-        content="Détecte et comptabilise automatiquement vos périodes déconnectées."
-      />
-      <FeatureCard
-        badge="Clarté"
-        title="Statistiques limpides"
-        content="Visualisez vos pauses quotidiennes et hebdomadaires."
-      />
-      <FeatureCard
-        badge="Soutien"
-        title="Encouragements personnalisés"
-        content="Restez motivé grâce à des objectifs progressifs à atteindre."
-      />
+    <div>
+      <H2 title="Fonctionnalités" />
+      <div class="w-full flex flex-wrap justify-center gap-2">
+        <FeatureCard
+          badge="Auto"
+          title="Suivi hors ligne"
+          content="Détecte et comptabilise automatiquement vos périodes déconnectées."
+        />
+        <FeatureCard
+          badge="Clarté"
+          title="Statistiques limpides"
+          content="Visualisez vos pauses quotidiennes et hebdomadaires."
+        />
+        <FeatureCard
+          badge="Soutien"
+          title="Encouragements personnalisés"
+          content="Restez motivé grâce à des objectifs progressifs à atteindre."
+        />
+      </div>
     </div>
   </section>
 </Layout>
