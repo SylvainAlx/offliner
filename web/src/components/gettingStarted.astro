@@ -1,0 +1,58 @@
+---
+import { PROJECT } from "shared/config";
+import Check from "./svg/check.astro";
+---
+
+<ul class="timeline timeline-vertical">
+  <li>
+    <div class="timeline-start">Étape 1</div>
+    <div class="timeline-middle">
+      <Check />
+    </div>
+    <div class="timeline-end timeline-box">
+      Téléchargez et installez {PROJECT.TITLE} avec le lien ci-dessus
+    </div>
+    <hr class="bg-accent" />
+  </li>
+  <li>
+    <hr class="bg-accent" />
+    <div class="timeline-start">Étape 2</div>
+    <div class="timeline-middle">
+      <Check />
+    </div>
+    <div class="timeline-end timeline-box">Créez un compte (facultatif)</div>
+    <hr class="bg-accent" />
+  </li>
+  <li>
+    <hr class="bg-accent" />
+    <div class="timeline-start">Étape 3</div>
+    <div class="timeline-middle">
+      <Check />
+    </div>
+    <div class="timeline-end timeline-box">
+      Coupez le Wifi et les données mobiles !
+    </div>
+    <hr class="bg-accent" />
+  </li>
+  <li>
+    <hr class="bg-accent" />
+    <div class="timeline-start">Étape 5</div>
+    <div class="timeline-middle">
+      <Check />
+    </div>
+    <div class="timeline-end timeline-box">
+      Commulez le temps hors ligne pour atteindre les objectifs
+    </div>
+    <hr class="bg-accent" />
+  </li>
+  <li>
+    <hr class="bg-accent" />
+    <div class="timeline-start">Étape 6</div>
+    <div class="timeline-middle">
+      <Check />
+    </div>
+    <div class="timeline-end timeline-box">
+      Partagez votre performance avec la communauté
+    </div>
+  </li>
+</ul>
