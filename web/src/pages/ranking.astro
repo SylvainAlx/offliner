@@ -8,6 +8,7 @@ import { getPowerSavingEstimate } from "shared/utils/powerSaving";
 import { getTotalDuration, getUsersRanking } from "src/api/users";
 import { formatDuration } from "shared/utils/formatDuration";
 import HomeIcon from "src/components/svg/homeIcon.astro";
+import Medal from "src/components/svg/medal.astro";
 
 // 📡 Récupération des données côté serveur
 const data = await getUsersRanking();
@@ -64,7 +65,16 @@ const powerSavingEstimate = getPowerSavingEstimate(totalDuration);
             data && data.length > 0 ? (
               data.map((user, index) => (
                 <tr class="hover:bg-secondary/20">
-                  <th class="text-right">{index + 1}</th>
+                  <th class="text-right flex items-center gap-2">
+                    {index === 0 ? (
+                      <Medal classes="text-yellow-500" />
+                    ) : index === 1 ? (
+                      <Medal classes="text-gray-300" />
+                    ) : (
+                      index === 2 && <Medal classes="text-orange-600" />
+                    )}{" "}
+                    {index + 1}
+                  </th>
                   <td>
                     <a
                       href={`/${user.username}`}
