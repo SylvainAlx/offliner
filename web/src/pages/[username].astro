@@ -26,21 +26,22 @@ let devices = null;
 if (user) {
   devices = await getLatestDeviceNameByUserId(user.id);
   rankingWorld = await getRanking(null, username);
-  rankingCountry = await getRanking(
+  if (user.country) rankingCountry = await getRanking(
     { column: "country", value: user.country },
     username,
   );
-  rankingRegion = await getRanking(
+  if (user.region) rankingRegion = await getRanking(
     { column: "region", value: user.region },
     username,
   );
-  rankingDepartment = await getRanking(
+  if (user.subregion) rankingDepartment = await getRanking(
     {
       column: "subregion",
       value: user.subregion,
     },
     username,
   );
+  
 }
 ---
 
@@ -66,23 +67,29 @@ if (user) {
           )}
           {rankingCountry ? (
             <DataCard
-              title={user.country || "-"}
+              title={user.country}
               data={rankingCountry.rank}
               dataSup={rankingCountry.rank > 1 ? "ème" : "er"}
               info={`sur ${rankingCountry.total} utilisateur(s)`}
             />
           ) : (
-            <p>"N/A"</p>
+            <DataCard
+              title="Pays"
+              data="Aucune information"
+            />
           )}
           {rankingRegion ? (
             <DataCard
-              title={user.region || "-"}
+              title={user.region}
               data={rankingRegion.rank}
               dataSup={rankingRegion.rank > 1 ? "ème" : "er"}
               info={`sur ${rankingRegion.total} utilisateur(s)`}
             />
           ) : (
-            <p>"N/A"</p>
+            <DataCard
+              title="Région"
+              data="Aucune information"
+            />
           )}
           {rankingDepartment ? (
             <DataCard
@@ -92,7 +99,10 @@ if (user) {
               info={`sur ${rankingDepartment.total} utilisateur(s)`}
             />
           ) : (
-            <p>"N/A"</p>
+            <DataCard
+              title="Département"
+              data="Aucune information"
+            />
           )}
           </div>
           <Devider label="Informations" />
@@ -105,7 +115,14 @@ if (user) {
             title="Économie d'énergie estimée"
             data={getPowerSavingEstimate(user.total_duration)}
           />
-          <DataCard title="Appareil utilisé" data={devices} />
+          {devices ?
+          (<DataCard title="Appareil utilisé" data={devices} />)
+             : (
+               <DataCard
+              title="Appareil utilisé"
+              data="Aucune information"
+            />
+            )}
             <DataCard
               title="Date d'inscription"
               data={new Date(user.created_at).toLocaleDateString("fr-FR", {

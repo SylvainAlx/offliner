@@ -23,6 +23,7 @@ export async function getRanking(
   let query = supabase
     .from("users")
     .select("username, total_duration")
+    .not("total_duration", "is", null)
     .order("total_duration", { ascending: false });
 
   // Si scope défini et valeur présente, on filtre
