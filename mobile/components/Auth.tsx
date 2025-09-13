@@ -16,6 +16,8 @@ export default function Auth() {
     emailRef,
     signIn,
     signUp,
+    signInWithBiometrics,
+    isBiometricAvailable,
   } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -30,6 +32,18 @@ export default function Auth() {
           d&apos;autres appareils
         </Text>
         <View style={globalStyles.card}>
+          {isBiometricAvailable && (
+            <Button
+              icon="fingerprint"
+              mode="text"
+              onPress={signInWithBiometrics}
+              disabled={loading}
+              textColor={COLORS.primary}
+              style={{ marginBottom: 16 }}
+            >
+              Se connecter avec la biométrie
+            </Button>
+          )}
           <View style={globalStyles.verticallySpaced}>
             <TextInput
               label="E-mail"
