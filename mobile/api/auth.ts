@@ -1,5 +1,30 @@
 import { confirmDialog, showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
+import * as SecureStore from "expo-secure-store";
+import { z } from "zod";
+
+// Zod Schemas for Supabase Auth
+const UserSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email().optional(),
+});
+
+const SessionSchema = z.object({
+  access_token: z.string(),
+  refresh_token: z.string(),
+  user: UserSchema,
+});
+
+// Schema for the data object returned by signInWithPassword and signUp
+const AuthDataSchema = z.object({
+  session: SessionSchema.nullable(),
+  user: UserSchema.nullable(),
+});
+
+// Schema for the data object returned by getSession
+const GetSessionDataSchema = z.object({
+  session: SessionSchema.nullable(),
+});
 
 export async function signInWithEmail(email: string, password: string) {
   try {
@@ -7,10 +32,15 @@ export async function signInWithEmail(email: string, password: string) {
       email,
       password,
     });
-    if (error) {
-      showMessage(error.message);
-    } else if (data.session) {
+
+    if (error) throw error;
+
+    const { session } = AuthDataSchema.parse(data);
+
+    if (session) {
       showMessage("Connexion réussie 🎉");
+    } else {
+      showMessage("Veuillez vérifier votre boîte mail pour continuer.");
     }
   } catch (error) {
     if (error instanceof Error) {
@@ -24,22 +54,18 @@ export async function signInWithEmail(email: string, password: string) {
 
 export async function signUpWithEmail(email: string, password: string) {
   try {
-    const {
-      data: { session },
-      error,
-    } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
 
-    if (error) {
-      showMessage(error.message);
-      return;
-    }
+    if (error) throw error;
+
+    const { session } = AuthDataSchema.parse(data);
 
     if (!session) {
       showMessage(
-        "Veuillez vérifier votre boîte mail pour activer votre compte.",
+        "Veuillez vérifier votre boîte mail pour activer votre compte."
       );
     } else {
       showMessage("Inscription réussie 🎉");
@@ -56,11 +82,12 @@ export async function signUpWithEmail(email: string, password: string) {
 
 export async function logout() {
   const confirmed = await confirmDialog(
-    "Es-tu sûr de vouloir te déconnecter ?",
+    "Es-tu sûr de vouloir te déconnecter ?"
   );
 
   if (confirmed) {
     await supabase.auth.signOut();
+    await SecureStore.deleteItemAsync("supabase_refresh_token");
     showMessage("Déconnexion réussie");
     return true;
   }
@@ -68,15 +95,18 @@ export async function logout() {
 
 export async function deleteAccount() {
   const confirmed = await confirmDialog(
-    "Es-tu sûr de vouloir supprimer ton compte ? Cette action est irréversible.",
+    "Es-tu sûr de vouloir supprimer ton compte ? Cette action est irréversible."
   );
 
   if (!confirmed) return;
 
   try {
     // Récupération du token utilisateur
-    const sessionResult = await supabase.auth.getSession();
-    const accessToken = sessionResult.data.session?.access_token;
+    const { data, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+
+    const { session } = GetSessionDataSchema.parse(data);
+    const accessToken = session?.access_token;
 
     if (!accessToken) {
       showMessage("Impossible de récupérer la session utilisateur.");
@@ -101,7 +131,7 @@ export async function deleteAccount() {
     await supabase.auth.signOut();
 
     showMessage(
-      "Compte supprimé (données supprimées, utilisateur déconnecté).",
+      "Compte supprimé (données supprimées, utilisateur déconnecté)."
     );
     return true;
   } catch (error) {

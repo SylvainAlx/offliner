@@ -32,7 +32,7 @@ export default function HistoryScreen() {
         <Button
           mode="contained"
           onPress={() => session && loadSlots(session)}
-          buttonColor={COLORS.primary}
+          buttonColor={COLORS.secondary}
           style={globalStyles.button}
         >
           Actualiser
@@ -41,7 +41,7 @@ export default function HistoryScreen() {
         <Link href={"/profile"} asChild>
           <Button
             mode="contained"
-            buttonColor={COLORS.primary}
+            buttonColor={COLORS.secondary}
             style={globalStyles.button}
           >
             Se connecter

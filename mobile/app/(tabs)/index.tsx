@@ -104,7 +104,7 @@ export default function Home() {
               buttonColor={COLORS.secondary}
               style={globalStyles.button}
             >
-              Accéder au profile
+              Se connecter
             </Button>
           </Link>
         )}

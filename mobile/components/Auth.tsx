@@ -90,7 +90,7 @@ export default function Auth() {
               mode="contained"
               onPress={signIn}
               disabled={loading}
-              buttonColor={COLORS.primary}
+              buttonColor={COLORS.secondary}
               style={[globalStyles.button, { borderRadius: 100 }]}
             >
               Se connecter
@@ -100,7 +100,7 @@ export default function Auth() {
               mode="contained"
               onPress={signUp}
               disabled={loading}
-              buttonColor={COLORS.primary}
+              buttonColor={COLORS.info}
               style={[globalStyles.button, { borderRadius: 100 }]}
             >
               Créer un compte

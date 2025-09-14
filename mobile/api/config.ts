@@ -1,0 +1,43 @@
+import { z } from "zod";
+import { supabase } from "@/utils/supabase";
+import { showMessage } from "@/utils/formatNotification";
+// Assuming 'shared/config.ts' is located two directories above 'mobile/api/'
+import { PROJECT } from "shared/config";
+
+// Schema for the row in the 'config' table
+const ConfigSchema = z.object({
+  value: z.string(),
+});
+
+/**
+ * Checks if the 'mobile-version' in the remote config table
+ * matches the local project version.
+ * @returns {Promise<boolean>} - True if versions match, false otherwise.
+ */
+export async function checkMobileVersion(): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from("config")
+      .select("value")
+      .eq("label", "version")
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    const remoteConfig = ConfigSchema.parse(data);
+
+    const isMatch = remoteConfig.value === PROJECT.VERSION;
+
+    return isMatch;
+  } catch (error) {
+    if (error instanceof Error) {
+      showMessage(`Error checking mobile version: ${error.message}`);
+    } else {
+      showMessage("An unknown error occurred while checking app version.");
+    }
+    // In case of an error, prevent app from proceeding
+    return false;
+  }
+}
