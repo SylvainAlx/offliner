@@ -1,5 +1,5 @@
-
 import { supabase } from "@/utils/supabase";
+import { Session } from "@supabase/supabase-js";
 import * as LocalAuthentication from "expo-local-authentication";
 import * as SecureStore from "expo-secure-store";
 import { Alert } from "react-native";
@@ -15,6 +15,13 @@ export const useBiometricAuth = () => {
 
   const saveRefreshToken = async (refreshToken: string) => {
     await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
+  };
+
+  // ✅ Nouvelle fonction centralisée
+  const saveSession = async (session: Session | null) => {
+    if (session?.refresh_token) {
+      await saveRefreshToken(session.refresh_token);
+    }
   };
 
   const promptToEnableBiometrics = (onEnabled: () => void) => {
@@ -51,26 +58,29 @@ export const useBiometricAuth = () => {
     });
 
     if (result.success) {
-      const { error } = await supabase.auth.setSession({
-        access_token: "", // Access token will be fetched automatically
+      const { data, error } = await supabase.auth.refreshSession({
         refresh_token: refreshToken,
       });
 
-      if (error) {
+      if (error || !data?.session) {
         Alert.alert(
           "Erreur de connexion",
           "Nous n'avons pas pu vous reconnecter. Veuillez vous connecter manuellement.",
         );
         return false;
       }
+
+      await saveSession(data.session);
+
       return true;
     }
+
     return false;
   };
 
   return {
     checkBiometricAvailability,
-    saveRefreshToken,
+    saveSession,
     promptToEnableBiometrics,
     loginWithBiometrics,
   };

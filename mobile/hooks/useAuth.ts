@@ -14,7 +14,7 @@ export const useAuth = () => {
   const {
     checkBiometricAvailability,
     promptToEnableBiometrics,
-    saveRefreshToken,
+    saveSession,
     loginWithBiometrics,
   } = useBiometricAuth();
 
@@ -53,9 +53,7 @@ export const useAuth = () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         promptToEnableBiometrics(() => {
-          if (data.session?.refresh_token) {
-            saveRefreshToken(data.session.refresh_token);
-          }
+          saveSession(data.session);
         });
       }
     } catch (error) {
@@ -74,9 +72,7 @@ export const useAuth = () => {
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         promptToEnableBiometrics(() => {
-          if (data.session?.refresh_token) {
-            saveRefreshToken(data.session.refresh_token);
-          }
+          saveSession(data.session);
         });
       }
     } catch (error) {
@@ -91,7 +87,15 @@ export const useAuth = () => {
   async function signInWithBiometrics() {
     setLoading(true);
     try {
-      await loginWithBiometrics();
+      const success = await loginWithBiometrics();
+
+      if (success) {
+        // 🔑 récupérer la session à jour
+        const { data } = await supabase.auth.getSession();
+        saveSession(data.session);
+      } else {
+        showMessage("Échec de la connexion biométrique.");
+      }
     } catch (error) {
       if (error instanceof Error) {
         showMessage(error.message);
