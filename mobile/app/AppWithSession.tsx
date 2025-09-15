@@ -1,7 +1,4 @@
-import {
-  OfflineProgressProvider,
-  useOfflineProgress,
-} from "@/contexts/OfflineProgressContext";
+import { OfflineProgressProvider } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
 import { useSyncSession } from "@/hooks/useSyncSession";
 import { Stack } from "expo-router";
@@ -10,44 +7,71 @@ import {
   View,
   Text,
   ActivityIndicator,
-  StyleSheet,
   Pressable,
   Linking,
 } from "react-native";
 import { checkMobileVersion } from "@/api/config";
 import { PROJECT } from "shared/config";
+import { globalStyles } from "@/styles/global.styles";
+import { COLORS, SIZES } from "shared/theme";
 
 export default function AppWithSession() {
   const { session } = useSession();
-  const { isOnline } = useOfflineProgress();
-  const [versionStatus, setVersionStatus] = useState<
-    "checking" | "valid" | "invalid"
-  >("checking");
+  const [versionStatus, setVersionStatus] = useState("checking");
 
   useSyncSession(session);
 
   useEffect(() => {
     const verifyVersion = async () => {
       const isValid = await checkMobileVersion();
-      setVersionStatus(isValid ? "valid" : "invalid");
+      setVersionStatus(isValid);
     };
     verifyVersion();
   }, []); // Rerun check if session changes
 
   if (versionStatus === "checking") {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={styles.message}>Vérification de mise à jour...</Text>
+      <View
+        style={[
+          globalStyles.container,
+          { flex: 1, justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={globalStyles.contentText}>
+          Vérification de mise à jour...
+        </Text>
       </View>
     );
   }
 
-  if (versionStatus === "invalid" && isOnline) {
+  if (versionStatus === "error") {
     return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Mise à jour requise</Text>
-        <Text style={styles.message}>
+      <View
+        style={[
+          globalStyles.container,
+          { flex: 1, justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <Text style={globalStyles.title}>Vérification impossible</Text>
+        <Text style={globalStyles.contentText}>
+          La vérification de mise à jour n&apos;a pas pu aboutir, merci de
+          redémarrer {PROJECT.TITLE} avec la connexion internet activée.
+        </Text>
+      </View>
+    );
+  }
+
+  if (versionStatus === "invalid") {
+    return (
+      <View
+        style={[
+          globalStyles.container,
+          { flex: 1, justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <Text style={globalStyles.title}>Mise à jour requise</Text>
+        <Text style={globalStyles.contentText}>
           Une nouvelle version de {PROJECT.TITLE} est disponible. Veuillez la
           télécharger depuis le site officiel :
         </Text>
@@ -58,7 +82,14 @@ export default function AppWithSession() {
           hitSlop={8}
           accessibilityLabel="Ouvrir la page externe"
         >
-          <Text>{process.env.EXPO_PUBLIC_WEBSITE_URL}</Text>
+          <Text
+            style={[
+              globalStyles.button,
+              { color: COLORS.primary, fontSize: SIZES.text_lg },
+            ]}
+          >
+            {process.env.EXPO_PUBLIC_WEBSITE_URL}
+          </Text>
         </Pressable>
       </View>
     );
@@ -73,23 +104,3 @@ export default function AppWithSession() {
     </OfflineProgressProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#fff",
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 12,
-  },
-  message: {
-    fontSize: 16,
-    textAlign: "center",
-  },
-});

@@ -14,7 +14,7 @@ const ConfigSchema = z.object({
  * matches the local project version.
  * @returns {Promise<boolean>} - True if versions match, false otherwise.
  */
-export async function checkMobileVersion(): Promise<boolean> {
+export async function checkMobileVersion(): Promise<string> {
   try {
     const { data, error } = await supabase
       .from("config")
@@ -30,7 +30,11 @@ export async function checkMobileVersion(): Promise<boolean> {
 
     const isMatch = remoteConfig.value === PROJECT.VERSION;
 
-    return isMatch;
+    if (isMatch){
+      return "valid"
+    } else {
+      return "invalid"
+    }
   } catch (error) {
     if (error instanceof Error) {
       showMessage(`Error checking mobile version: ${error.message}`);
@@ -38,6 +42,6 @@ export async function checkMobileVersion(): Promise<boolean> {
       showMessage("An unknown error occurred while checking app version.");
     }
     // In case of an error, prevent app from proceeding
-    return false;
+    return "error";
   }
 }

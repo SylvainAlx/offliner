@@ -4,7 +4,6 @@
       "enabled": false
     },
     "name": "Offliner",
-    "label": "",
     "slug": "Offliner",
     "version": "0.0.1",
     "orientation": "portrait",
@@ -38,7 +37,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#000000"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

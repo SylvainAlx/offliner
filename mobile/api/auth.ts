@@ -5,8 +5,8 @@ import { z } from "zod";
 
 // Zod Schemas for Supabase Auth
 const UserSchema = z.object({
-  id: z.string().uuid(),
-  email: z.string().email().optional(),
+  id: z.string().pipe(z.uuid()),
+  email: z.string().pipe(z.email()).optional(),
 });
 
 const SessionSchema = z.object({
@@ -65,7 +65,7 @@ export async function signUpWithEmail(email: string, password: string) {
 
     if (!session) {
       showMessage(
-        "Veuillez vérifier votre boîte mail pour activer votre compte."
+        "Veuillez vérifier votre boîte mail pour activer votre compte.",
       );
     } else {
       showMessage("Inscription réussie 🎉");
@@ -82,7 +82,7 @@ export async function signUpWithEmail(email: string, password: string) {
 
 export async function logout() {
   const confirmed = await confirmDialog(
-    "Es-tu sûr de vouloir te déconnecter ?"
+    "Es-tu sûr de vouloir te déconnecter ?",
   );
 
   if (confirmed) {
@@ -95,7 +95,7 @@ export async function logout() {
 
 export async function deleteAccount() {
   const confirmed = await confirmDialog(
-    "Es-tu sûr de vouloir supprimer ton compte ? Cette action est irréversible."
+    "Es-tu sûr de vouloir supprimer ton compte ? Cette action est irréversible.",
   );
 
   if (!confirmed) return;
@@ -131,7 +131,7 @@ export async function deleteAccount() {
     await supabase.auth.signOut();
 
     showMessage(
-      "Compte supprimé (données supprimées, utilisateur déconnecté)."
+      "Compte supprimé (données supprimées, utilisateur déconnecté).",
     );
     return true;
   } catch (error) {
