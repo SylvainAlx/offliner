@@ -86,10 +86,16 @@ export async function logout() {
   );
 
   if (confirmed) {
-    await supabase.auth.signOut();
-    await SecureStore.deleteItemAsync("supabase_refresh_token");
-    showMessage("Déconnexion réussie");
-    return true;
+    try {
+      await supabase.auth.signOut();
+      await SecureStore.deleteItemAsync("supabase_refresh_token");
+      showMessage("Déconnexion réussie");
+      return true;
+    } catch (error) {
+      console.error("Logout error:", error);
+      showMessage("Erreur lors de la déconnexion");
+      return false;
+    }
   }
 }
 

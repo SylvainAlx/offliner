@@ -9,15 +9,16 @@ const REFRESH_TOKEN_KEY = "supabase_refresh_token";
 export const useBiometricAuth = () => {
   const checkBiometricAvailability = async () => {
     const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    const supportedTypes =
+      await LocalAuthentication.supportedAuthenticationTypesAsync();
     const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-    return hasHardware && isEnrolled;
+    return hasHardware && isEnrolled && supportedTypes.length > 0;
   };
 
   const saveRefreshToken = async (refreshToken: string) => {
     await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
   };
 
-  // ✅ Nouvelle fonction centralisée
   const saveSession = async (session: Session | null) => {
     if (session?.refresh_token) {
       await saveRefreshToken(session.refresh_token);
@@ -38,44 +39,53 @@ export const useBiometricAuth = () => {
     );
   };
 
+  const cancelAuthentication = () => {
+    LocalAuthentication.cancelAuthenticate();
+  };
+
   const loginWithBiometrics = async () => {
-    const isAvailable = await checkBiometricAvailability();
-    if (!isAvailable) {
-      Alert.alert(
-        "Biométrie non disponible",
-        "Votre appareil ne supporte pas l'authentification biométrique ou elle n'est pas configurée.",
-      );
-      return false;
-    }
-
-    const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
-    if (!refreshToken) {
-      return false;
-    }
-
-    const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: "Connectez-vous avec votre biométrie",
-    });
-
-    if (result.success) {
-      const { data, error } = await supabase.auth.refreshSession({
-        refresh_token: refreshToken,
-      });
-
-      if (error || !data?.session) {
+    try {
+      const isAvailable = await checkBiometricAvailability();
+      if (!isAvailable) {
         Alert.alert(
-          "Erreur de connexion",
-          "Nous n'avons pas pu vous reconnecter. Veuillez vous connecter manuellement.",
+          "Biométrie non disponible",
+          "Votre appareil ne supporte pas l'authentification biométrique ou elle n'est pas configurée.",
         );
         return false;
       }
 
-      await saveSession(data.session);
+      const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+      if (!refreshToken) {
+        return false;
+      }
 
-      return true;
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: "Connectez-vous avec votre biométrie",
+        disableDeviceFallback: true,
+      });
+
+      if (result.success) {
+        const { data, error } = await supabase.auth.refreshSession({
+          refresh_token: refreshToken,
+        });
+
+        if (error || !data?.session) {
+          Alert.alert(
+            "Erreur de connexion",
+            "Nous n'avons pas pu vous reconnecter. Veuillez vous connecter manuellement.",
+          );
+          return false;
+        }
+
+        await saveSession(data.session);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Biometric authentication error:", error);
+      cancelAuthentication();
+      return false;
     }
-
-    return false;
   };
 
   return {
