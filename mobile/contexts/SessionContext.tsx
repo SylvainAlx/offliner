@@ -67,7 +67,7 @@ export const SessionProvider = ({
       setDeviceName(device);
     } catch (error) {
       if (error instanceof Error) {
-        showMessage(error.message);
+        showMessage(error.message, "error", "Erreur");
       }
     }
   }

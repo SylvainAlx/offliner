@@ -7,10 +7,12 @@ import React from "react";
 import { Linking, Platform, Pressable, View } from "react-native";
 import { config } from "@/config/env";
 import { useSession } from "@/contexts/SessionContext";
+import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 
 export default function TabLayout() {
   const pathname = usePathname();
   const { username } = useSession();
+  const { isOnline } = useOfflineProgress();
   const openExternalLink = () => {
     let link = config.websiteUrl;
     if (username) {
@@ -54,13 +56,20 @@ export default function TabLayout() {
               <Pressable
                 onPress={openExternalLink}
                 hitSlop={8}
+                disabled={!isOnline}
                 accessibilityLabel="Ouvrir la page externe"
               >
                 {({ pressed }) => (
                   <IconSymbol
                     name="medal.fill"
                     size={24}
-                    color={pressed ? COLORS.secondary : COLORS.accent}
+                    color={
+                      pressed
+                        ? COLORS.secondary
+                        : !isOnline
+                        ? COLORS.warning
+                        : COLORS.accent
+                    }
                   />
                 )}
               </Pressable>
@@ -76,6 +85,7 @@ export default function TabLayout() {
               <Pressable
                 onPress={() => router.push("/profile")}
                 hitSlop={8}
+                disabled={!isOnline}
                 accessibilityLabel="Aller au profil"
               >
                 {({ pressed }) => (
@@ -83,7 +93,11 @@ export default function TabLayout() {
                     name="person.crop.circle"
                     size={24}
                     color={
-                      pressed || isProfile ? COLORS.secondary : COLORS.accent
+                      pressed || isProfile
+                        ? COLORS.secondary
+                        : !isOnline
+                        ? COLORS.warning
+                        : COLORS.accent
                     }
                   />
                 )}

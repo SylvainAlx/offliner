@@ -33,7 +33,7 @@ export default function TimerCard() {
       setIsStarting(true);
       setTimeout(() => {
         setIsStarting(false);
-      }, config.startupDelayMs);
+      }, config.minimumDurationMs);
     } else {
       setIsStarting(false);
     }

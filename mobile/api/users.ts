@@ -32,7 +32,7 @@ export async function getUser(session: Session): Promise<UserProfile | null> {
     return null;
   } catch (error) {
     if (error instanceof Error) {
-      showMessage(error.message);
+      showMessage(error.message, "error", "Erreur");
     }
     return null;
   }
@@ -70,7 +70,7 @@ export async function updateUser({
     }
   } catch (error) {
     if (error instanceof Error) {
-      showMessage(error.message);
+      showMessage(error.message, "error", "Erreur");
     }
   }
 }

@@ -4,7 +4,7 @@ import { showMessage } from "@/utils/formatNotification";
 import { Session } from "@supabase/supabase-js";
 
 export const getAndUpdateLocalDevice = async (
-  session: Session
+  session: Session,
 ): Promise<string> => {
   const deviceName = await getReadableDeviceName();
 
@@ -13,13 +13,13 @@ export const getAndUpdateLocalDevice = async (
       const data = await getDeviceId(session, deviceName);
       if (!data) {
         console.warn(
-          "L'appareil n'existe pas dans la base de données, insertion..."
+          "L'appareil n'existe pas dans la base de données, insertion...",
         );
         await insertDevice(session, deviceName);
       }
     } catch (error) {
       if (error instanceof Error) {
-        showMessage(error.message);
+        showMessage(error.message, "error", "Erreur");
       }
     }
   }

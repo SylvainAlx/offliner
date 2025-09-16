@@ -1,11 +1,23 @@
 import { Alert, Platform } from "react-native";
+import { Toast } from "toastify-react-native";
+import { ToastType } from "toastify-react-native/utils/interfaces";
 
-
-export function showMessage(text: string) {
+export function showMessage(
+  text: string,
+  type: ToastType = "info",
+  title: string = "Information",
+) {
   if (Platform.OS === "web") {
     alert(text);
   } else {
-    Alert.alert("Info", text);
+    Toast.show({
+      type,
+      text1: title,
+      text2: text,
+      position: "top",
+      visibilityTime: 5000,
+      autoHide: true,
+    });
   }
 }
 

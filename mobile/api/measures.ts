@@ -34,7 +34,7 @@ export async function getAllMeasures(
     return null;
   } catch (error) {
     if (error instanceof Error) {
-      showMessage(error.message);
+      showMessage(error.message, "error", "Erreur");
     }
     return null;
   }
@@ -61,7 +61,7 @@ export async function getTotalDuration(session: Session): Promise<number> {
     return total;
   } catch (error) {
     if (error instanceof Error) {
-      showMessage(error.message);
+      showMessage(error.message, "error", "Erreur");
     }
     return 0;
   }
@@ -151,13 +151,13 @@ export async function insertMeasure(
         `Durée tronquée : seules ${durationToInsert} secondes ont été enregistrées (24h max atteintes).`,
       );
     } else {
-      showMessage("Synchronisation réussie 🎉");
+      showMessage("Synchronisation réussie 🎉", "success");
     }
 
     return { success: true };
   } catch (error) {
     if (error instanceof Error) {
-      showMessage(error.message);
+      showMessage(error.message, "error", "Erreur");
     }
     return { success: false };
   }

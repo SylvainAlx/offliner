@@ -80,7 +80,7 @@ export const OfflineProgressProvider = ({
         // Début période offline
         wasOffline.current = true;
         await addPeriod({ from: new Date().toISOString() });
-        showMessage("⏳ Début d'une période hors ligne");
+        showMessage("⏳ Début d'une période hors ligne", "success");
 
         // Compteur live au premier plan
         liveInterval.current = setInterval(() => {

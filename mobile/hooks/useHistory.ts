@@ -1,4 +1,5 @@
 import { getAllMeasures } from "@/api/measures";
+import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
 import { Session } from "@supabase/supabase-js";
 import { format, parseISO } from "date-fns";
@@ -14,6 +15,7 @@ type DailySummary = {
 export const useHistory = () => {
   const [dailyData, setDailyData] = useState<DailySummary[]>([]);
   const { session } = useSession();
+  const { isOnline } = useOfflineProgress();
 
   const loadSlots = async (session: Session) => {
     const raw = await getAllMeasures(session);
@@ -42,5 +44,5 @@ export const useHistory = () => {
     if (session) loadSlots(session);
   }, [session]);
 
-  return { dailyData, loadSlots };
+  return { dailyData, isOnline, loadSlots };
 };

@@ -41,7 +41,7 @@ export const useHome = () => {
       await syncMeasures();
     } catch (error) {
       if (error instanceof Error) {
-        showMessage(error.message);
+        showMessage(error.message, "error", "Erreur");
       }
     } finally {
       setIsLoading(false);

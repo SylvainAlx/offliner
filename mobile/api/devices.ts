@@ -11,7 +11,10 @@ const DeviceSchema = z.object({
 
 export type Device = z.infer<typeof DeviceSchema>;
 
-export async function getDeviceId(session: Session, deviceName: string): Promise<Device | null> {
+export async function getDeviceId(
+  session: Session,
+  deviceName: string,
+): Promise<Device | null> {
   try {
     if (!session?.user) throw new Error("Aucune session active.");
 
@@ -30,7 +33,7 @@ export async function getDeviceId(session: Session, deviceName: string): Promise
     }
   } catch (error) {
     if (error instanceof Error) {
-      showMessage(error.message);
+      showMessage(error.message, "error", "Erreur");
     }
     return null;
   }
@@ -50,7 +53,7 @@ export async function insertDevice(session: Session, deviceName: string) {
     if (selectError) throw selectError;
     if (existingDevices && existingDevices.length > 0) {
       throw new Error(
-        "Un appareil avec ce nom existe déjà pour cet utilisateur."
+        "Un appareil avec ce nom existe déjà pour cet utilisateur.",
       );
     }
 
@@ -61,7 +64,7 @@ export async function insertDevice(session: Session, deviceName: string) {
           name: deviceName,
         },
       ],
-      { onConflict: "user_id,name" } // très important
+      { onConflict: "user_id,name" }, // très important
     );
 
     if (error) {
@@ -71,7 +74,7 @@ export async function insertDevice(session: Session, deviceName: string) {
     return { success: true };
   } catch (error) {
     if (error instanceof Error) {
-      showMessage(error.message);
+      showMessage(error.message, "error", "Erreur");
     }
     return { success: false };
   }
