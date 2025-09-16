@@ -10,7 +10,7 @@ import { formatDuration } from "shared/utils/formatDuration";
 
 export default function HistoryScreen() {
   const { session } = useSession();
-  const { dailyData, loadSlots } = useHistory();
+  const { dailyData, loadSlots, isOnline } = useHistory();
 
   const renderHeader = () => (
     <>
@@ -24,11 +24,11 @@ export default function HistoryScreen() {
             { textAlign: "center", marginVertical: SIZES.margin },
           ]}
         >
-          Aucune mesure hors ligne enregistrée.
+          Aucune mesure hors ligne synchronisée.
         </Text>
       )}
 
-      {session ? (
+      {session && isOnline ? (
         <Button
           mode="contained"
           onPress={() => session && loadSlots(session)}
@@ -38,15 +38,17 @@ export default function HistoryScreen() {
           Actualiser
         </Button>
       ) : (
-        <Link href={"/profile"} asChild>
-          <Button
-            mode="contained"
-            buttonColor={COLORS.secondary}
-            style={globalStyles.button}
-          >
-            Se connecter
-          </Button>
-        </Link>
+        isOnline && (
+          <Link href={"/profile"} asChild>
+            <Button
+              mode="contained"
+              buttonColor={COLORS.secondary}
+              style={globalStyles.button}
+            >
+              Se connecter
+            </Button>
+          </Link>
+        )
       )}
     </>
   );

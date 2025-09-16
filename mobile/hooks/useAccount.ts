@@ -98,10 +98,10 @@ export const useAccount = (session: Session) => {
         region,
         subregion,
       });
-      showMessage("Profil mis à jour avec succès.");
+      showMessage("Profil mis à jour avec succès.", "success");
     } catch (error) {
       if (error instanceof Error) {
-        showMessage(error.message);
+        showMessage(error.message, "error", "Erreur");
       }
     } finally {
       setLoading(false);

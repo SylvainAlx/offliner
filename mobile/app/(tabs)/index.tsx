@@ -87,26 +87,28 @@ export default function Home() {
             : "Vous devez avoir un compte pour synchroniser le temps hors ligne"}
         </Text>
 
-        {session ? (
+        {session && isOnline ? (
           <Button
             mode="contained"
             onPress={sendPeriods}
-            disabled={!isOnline || totalUnsync === 0 || isLoading}
-            buttonColor={COLORS.secondary}
+            disabled={totalUnsync === 0 || isLoading}
+            buttonColor={isOnline ? COLORS.secondary : COLORS.dark}
             style={globalStyles.button}
           >
             Synchroniser
           </Button>
         ) : (
-          <Link href={"/profile"} asChild>
-            <Button
-              mode="contained"
-              buttonColor={COLORS.secondary}
-              style={globalStyles.button}
-            >
-              Se connecter
-            </Button>
-          </Link>
+          isOnline && (
+            <Link href={"/profile"} asChild>
+              <Button
+                mode="contained"
+                buttonColor={COLORS.secondary}
+                style={globalStyles.button}
+              >
+                Se connecter
+              </Button>
+            </Link>
+          )
         )}
       </View>
     </ScrollView>

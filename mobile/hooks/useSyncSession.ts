@@ -46,7 +46,7 @@ export const useSyncSession = (session: Session | null) => {
       return globalSuccess;
     } catch (error) {
       if (error instanceof Error) {
-        showMessage(error.message);
+        showMessage(error.message, "error", "Erreur");
       }
       return false;
     }

@@ -58,7 +58,7 @@ export const useAuth = () => {
       }
     } catch (error) {
       if (error instanceof Error) {
-        showMessage(error.message);
+        showMessage(error.message, "error", "Erreur");
       }
     } finally {
       setLoading(false);
@@ -77,7 +77,7 @@ export const useAuth = () => {
       }
     } catch (error) {
       if (error instanceof Error) {
-        showMessage(error.message);
+        showMessage(error.message, "error", "Erreur");
       }
     } finally {
       setLoading(false);
@@ -94,11 +94,11 @@ export const useAuth = () => {
         const { data } = await supabase.auth.getSession();
         saveSession(data.session);
       } else {
-        showMessage("Échec de la connexion biométrique.");
+        showMessage("Échec de la connexion biométrique.", "error", "Erreur");
       }
     } catch (error) {
       if (error instanceof Error) {
-        showMessage(error.message);
+        showMessage(error.message, "error", "Erreur");
       }
     } finally {
       setLoading(false);

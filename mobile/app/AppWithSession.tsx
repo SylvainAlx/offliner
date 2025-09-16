@@ -14,6 +14,7 @@ import { checkMobileVersion } from "@/api/config";
 import { PROJECT } from "shared/config";
 import { globalStyles } from "@/styles/global.styles";
 import { COLORS, SIZES } from "shared/theme";
+import ToastManager from "toastify-react-native";
 
 export default function AppWithSession() {
   const { session } = useSession();
@@ -40,23 +41,6 @@ export default function AppWithSession() {
         <ActivityIndicator size="large" color={COLORS.primary} />
         <Text style={globalStyles.contentText}>
           Vérification de mise à jour...
-        </Text>
-      </View>
-    );
-  }
-
-  if (versionStatus === "error") {
-    return (
-      <View
-        style={[
-          globalStyles.container,
-          { flex: 1, justifyContent: "center", alignItems: "center" },
-        ]}
-      >
-        <Text style={globalStyles.title}>Vérification impossible</Text>
-        <Text style={globalStyles.contentText}>
-          La vérification de mise à jour n&apos;a pas pu aboutir, merci de
-          redémarrer {PROJECT.TITLE} avec la connexion internet activée.
         </Text>
       </View>
     );
@@ -101,6 +85,7 @@ export default function AppWithSession() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
+      <ToastManager />
     </OfflineProgressProvider>
   );
 }

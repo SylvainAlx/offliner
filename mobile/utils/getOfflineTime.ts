@@ -13,7 +13,7 @@ export async function getLastOpenPeriod(): Promise<Date | null> {
     }
   } catch (error) {
     if (error instanceof Error) {
-      showMessage(error.message);
+      showMessage(error.message, "error", "Erreur");
     }
   }
   return null;
@@ -25,7 +25,7 @@ async function getAllPeriods(): Promise<OfflinePeriod[]> {
     return json ? JSON.parse(json) : [];
   } catch (error) {
     if (error instanceof Error) {
-      showMessage(error.message);
+      showMessage(error.message, "error", "Erreur");
     }
     return [];
   }

@@ -38,15 +38,17 @@ export async function signInWithEmail(email: string, password: string) {
     const { session } = AuthDataSchema.parse(data);
 
     if (session) {
-      showMessage("Connexion réussie 🎉");
-    } else {
-      showMessage("Veuillez vérifier votre boîte mail pour continuer.");
+      showMessage("Connexion réussie 🎉", "success");
     }
   } catch (error) {
     if (error instanceof Error) {
-      showMessage(error.message);
+      showMessage(error.message, "error");
     } else {
-      showMessage("Une erreur est survenue lors de la connexion.");
+      showMessage(
+        "Une erreur est survenue lors de la connexion.",
+        "error",
+        "Erreur",
+      );
     }
     return;
   }
@@ -63,18 +65,18 @@ export async function signUpWithEmail(email: string, password: string) {
 
     const { session } = AuthDataSchema.parse(data);
 
-    if (!session) {
-      showMessage(
-        "Veuillez vérifier votre boîte mail pour activer votre compte.",
-      );
-    } else {
-      showMessage("Inscription réussie 🎉");
+    if (session) {
+      showMessage("Inscription réussie 🎉", "success");
     }
   } catch (error) {
     if (error instanceof Error) {
-      showMessage(error.message);
+      showMessage(error.message, "error", "Erreur");
     } else {
-      showMessage("Une erreur est survenue lors de l'inscription.");
+      showMessage(
+        "Une erreur est survenue lors de l'inscription.",
+        "error",
+        "Erreur",
+      );
     }
     return;
   }
@@ -89,11 +91,11 @@ export async function logout() {
     try {
       await supabase.auth.signOut();
       await SecureStore.deleteItemAsync("supabase_refresh_token");
-      showMessage("Déconnexion réussie");
+      showMessage("Déconnexion réussie", "success");
       return true;
     } catch (error) {
       console.error("Logout error:", error);
-      showMessage("Erreur lors de la déconnexion");
+      showMessage("Erreur lors de la déconnexion", "error", "Erreur");
       return false;
     }
   }
@@ -115,7 +117,11 @@ export async function deleteAccount() {
     const accessToken = session?.access_token;
 
     if (!accessToken) {
-      showMessage("Impossible de récupérer la session utilisateur.");
+      showMessage(
+        "Impossible de récupérer la session utilisateur.",
+        "error",
+        "Erreur",
+      );
       return;
     }
 
@@ -129,7 +135,11 @@ export async function deleteAccount() {
     });
 
     if (error) {
-      showMessage("suppression impossible : " + error.message);
+      showMessage(
+        "suppression impossible : " + error.message,
+        "error",
+        "Erreur",
+      );
       return;
     }
 
@@ -138,11 +148,12 @@ export async function deleteAccount() {
 
     showMessage(
       "Compte supprimé (données supprimées, utilisateur déconnecté).",
+      "success",
     );
     return true;
   } catch (error) {
     if (error instanceof Error) {
-      showMessage(error.message);
+      showMessage(error.message, "error", "Erreur");
     }
   }
 }

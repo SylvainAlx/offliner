@@ -30,16 +30,24 @@ export async function checkMobileVersion(): Promise<string> {
 
     const isMatch = remoteConfig.value === PROJECT.VERSION;
 
-    if (isMatch){
-      return "valid"
+    if (isMatch) {
+      return "valid";
     } else {
-      return "invalid"
+      return "invalid";
     }
   } catch (error) {
     if (error instanceof Error) {
-      showMessage(`Error checking mobile version: ${error.message}`);
+      showMessage(
+        `Impossible de vérifier la version de l'application : ${error.message}`,
+        "error",
+        "Erreur",
+      );
     } else {
-      showMessage("An unknown error occurred while checking app version.");
+      showMessage(
+        "Une erreur inconnue est survenue lors de la vérification de version de l'application.",
+        "error",
+        "Erreur",
+      );
     }
     // In case of an error, prevent app from proceeding
     return "error";
