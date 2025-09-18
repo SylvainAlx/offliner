@@ -1,5 +1,5 @@
 import { signInWithEmail, signUpWithEmail } from "@/api/auth";
-import { showMessage } from "@/utils/formatNotification";
+import { confirmDialog, showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
 import { useEffect, useRef, useState } from "react";
 import { AppState, TextInput } from "react-native";
@@ -117,5 +117,33 @@ export const useAuth = () => {
     signUp,
     signInWithBiometrics,
     isBiometricAvailable,
+    sendPasswordResetEmail,
   };
 };
+
+async function sendPasswordResetEmail(email: string) {
+  if (!email) {
+    showMessage("Veuillez saisir votre adresse e-mail.", "warn", "Attention");
+    return;
+  }
+  const confirmed = await confirmDialog(
+    "Envoyer un e-mail de réinitialisation du mot de passe ?",
+  );
+
+  if (confirmed) {
+    try {
+      await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: "offliner://reset-password",
+      });
+      showMessage(
+        "Un e-mail de réinitialisation du mot de passe vous sera envoyé prochainement.",
+        "success",
+        "Succès",
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        showMessage(error.message, "error", "Erreur");
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 // geonames.ts
 import { config } from "@/config/env";
 import { STORAGE_KEYS } from "@/constants/Labels";
+import { showMessage } from "@/utils/formatNotification";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { z } from "zod";
 
@@ -34,7 +35,9 @@ export async function getCountries(): Promise<Country[]> {
     const json = await response.json();
 
     if (!response.ok || !json.geonames) {
-      throw new Error(json.status?.message || "Failed to fetch countries");
+      throw new Error(
+        json.status?.message || "Impossible de récupérer les pays.",
+      );
     }
     // ✅ Enregistrement dans AsyncStorage
     await AsyncStorage.setItem(
@@ -43,7 +46,9 @@ export async function getCountries(): Promise<Country[]> {
     );
     return z.array(CountrySchema).parse(json.geonames);
   } catch (error) {
-    console.error("❌ getCountries error:", error);
+    if (error instanceof Error) {
+      showMessage(error.message, "error", "Erreur");
+    }
     return [];
   }
 }
@@ -59,15 +64,16 @@ export async function getSubdivisions(
     const json = await response.json();
 
     if (!response.ok || !json.geonames) {
-      throw new Error(json.status?.message || "Failed to fetch subdivisions");
+      throw new Error(
+        json.status?.message || "Impossible de récupérer les régions",
+      );
     }
 
     return z.array(SubdivisionSchema).parse(json.geonames);
   } catch (error) {
-    console.error(
-      `❌ getSubdivisions error for geonameId ${geonameId}:`,
-      error,
-    );
+    if (error instanceof Error) {
+      showMessage(error.message, "error", "Erreur");
+    }
     return [];
   }
 }
@@ -85,7 +91,7 @@ export const buildCountryTreeByName = async (
     const countries = await getCountries();
     const country = countries.find((c) => c.countryName === countryName);
     if (!country) {
-      console.warn(`❌ Pays "${countryName}" introuvable.`);
+      showMessage(`❌ Pays "${countryName}" introuvable.`, "error", "Erreur");
       return null;
     }
 
@@ -122,6 +128,9 @@ export const buildCountryTreeByName = async (
       `❌ Erreur lors de la génération du tree pour ${countryName}:`,
       error,
     );
+    if (error instanceof Error) {
+      showMessage(error.message, "error", "Erreur");
+    }
     return null;
   }
 };
@@ -141,6 +150,9 @@ export const loadCountryTreeFromStorage = async (
       `❌ Erreur lors du chargement du tree depuis le storage (${countryName}) :`,
       error,
     );
+    if (error instanceof Error) {
+      showMessage(error.message, "error", "Erreur");
+    }
     return null;
   }
 };

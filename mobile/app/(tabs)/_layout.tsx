@@ -67,7 +67,7 @@ export default function TabLayout() {
                       pressed
                         ? COLORS.secondary
                         : !isOnline
-                        ? COLORS.warning
+                        ? COLORS.card
                         : COLORS.accent
                     }
                   />
@@ -78,9 +78,25 @@ export default function TabLayout() {
         },
         headerRight: () => {
           const isProfile = pathname === "/profile";
+          const isAbout = pathname === "/about";
 
           return (
             <View style={{ flexDirection: "row", gap: 12, marginRight: 16 }}>
+              <Pressable
+                onPress={() => router.push("/about")}
+                hitSlop={8}
+                accessibilityLabel="A propos"
+              >
+                {({ pressed }) => (
+                  <IconSymbol
+                    name="questionmark.circle"
+                    size={24}
+                    color={
+                      pressed || isAbout ? COLORS.secondary : COLORS.accent
+                    }
+                  />
+                )}
+              </Pressable>
               {/* Bouton profil */}
               <Pressable
                 onPress={() => router.push("/profile")}
@@ -96,7 +112,7 @@ export default function TabLayout() {
                       pressed || isProfile
                         ? COLORS.secondary
                         : !isOnline
-                        ? COLORS.warning
+                        ? COLORS.card
                         : COLORS.accent
                     }
                   />
@@ -135,13 +151,24 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="about"
+        options={{
+          href: null,
+          title: "About",
+        }}
+      />
+      <Tabs.Screen
+        name="legals"
+        options={{
+          href: null,
+          title: "Legals",
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           href: null,
           title: "Profil",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol name="person.crop.circle" color={color} size={28} />
-          ),
         }}
       />
     </Tabs>
