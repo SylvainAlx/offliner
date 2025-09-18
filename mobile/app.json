@@ -8,7 +8,7 @@
     "version": "0.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "offlinetracker",
+    "scheme": "offliner",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -44,6 +44,7 @@
       "typedRoutes": true
     },
     "extra": {
+      "supabaseRedirect": "offliner://reset-password",
       "router": {},
       "eas": {
         "projectId": "d0cd045d-0987-4297-996b-0272d042a62b"

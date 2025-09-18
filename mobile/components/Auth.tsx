@@ -18,6 +18,7 @@ export default function Auth() {
     signUp,
     signInWithBiometrics,
     isBiometricAvailable,
+    sendPasswordResetEmail,
   } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -106,6 +107,16 @@ export default function Auth() {
               Créer un compte
             </Button>
           </View>
+
+          <Button
+            mode="text"
+            onPress={() => sendPasswordResetEmail(email)}
+            disabled={loading}
+            textColor={COLORS.primary}
+            style={{ marginTop: 16 }}
+          >
+            Mot de passe oublié ?
+          </Button>
         </View>
       </View>
     </TouchableWithoutFeedback>

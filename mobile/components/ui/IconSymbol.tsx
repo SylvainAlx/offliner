@@ -25,6 +25,7 @@ const MAPPING = {
   clock: "history",
   "trophy.fill": "emoji-events",
   "medal.fill": "leaderboard",
+  "questionmark.circle": "help",
 } as IconMapping;
 
 /**
