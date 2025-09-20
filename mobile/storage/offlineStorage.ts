@@ -1,22 +1,25 @@
+import * as SecureStore from "expo-secure-store";
 import { STORAGE_KEYS } from "@/constants/Labels";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { OfflinePeriod } from "../types/OfflinePeriod";
 import { config } from "@/config/env";
 
+// Récupérer les périodes
 async function getPeriods(): Promise<OfflinePeriod[]> {
-  const json = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_PERIODS);
+  const json = await SecureStore.getItemAsync(STORAGE_KEYS.OFFLINE_PERIODS);
   return json ? JSON.parse(json) : [];
 }
 
+// Ajouter une période
 export async function addPeriod(period: OfflinePeriod) {
   const data = await getPeriods();
   data.push(period);
-  await AsyncStorage.setItem(
+  await SecureStore.setItemAsync(
     STORAGE_KEYS.OFFLINE_PERIODS,
     JSON.stringify(data),
   );
 }
 
+// Fermer la dernière période
 export async function closeLastPeriod(to: string) {
   const data = await getPeriods();
   const reversed = [...data].reverse();
@@ -31,35 +34,36 @@ export async function closeLastPeriod(to: string) {
   if (duration >= config.minimumDurationMs) {
     last.to = to;
   } else {
-    // Supprimer la période si elle est trop courte
     const index = reversed.indexOf(last);
     if (index !== -1) reversed.splice(index, 1);
   }
 
-  // Sauvegarder les données dans le bon ordre
-  await AsyncStorage.setItem(
+  await SecureStore.setItemAsync(
     STORAGE_KEYS.OFFLINE_PERIODS,
     JSON.stringify(reversed.reverse()),
   );
 }
 
+// Supprimer les périodes non fermées
 export async function deleteUnclosePeriods() {
   const data = await getPeriods();
   const updated = data.filter((period) => period.to);
-  await AsyncStorage.setItem(
+  await SecureStore.setItemAsync(
     STORAGE_KEYS.OFFLINE_PERIODS,
     JSON.stringify(updated),
   );
 }
 
+// Récupérer les périodes non synchronisées
 export async function getUnsyncedPeriods(): Promise<OfflinePeriod[]> {
   return await getPeriods();
 }
 
+// Supprimer une période spécifique
 export async function clearPeriod(index: number) {
   const periods = await getUnsyncedPeriods();
   periods.splice(index, 1);
-  await AsyncStorage.setItem(
+  await SecureStore.setItemAsync(
     STORAGE_KEYS.OFFLINE_PERIODS,
     JSON.stringify(periods),
   );

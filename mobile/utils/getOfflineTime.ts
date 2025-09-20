@@ -1,11 +1,11 @@
 import { STORAGE_KEYS } from "@/constants/Labels";
 import { OfflinePeriod } from "@/types/OfflinePeriod";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import { showMessage } from "./formatNotification";
 
 export async function getLastOpenPeriod(): Promise<Date | null> {
   try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_PERIODS);
+    const raw = await SecureStore.getItemAsync(STORAGE_KEYS.OFFLINE_PERIODS);
     const list = raw ? JSON.parse(raw) : [];
     const last = list[list.length - 1];
     if (last && last.start && !last.end) {
@@ -21,7 +21,7 @@ export async function getLastOpenPeriod(): Promise<Date | null> {
 
 async function getAllPeriods(): Promise<OfflinePeriod[]> {
   try {
-    const json = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_PERIODS);
+    const json = await SecureStore.getItemAsync(STORAGE_KEYS.OFFLINE_PERIODS);
     return json ? JSON.parse(json) : [];
   } catch (error) {
     if (error instanceof Error) {

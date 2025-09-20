@@ -92,8 +92,8 @@ export const OfflineProgressProvider = ({
         // Fin période offline
         wasOffline.current = false;
         await closeLastPeriod(new Date().toISOString());
-        const seconds = await getTotalOfflineSeconds(true);
-        setTotalUnsync(seconds);
+        // const seconds = await getTotalOfflineSeconds(true);
+        // setTotalUnsync(seconds);
         showMessage("✅ Fin d'une période hors ligne");
 
         // Arrêter le compteur live
