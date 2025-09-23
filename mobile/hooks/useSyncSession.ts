@@ -1,7 +1,7 @@
 import { getTotalDuration, insertMeasure } from "@/api/measures";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
-import { clearPeriod, getUnsyncedPeriods } from "@/storage/offlineStorage";
+import { clearPeriod, getUnsyncedPeriods } from "@/services/offlineStorage";
 import { getReadableDeviceName } from "@/utils/deviceModelMap";
 import { showMessage } from "@/utils/formatNotification";
 import { Session } from "@supabase/supabase-js";

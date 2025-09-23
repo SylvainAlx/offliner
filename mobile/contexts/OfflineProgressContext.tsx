@@ -12,7 +12,7 @@ import {
   addPeriod,
   closeLastPeriod,
   deleteUnclosePeriods,
-} from "@/storage/offlineStorage";
+} from "@/services/offlineStorage";
 import { getTotalOfflineSeconds } from "@/utils/getOfflineTime";
 import { showMessage } from "@/utils/formatNotification";
 

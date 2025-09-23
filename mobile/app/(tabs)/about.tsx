@@ -10,7 +10,7 @@ export default function AboutScreen() {
     <View style={globalStyles.container}>
       <Text style={globalStyles.title}>A propos de {PROJECT.TITLE}</Text>
       <Text style={globalStyles.cardTitle}>
-        Version de l&apos;application : {PROJECT.VERSION}
+        Version de l&apos;application : v{PROJECT.VERSION}
       </Text>
       <Text style={globalStyles.contentText}>
         {" "}
@@ -28,6 +28,15 @@ export default function AboutScreen() {
         aussi des économies d’énergie contribuant à réduire l’empreinte carbone
         du numérique tout en allégeant vos dépenses énergétiques.
       </Text>
+      <Link href="../help" asChild>
+        <Button
+          mode="contained"
+          buttonColor={COLORS.secondary}
+          style={globalStyles.button}
+        >
+          Mode d&apos;emploi
+        </Button>
+      </Link>
       <Button
         mode="contained"
         onPress={() => Linking.openURL(`mailto:${OWNER.CONTACT}`)}
@@ -36,7 +45,7 @@ export default function AboutScreen() {
       >
         Contacter le développeur
       </Button>
-      <Link href={"/legals"} asChild>
+      <Link href={"../legals"} asChild>
         <Button
           mode="contained"
           buttonColor={COLORS.secondary}

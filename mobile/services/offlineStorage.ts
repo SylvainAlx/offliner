@@ -1,11 +1,11 @@
-import * as SecureStore from "expo-secure-store";
 import { STORAGE_KEYS } from "@/constants/Labels";
 import { OfflinePeriod } from "../types/OfflinePeriod";
 import { config } from "@/config/env";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Récupérer les périodes
 async function getPeriods(): Promise<OfflinePeriod[]> {
-  const json = await SecureStore.getItemAsync(STORAGE_KEYS.OFFLINE_PERIODS);
+  const json = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_PERIODS);
   return json ? JSON.parse(json) : [];
 }
 
@@ -13,7 +13,7 @@ async function getPeriods(): Promise<OfflinePeriod[]> {
 export async function addPeriod(period: OfflinePeriod) {
   const data = await getPeriods();
   data.push(period);
-  await SecureStore.setItemAsync(
+  await AsyncStorage.setItem(
     STORAGE_KEYS.OFFLINE_PERIODS,
     JSON.stringify(data),
   );
@@ -38,7 +38,7 @@ export async function closeLastPeriod(to: string) {
     if (index !== -1) reversed.splice(index, 1);
   }
 
-  await SecureStore.setItemAsync(
+  await AsyncStorage.setItem(
     STORAGE_KEYS.OFFLINE_PERIODS,
     JSON.stringify(reversed.reverse()),
   );
@@ -48,7 +48,7 @@ export async function closeLastPeriod(to: string) {
 export async function deleteUnclosePeriods() {
   const data = await getPeriods();
   const updated = data.filter((period) => period.to);
-  await SecureStore.setItemAsync(
+  await AsyncStorage.setItem(
     STORAGE_KEYS.OFFLINE_PERIODS,
     JSON.stringify(updated),
   );
@@ -63,7 +63,7 @@ export async function getUnsyncedPeriods(): Promise<OfflinePeriod[]> {
 export async function clearPeriod(index: number) {
   const periods = await getUnsyncedPeriods();
   periods.splice(index, 1);
-  await SecureStore.setItemAsync(
+  await AsyncStorage.setItem(
     STORAGE_KEYS.OFFLINE_PERIODS,
     JSON.stringify(periods),
   );
