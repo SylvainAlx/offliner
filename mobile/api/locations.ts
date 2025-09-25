@@ -15,13 +15,33 @@ const SubdivisionSchema = z.object({
   name: z.string(),
 });
 
-const username = config.geonamesUsername || "demo";
+const username = config.geonamesUsername;
 
 export type Country = z.infer<typeof CountrySchema>;
 export type Subdivision = z.infer<typeof SubdivisionSchema>;
 
+const verifyGeonamesUsername = () => {
+  if (!username) {
+    throw new Error(
+      "Le nom d'utilisateur Geonames n'est pas configuré dans les variables d'environnement (EXPO_PUBLIC_GEONAMES_USERNAME).",
+    );
+  }
+};
+
+const verifyGeonamesResponse = async (response: Response) => {
+  const contentType = response.headers.get("content-type");
+  if (!contentType || !contentType.includes("application/json")) {
+    const textResponse = await response.text();
+    console.error("Geonames API did not return JSON:", textResponse);
+    throw new Error(
+      "L'API Geonames n'a pas retourné une réponse JSON. Le compte est peut-être surchargé.",
+    );
+  }
+};
+
 export async function getCountries(): Promise<Country[]> {
   try {
+    verifyGeonamesUsername();
     const countriesFromStorage = await AsyncStorage.getItem(
       STORAGE_KEYS.COUNTRIES,
     );
@@ -31,6 +51,7 @@ export async function getCountries(): Promise<Country[]> {
     const response = await fetch(
       `https://secure.geonames.org/countryInfoJSON?username=${username}`,
     );
+    verifyGeonamesResponse(response);
 
     const json = await response.json();
 
@@ -57,9 +78,11 @@ export async function getSubdivisions(
   geonameId: number,
 ): Promise<Subdivision[]> {
   try {
+    verifyGeonamesUsername();
     const response = await fetch(
       `https://secure.geonames.org/childrenJSON?geonameId=${geonameId}&username=${username}`,
     );
+    verifyGeonamesResponse(response);
 
     const json = await response.json();
 

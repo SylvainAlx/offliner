@@ -28,7 +28,7 @@ export async function checkMobileVersion(): Promise<string> {
 
     const remoteConfig = ConfigSchema.parse(data);
 
-    const isMatch = remoteConfig.value === PROJECT.VERSION;
+    const isMatch = PROJECT.VERSION >= remoteConfig.value;
 
     if (isMatch) {
       return "valid";

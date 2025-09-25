@@ -1,6 +1,6 @@
 export const PROJECT = {
   TITLE: "Offliner",
-  VERSION: "0.0.3",
+  VERSION: "0.0.4",
   DESCRIPTION:
     "L'application mobile qui compte et encourage le temps passé hors ligne",
   SLOGAN: "Déconnectez pour mieux vous reconnecter",
