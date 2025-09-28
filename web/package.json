@@ -1,7 +1,7 @@
 {
   "name": "offliner-web",
   "type": "module",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -9,12 +9,12 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/vercel": "^8.2.8",
     "@supabase/supabase-js": "^2.53.0",
     "astro": "^5.12.8",
     "shared": "file:../shared"
   },
   "devDependencies": {
-    "@astrojs/vercel": "^8.2.5",
     "@tailwindcss/vite": "^4.1.11",
     "daisyui": "^5.0.50",
     "tailwindcss": "^4.1.11"

@@ -59,7 +59,9 @@ export const globalStyles = StyleSheet.create({
     fontFamily: "Montserrat",
   },
   link: {
-    paddingVertical: SIZES.padding / 2,
+    color: COLORS.accent,
+    fontWeight: "bold",
+    fontSize: SIZES.text_lg,
   },
   verticallySpaced: {
     paddingVertical: SIZES.padding / 4,

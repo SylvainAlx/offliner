@@ -11,6 +11,7 @@ export default function RootLayout() {
     // SpaceMono: require("shared/fonts/SpaceMono-Regular.ttf"),
     Knewave: require("shared/fonts/Knewave-Regular.ttf"),
     Montserrat: require("shared/fonts/montserrat-latin-400-normal.ttf"),
+    Doto: require("shared/fonts/Doto-Bold.ttf"),
   });
 
   if (!loaded) return null;

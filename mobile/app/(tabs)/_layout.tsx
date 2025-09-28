@@ -25,7 +25,7 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: true,
         headerTitle: () => <AppHeaderTitle />,
-        headerTitleAlign: "center",
+        headerTitleAlign: "left",
         tabBarButton: HapticTab,
         tabBarActiveTintColor: COLORS.secondary, // Couleur des icônes actives
         tabBarInactiveTintColor: COLORS.accent, // Couleur des icônes inactives
@@ -49,10 +49,12 @@ export default function TabLayout() {
           fontWeight: "bold",
           fontSize: 18,
         },
-        headerLeft: () => {
+        headerRight: () => {
+          const isProfile = pathname === "/profile";
+          const isAbout = pathname === "/about";
+
           return (
-            <View style={{ flexDirection: "row", gap: 12, marginLeft: 16 }}>
-              {/* Bouton vers page web externe */}
+            <View style={{ flexDirection: "row", gap: 12, marginRight: 16 }}>
               <Pressable
                 onPress={openExternalLink}
                 hitSlop={8}
@@ -73,15 +75,6 @@ export default function TabLayout() {
                   />
                 )}
               </Pressable>
-            </View>
-          );
-        },
-        headerRight: () => {
-          const isProfile = pathname === "/profile";
-          const isAbout = pathname === "/about";
-
-          return (
-            <View style={{ flexDirection: "row", gap: 12, marginRight: 16 }}>
               <Pressable
                 onPress={() => router.push("/about")}
                 hitSlop={8}
@@ -162,6 +155,13 @@ export default function TabLayout() {
         options={{
           href: null,
           title: "Legals",
+        }}
+      />
+      <Tabs.Screen
+        name="help"
+        options={{
+          href: null,
+          title: "help",
         }}
       />
       <Tabs.Screen

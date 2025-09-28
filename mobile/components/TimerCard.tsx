@@ -66,7 +66,7 @@ export default function TimerCard() {
         <Animated.Text
           style={{
             fontSize: SIZES.text_3xl,
-            fontFamily: "Knewave",
+            fontFamily: "Doto",
             color: animatedColor,
           }}
         >

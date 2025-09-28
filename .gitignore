@@ -58,6 +58,7 @@ web/.env.production
 web/.DS_Store
 # jetbrains setting folder
 web/.idea/
+web/.vercel/
 
 
 # IDE and editor files
