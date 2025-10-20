@@ -62,7 +62,13 @@ export default function TimerCard() {
     <View style={globalStyles.card}>
       <Text style={globalStyles.cardTitle}>Temps passé hors ligne</Text>
 
-      <View>
+      <View
+        style={{
+          backgroundColor: COLORS.background,
+          padding: SIZES.padding,
+          borderRadius: SIZES.radius,
+        }}
+      >
         <Animated.Text
           style={{
             fontSize: SIZES.text_3xl,

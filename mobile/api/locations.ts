@@ -49,7 +49,7 @@ export async function getCountries(): Promise<Country[]> {
       return z.array(CountrySchema).parse(JSON.parse(countriesFromStorage));
     }
     const response = await fetch(
-      `https://secure.geonames.org/countryInfoJSON?username=${username}`,
+      `https://offliner-geonames-proxy.sylvainalx-dev.workers.dev/countryInfoJSON?username=${username}`,
     );
     verifyGeonamesResponse(response);
 
