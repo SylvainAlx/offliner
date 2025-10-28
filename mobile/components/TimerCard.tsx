@@ -64,6 +64,9 @@ export default function TimerCard() {
 
       <View
         style={{
+          width: "100%",
+          display: "flex",
+          flexDirection: "row-reverse",
           backgroundColor: COLORS.background,
           padding: SIZES.padding,
           borderRadius: SIZES.radius,

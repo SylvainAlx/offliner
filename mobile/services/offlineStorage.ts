@@ -2,6 +2,8 @@ import { STORAGE_KEYS } from "@/constants/Labels";
 import { OfflinePeriod } from "../types/OfflinePeriod";
 import { config } from "@/config/env";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { confirmDialog } from "@/utils/formatNotification";
+import { formatDuration } from "shared/utils/formatDuration";
 
 // Récupérer les périodes
 async function getPeriods(): Promise<OfflinePeriod[]> {
@@ -67,4 +69,17 @@ export async function clearPeriod(index: number) {
     STORAGE_KEYS.OFFLINE_PERIODS,
     JSON.stringify(periods),
   );
+}
+
+// supprimer toutes les périodes
+export async function clearAllPeriods(duration: number) {
+  const confirmed = await confirmDialog(
+    `Es-tu sûr de vouloir supprimer toutes les périodes non synchronisées (${formatDuration(
+      duration,
+      true,
+    )}) ?`,
+  );
+
+  if (!confirmed) return;
+  await AsyncStorage.removeItem(STORAGE_KEYS.OFFLINE_PERIODS);
 }

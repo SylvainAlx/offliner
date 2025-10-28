@@ -80,7 +80,7 @@ export async function getSubdivisions(
   try {
     verifyGeonamesUsername();
     const response = await fetch(
-      `https://secure.geonames.org/childrenJSON?geonameId=${geonameId}&username=${username}`,
+      `https://offliner-geonames-proxy.sylvainalx-dev.workers.dev/childrenJSON?geonameId=${geonameId}&username=${username}`,
     );
     verifyGeonamesResponse(response);
 

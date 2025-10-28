@@ -5,20 +5,15 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { AppState, AppStateStatus } from "react-native";
 import NetInfo from "@react-native-community/netinfo";
-
-import {
-  addPeriod,
-  closeLastPeriod,
-  deleteUnclosePeriods,
-} from "@/services/offlineStorage";
-import { getTotalOfflineSeconds } from "@/utils/getOfflineTime";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AppState, AppStateStatus } from "react-native";
 import { showMessage } from "@/utils/formatNotification";
+import { STORAGE_KEYS } from "@/constants/Labels";
 
 type OfflineProgressContextType = {
   totalUnsync: number;
-  setTotalUnsync: (value: number) => void;
+  setTotalUnsync: React.Dispatch<React.SetStateAction<number>>;
   isOnline: boolean;
 };
 
@@ -33,97 +28,127 @@ export const OfflineProgressProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [totalUnsync, setTotalUnsync] = useState<number>(0);
-  const [isOnline, setIsOnline] = useState<boolean>(true);
-  const wasOffline = useRef(false);
+  const [totalUnsync, setTotalUnsync] = useState(0);
+  const [isOnline, setIsOnline] = useState(true);
+  const currentPeriodStart = useRef<string | null>(null);
   const appState = useRef<AppStateStatus>(AppState.currentState);
   const liveInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const isNightTime = () => {
-    const hour = new Date().getHours(); // récupère l'heure locale (0-23)
-    if (hour >= 0 && hour < 6) {
-      return true;
-    } else {
-      return false;
-    }
+  // Helpers
+  type OfflinePeriod = { from?: string | null; to?: string | null };
+
+  const getPeriods = async (): Promise<OfflinePeriod[]> => {
+    const json = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_PERIODS);
+    return json ? (JSON.parse(json) as OfflinePeriod[]) : [];
   };
 
-  // Charger l'état initial
-  useEffect(() => {
-    const init = async () => {
-      await deleteUnclosePeriods();
-      const seconds = await getTotalOfflineSeconds(true);
-      setTotalUnsync(seconds);
-    };
-    init();
-  }, []);
+  const savePeriods = async (periods: OfflinePeriod[]) => {
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.OFFLINE_PERIODS,
+      JSON.stringify(periods),
+    );
+  };
 
-  // Surveiller la connectivité réseau
+  const getTotalSeconds = async (): Promise<number> => {
+    const periods = await getPeriods();
+    let total = 0;
+    for (const p of periods) {
+      if (p && p.from) {
+        const start = new Date(p.from).getTime();
+        const end = p.to ? new Date(p.to).getTime() : Date.now();
+        total += Math.floor((end - start) / 1000);
+      }
+    }
+    return total;
+  };
+
+  // 🛰️ État réseau
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener((state) => {
+    const unsubscribe = NetInfo.addEventListener(async (state) => {
       const connected = state.isConnected && state.isInternetReachable;
       setIsOnline(!!connected);
-    });
-    return () => unsubscribe();
-  }, []);
 
-  // Gestion des périodes offline et compteur live
-  useEffect(() => {
-    const handleOfflinePeriod = async () => {
-      if (!isOnline && !wasOffline.current) {
-        // Ne pas activer la gestion offline entre 00:00 et 06:00
-        if (isNightTime()) {
-          showMessage("🌙 Période hors ligne non comptée entre 00:00 et 06:00");
-          return;
-        }
-
-        // Début période offline
-        wasOffline.current = true;
-        await addPeriod({ from: new Date().toISOString() });
+      if (!connected && !currentPeriodStart.current) {
+        // Début hors ligne
+        currentPeriodStart.current = new Date().toISOString();
+        const periods = await getPeriods();
+        periods.push({ from: currentPeriodStart.current });
+        await savePeriods(periods);
         showMessage("⏳ Début d'une période hors ligne", "success");
 
-        // Compteur live au premier plan
-        liveInterval.current = setInterval(() => {
-          setTotalUnsync((prev) => prev + 1);
-        }, 1000);
+        // Démarre le compteur visuel
+        if (!liveInterval.current) {
+          liveInterval.current = setInterval(() => {
+            setTotalUnsync((prev) => prev + 1);
+          }, 1000);
+        }
       }
 
-      if (isOnline && wasOffline.current) {
-        // Fin période offline
-        wasOffline.current = false;
-        await closeLastPeriod(new Date().toISOString());
-        // const seconds = await getTotalOfflineSeconds(true);
-        // setTotalUnsync(seconds);
+      if (connected && currentPeriodStart.current) {
+        // Fin hors ligne
+        const periods = await getPeriods();
+        const last = periods.reverse().find((p) => !p.to);
+        if (last) last.to = new Date().toISOString();
+        await savePeriods(periods.reverse());
+        currentPeriodStart.current = null;
         showMessage("✅ Fin d'une période hors ligne");
 
-        // Arrêter le compteur live
-        if (liveInterval.current) clearInterval(liveInterval.current);
-        liveInterval.current = null;
+        // Stoppe le compteur visuel
+        if (liveInterval.current) {
+          clearInterval(liveInterval.current);
+          liveInterval.current = null;
+        }
       }
-    };
 
-    handleOfflinePeriod();
-
-    return () => {
-      if (liveInterval.current) clearInterval(liveInterval.current);
-      liveInterval.current = null;
-    };
-  }, [isOnline]);
-
-  // Recalculer le total à chaque retour au premier plan
-  useEffect(() => {
-    const subscription = AppState.addEventListener("change", (nextAppState) => {
-      if (
-        appState.current.match(/inactive|background/) &&
-        nextAppState === "active"
-      ) {
-        // L'app revient au premier plan → recalculer le total
-        getTotalOfflineSeconds(true).then(setTotalUnsync);
-      }
-      appState.current = nextAppState;
+      const total = await getTotalSeconds();
+      setTotalUnsync(total);
     });
 
+    return () => unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 💤 Gestion mise en arrière-plan / reprise
+  useEffect(() => {
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      const wasBackground = appState.current.match(/inactive|background/);
+      const isNowActive = nextAppState === "active";
+
+      if (wasBackground && isNowActive) {
+        const total = await getTotalSeconds();
+        setTotalUnsync(total);
+
+        // Si toujours hors ligne, on relance juste le compteur visuel
+        if (!isOnline && currentPeriodStart.current && !liveInterval.current) {
+          liveInterval.current = setInterval(() => {
+            setTotalUnsync((prev) => prev + 1);
+          }, 1000);
+        }
+      }
+
+      if (!isNowActive && liveInterval.current) {
+        clearInterval(liveInterval.current);
+        liveInterval.current = null;
+      }
+
+      appState.current = nextAppState;
+    };
+
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange,
+    );
     return () => subscription.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOnline]);
+
+  // 🏁 Initialisation
+  useEffect(() => {
+    (async () => {
+      const total = await getTotalSeconds();
+      setTotalUnsync(total);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
