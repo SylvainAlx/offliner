@@ -38,6 +38,35 @@ export async function getUser(session: Session): Promise<UserProfile | null> {
   }
 }
 
+export async function getRanking(
+  scope: { column: string; value: string | null } | null,
+  username: string | undefined,
+) {
+  if (!username) return null;
+
+  // Construction de la requête
+  let query = supabase
+    .from("users")
+    .select("username, total_duration")
+    .not("total_duration", "is", null)
+    .order("total_duration", { ascending: false });
+
+  // Si scope défini et valeur présente, on filtre
+  if (scope?.value) {
+    query = query.eq(scope.column, scope.value);
+  }
+
+  const { data: users, error } = await query;
+
+  if (error || !users) {
+    console.error(error);
+    return null;
+  }
+
+  const rank = users.findIndex((u) => u.username === username) + 1;
+  return { rank, total: users.length };
+}
+
 export async function updateUser({
   session,
   username,

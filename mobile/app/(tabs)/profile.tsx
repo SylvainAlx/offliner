@@ -3,7 +3,10 @@ import Account from "@/components/Account";
 import Auth from "@/components/Auth";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
+import { clearAllPeriods } from "@/services/offlineStorage";
+import { globalStyles } from "@/styles/global.styles";
 import { View } from "react-native";
+import { Button } from "react-native-paper";
 import { COLORS } from "shared/theme";
 
 export default function ProfileScreen() {
@@ -17,6 +20,16 @@ export default function ProfileScreen() {
       ) : (
         <Auth />
       )}
+      <View style={globalStyles.buttonContainer}>
+        <Button
+          mode="contained"
+          buttonColor={COLORS.danger}
+          onPress={async () => await clearAllPeriods()}
+          style={globalStyles.button}
+        >
+          Vider le stockage local
+        </Button>
+      </View>
     </View>
   );
 }

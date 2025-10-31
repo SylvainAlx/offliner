@@ -4,22 +4,15 @@ import { IconSymbol } from "@/components/ui/IconSymbol";
 import { COLORS } from "shared/theme";
 import { router, Tabs, usePathname } from "expo-router";
 import React from "react";
-import { Linking, Platform, Pressable, View } from "react-native";
-import { config } from "@/config/env";
-import { useSession } from "@/contexts/SessionContext";
+import { Platform, Pressable, View } from "react-native";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function TabLayout() {
   const pathname = usePathname();
   const { username } = useSession();
   const { isOnline } = useOfflineProgress();
-  const openExternalLink = () => {
-    let link = config.websiteUrl;
-    if (username) {
-      link = link + "/" + username;
-    }
-    Linking.openURL(link);
-  };
+
   return (
     <Tabs
       screenOptions={{
@@ -56,9 +49,9 @@ export default function TabLayout() {
           return (
             <View style={{ flexDirection: "row", gap: 12, marginRight: 16 }}>
               <Pressable
-                onPress={openExternalLink}
+                onPress={() => router.push("/stats")}
                 hitSlop={8}
-                disabled={!isOnline}
+                disabled={!isOnline || !username}
                 accessibilityLabel="Ouvrir la page externe"
               >
                 {({ pressed }) => (
@@ -68,7 +61,7 @@ export default function TabLayout() {
                     color={
                       pressed
                         ? COLORS.secondary
-                        : !isOnline
+                        : !isOnline || !username
                         ? COLORS.card
                         : COLORS.accent
                     }
@@ -169,6 +162,13 @@ export default function TabLayout() {
         options={{
           href: null,
           title: "Profil",
+        }}
+      />
+      <Tabs.Screen
+        name="stats"
+        options={{
+          href: null,
+          title: "Stats",
         }}
       />
     </Tabs>

@@ -8,7 +8,6 @@ import { ScrollView, Text, View } from "react-native";
 import { Button } from "react-native-paper";
 import { Link } from "expo-router";
 import { formatDuration } from "shared/utils/formatDuration";
-import { clearAllPeriods } from "@/services/offlineStorage";
 
 export default function Home() {
   const {
@@ -111,15 +110,6 @@ export default function Home() {
             </Link>
           )
         )}
-        <Button
-          mode="contained"
-          disabled={totalUnsync === 0 || isLoading}
-          buttonColor={COLORS.danger}
-          onPress={async () => await clearAllPeriods(totalUnsync)}
-          style={globalStyles.button}
-        >
-          Vider le stockage local
-        </Button>
       </View>
     </ScrollView>
   );
