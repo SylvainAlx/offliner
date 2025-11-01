@@ -43,44 +43,39 @@ export const useStats = () => {
         const userdata = await getUser(session);
         setUser(userdata);
 
-        if (user) {
-          const latestDevice = await getLatestDeviceNameByUserId(
-            session.user.id,
+        const latestDevice = await getLatestDeviceNameByUserId(session.user.id);
+        setDevices(latestDevice);
+
+        const world = await getRanking(null, username);
+        setRankingWorld(world);
+
+        if (userdata?.country) {
+          const country = await getRanking(
+            { column: "country", value: userdata.country },
+            username,
           );
-          setDevices(latestDevice);
+          setRankingCountry(country);
+        }
 
-          const world = await getRanking(null, username);
-          setRankingWorld(world);
+        if (userdata?.region) {
+          const region = await getRanking(
+            { column: "region", value: userdata.region },
+            username,
+          );
+          setRankingRegion(region);
+        }
 
-          if (user.country) {
-            const country = await getRanking(
-              { column: "country", value: user.country },
-              username,
-            );
-            setRankingCountry(country);
-          }
-
-          if (user.region) {
-            const region = await getRanking(
-              { column: "region", value: user.region },
-              username,
-            );
-            setRankingRegion(region);
-          }
-
-          if (user.subregion) {
-            const department = await getRanking(
-              { column: "subregion", value: user.subregion },
-              username,
-            );
-            setRankingDepartment(department);
-          }
+        if (userdata?.subregion) {
+          const department = await getRanking(
+            { column: "subregion", value: userdata.subregion },
+            username,
+          );
+          setRankingDepartment(department);
         }
       }
     };
 
     initialize();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, username]);
 
   return {

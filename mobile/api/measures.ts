@@ -67,6 +67,82 @@ export async function getTotalDuration(session: Session): Promise<number> {
   }
 }
 
+export async function getWeeklyDuration(session: Session): Promise<number> {
+  try {
+    if (!session?.user) throw new Error("Aucune session active.");
+
+    // --- Calcul du début et de la fin de la semaine ---
+    const today = new Date();
+    const firstDayOfWeek = new Date(today);
+    firstDayOfWeek.setDate(today.getDate() - today.getDay() + 1); // Lundi
+    const lastDayOfWeek = new Date(today);
+    lastDayOfWeek.setDate(today.getDate() - today.getDay() + 7); // Dimanche
+
+    // Format YYYY-MM-DD
+    const formatDate = (date: Date) => date.toISOString().split("T")[0];
+
+    const start = formatDate(firstDayOfWeek);
+    const end = formatDate(lastDayOfWeek);
+
+    // --- Requête Supabase ---
+    const { data, error, status } = await supabase
+      .from("measures")
+      .select("duration, date", { count: "exact", head: false })
+      .eq("user_id", session.user.id)
+      .gte("date", start)
+      .lte("date", end);
+
+    if (error && status !== 406) throw error;
+
+    // --- Validation et somme ---
+    const total =
+      z
+        .array(z.object({ duration: z.number() }))
+        .parse(data || [])
+        .reduce((sum, item) => sum + (item.duration || 0), 0) ?? 0;
+
+    return total;
+  } catch (error) {
+    if (error instanceof Error) {
+      showMessage(error.message, "error", "Erreur");
+    }
+    return 0;
+  }
+}
+
+export async function getDailyDuration(session: Session): Promise<number> {
+  try {
+    if (!session?.user) throw new Error("Aucune session active.");
+
+    // --- Date du jour au format YYYY-MM-DD ---
+    const today = new Date();
+    const formattedDate = today.toISOString().split("T")[0];
+
+    // --- Requête Supabase ---
+    const { data, error, status } = await supabase
+      .from("measures")
+      .select("duration, date", { count: "exact", head: false })
+      .eq("user_id", session.user.id)
+      .eq("date", formattedDate);
+
+    if (error && status !== 406) throw error;
+
+    // --- Validation et somme ---
+    const total =
+      z
+        .array(z.object({ duration: z.number() }))
+        .parse(data || [])
+        .reduce((sum, item) => sum + (item.duration || 0), 0) ?? 0;
+
+    return total;
+  } catch (error) {
+    if (error instanceof Error) {
+      showMessage(error.message, "error", "Erreur");
+    }
+    return 0;
+  }
+}
+
 export async function insertMeasure(
   session: Session,
   deviceName: string,

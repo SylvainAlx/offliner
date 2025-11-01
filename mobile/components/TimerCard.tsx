@@ -1,31 +1,24 @@
-import { COLORS, SIZES } from "shared/theme";
+import { SIZES } from "shared/theme";
 import { getPowerSavingEstimate } from "shared/utils/powerSaving";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
 import { indexStyles } from "@/styles/custom.styles";
 import { globalStyles } from "@/styles/global.styles";
 import { formatDuration } from "shared/utils/formatDuration";
-import { Text, View, Animated } from "react-native";
-import { useEffect, useState, useRef } from "react";
+import { Text, View } from "react-native";
+import { useEffect, useState } from "react";
 import { config } from "@/config/env";
+import Timer from "./Timer";
 
 export default function TimerCard() {
   const { totalUnsync, isOnline } = useOfflineProgress();
-  const { totalSyncSeconds } = useSession();
+  const { totalSyncSeconds, weeklySyncSeconds, dailySyncSeconds } =
+    useSession();
   const [isStarting, setIsStarting] = useState(false);
 
   const totalAll = totalSyncSeconds + totalUnsync;
-
-  // Animation de couleur
-  const colorAnim = useRef(new Animated.Value(0)).current;
-  const [prevColor, setPrevColor] = useState(COLORS.succes);
-
-  // Déterminer la couleur cible
-  const targetColor = isStarting
-    ? COLORS.warning
-    : isOnline
-    ? COLORS.accent
-    : COLORS.succes;
+  const totalWeek = weeklySyncSeconds + totalUnsync;
+  const totalDay = dailySyncSeconds + totalUnsync;
 
   // Gérer le "mode démarrage" si offline
   useEffect(() => {
@@ -39,49 +32,28 @@ export default function TimerCard() {
     }
   }, [isOnline]);
 
-  // Lancer l’animation quand la couleur change
-  useEffect(() => {
-    colorAnim.setValue(0); // reset
-    Animated.timing(colorAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: false, // ⚠️ pas de "true" car la couleur n’est pas supportée en driver natif
-    }).start(() => {
-      setPrevColor(targetColor);
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetColor]);
-
-  // Interpolation entre l’ancienne et la nouvelle couleur
-  const animatedColor = colorAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [prevColor, targetColor],
-  });
-
   return (
     <View style={globalStyles.card}>
       <Text style={globalStyles.cardTitle}>Temps passé hors ligne</Text>
 
-      <View
-        style={{
-          width: "100%",
-          display: "flex",
-          flexDirection: "row-reverse",
-          backgroundColor: COLORS.background,
-          padding: SIZES.padding,
-          borderRadius: SIZES.radius,
-        }}
-      >
-        <Animated.Text
-          style={{
-            fontSize: SIZES.text_3xl,
-            fontFamily: "Doto",
-            color: animatedColor,
-          }}
-        >
-          {formatDuration(totalAll)}
-        </Animated.Text>
-      </View>
+      <Timer
+        label="total"
+        duration={totalAll}
+        isOnline={isOnline}
+        isStarting={isStarting}
+      />
+      <Timer
+        label="cette semaine"
+        duration={totalWeek}
+        isOnline={isOnline}
+        isStarting={isStarting}
+      />
+      <Timer
+        label="aujourd'hui"
+        duration={totalDay}
+        isOnline={isOnline}
+        isStarting={isStarting}
+      />
 
       <View
         style={{
