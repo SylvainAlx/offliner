@@ -53,3 +53,37 @@ export async function checkMobileVersion(): Promise<string> {
     return "error";
   }
 }
+
+export async function getCreditPool(): Promise<string> {
+  try {
+    const { data, error } = await supabase
+      .from("config")
+      .select("value")
+      .eq("label", "credit_pool")
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    const result = ConfigSchema.parse(data);
+
+    return result.value;
+  } catch (error) {
+    if (error instanceof Error) {
+      showMessage(
+        `Impossible de récupérer la capacité de la mine de gemmes du temps : ${error.message}`,
+        "error",
+        "Erreur",
+      );
+    } else {
+      showMessage(
+        "Une erreur inconnue est survenue lors de la récupération de la capacité de la mine de gemmes du temps.",
+        "error",
+        "Erreur",
+      );
+    }
+    // In case of an error, prevent app from proceeding
+    return "error";
+  }
+}

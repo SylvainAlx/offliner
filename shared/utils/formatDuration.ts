@@ -28,6 +28,7 @@ export function formatDuration(
     if (mins > 0) parts.push(`${mins} minute${mins > 1 ? "s" : ""}`);
     if (secs > 0 || parts.length === 0)
       parts.push(`${secs} seconde${secs > 1 ? "s" : ""}`);
+    return parts.join(" ");
   } else {
     if (years > 0) parts.push(`${years}a`); // années
     if (months > 0) parts.push(`${months}m`); // mois

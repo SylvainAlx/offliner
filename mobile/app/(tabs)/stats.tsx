@@ -2,9 +2,7 @@ import { globalStyles } from "@/styles/global.styles";
 import { ScrollView, View, Text } from "react-native";
 import { Button } from "react-native-paper";
 import { COLORS, SIZES } from "shared/theme";
-import { formatDuration } from "shared/utils/formatDuration";
 import { useStats } from "@/hooks/useStats";
-import { getPowerSavingEstimate } from "shared/utils/powerSaving";
 import { RankingCard } from "@/components/RankingCard";
 import { InfoCard } from "@/components/InfoCard";
 
@@ -18,7 +16,6 @@ export default function StatsScreen() {
     rankingRegion,
     rankingDepartment,
     devices,
-    totalSyncSeconds,
     openExternalLink,
   } = useStats();
 
@@ -36,8 +33,16 @@ export default function StatsScreen() {
           textAlign: "center",
         }}
       >
-        Classement
+        Classement personnel
       </Text>
+
+      <RankingCard title="Monde" ranking={rankingWorld} />
+      <RankingCard title={user?.country ?? null} ranking={rankingCountry} />
+      <RankingCard title={user?.region ?? null} ranking={rankingRegion} />
+      <RankingCard
+        title={user?.subregion ?? null}
+        ranking={rankingDepartment}
+      />
       <View style={globalStyles.buttonContainer}>
         <Button
           mode="contained"
@@ -48,13 +53,6 @@ export default function StatsScreen() {
           Consulter le classement général
         </Button>
       </View>
-      <RankingCard title="Monde" ranking={rankingWorld} />
-      <RankingCard title={user?.country ?? null} ranking={rankingCountry} />
-      <RankingCard title={user?.region ?? null} ranking={rankingRegion} />
-      <RankingCard
-        title={user?.subregion ?? null}
-        ranking={rankingDepartment}
-      />
       <Text
         style={{
           color: COLORS.accent,
@@ -65,14 +63,6 @@ export default function StatsScreen() {
       >
         Autres informations
       </Text>
-      <InfoCard
-        title="Temps passé hors-ligne"
-        value={formatDuration(totalSyncSeconds)}
-      />
-      <InfoCard
-        title="Économie d'énergie estimée"
-        value={getPowerSavingEstimate(totalSyncSeconds)}
-      />
       <InfoCard title="Appareil utilisé" value={devices} />
       <InfoCard
         title="Date d'inscription"

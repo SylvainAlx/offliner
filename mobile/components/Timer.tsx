@@ -54,7 +54,6 @@ export default function Timer({
         flexDirection: "row-reverse",
         backgroundColor: COLORS.background,
         padding: SIZES.padding,
-        borderRadius: SIZES.radius,
       }}
     >
       <Text
@@ -63,7 +62,6 @@ export default function Timer({
           paddingLeft: 5,
           paddingTop: 2,
           left: 0,
-          fontFamily: "Doto",
           fontSize: SIZES.text_md,
           color: COLORS.secondary,
         }}
@@ -72,7 +70,7 @@ export default function Timer({
       </Text>
       <Animated.Text
         style={{
-          fontSize: SIZES.text_3xl,
+          fontSize: SIZES.text_xl,
           fontFamily: "Doto",
           color: animatedColor,
         }}

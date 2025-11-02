@@ -71,20 +71,22 @@ export async function getWeeklyDuration(session: Session): Promise<number> {
   try {
     if (!session?.user) throw new Error("Aucune session active.");
 
-    // --- Calcul du début et de la fin de la semaine ---
     const today = new Date();
+
+    // nombre de jours depuis lundi (0 = lundi, 6 = dimanche)
+    const daysSinceMonday = (today.getDay() + 6) % 7;
     const firstDayOfWeek = new Date(today);
-    firstDayOfWeek.setDate(today.getDate() - today.getDay() + 1); // Lundi
-    const lastDayOfWeek = new Date(today);
-    lastDayOfWeek.setDate(today.getDate() - today.getDay() + 7); // Dimanche
+    firstDayOfWeek.setDate(today.getDate() - daysSinceMonday);
 
-    // Format YYYY-MM-DD
-    const formatDate = (date: Date) => date.toISOString().split("T")[0];
+    const lastDayOfWeek = new Date(firstDayOfWeek);
+    lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
 
-    const start = formatDate(firstDayOfWeek);
-    const end = formatDate(lastDayOfWeek);
+    // format YYYY-MM-DD en tenant compte du fuseau local
+    const formatDateLocal = (d: Date) => d.toLocaleDateString("en-CA"); // "en-CA" => yyyy-mm-dd
 
-    // --- Requête Supabase ---
+    const start = formatDateLocal(firstDayOfWeek);
+    const end = formatDateLocal(lastDayOfWeek);
+
     const { data, error, status } = await supabase
       .from("measures")
       .select("duration, date", { count: "exact", head: false })
@@ -94,10 +96,9 @@ export async function getWeeklyDuration(session: Session): Promise<number> {
 
     if (error && status !== 406) throw error;
 
-    // --- Validation et somme ---
     const total =
       z
-        .array(z.object({ duration: z.number() }))
+        .array(z.object({ duration: z.number().optional() }))
         .parse(data || [])
         .reduce((sum, item) => sum + (item.duration || 0), 0) ?? 0;
 

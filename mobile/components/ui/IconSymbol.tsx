@@ -1,43 +1,61 @@
-// Fallback for using MaterialIcons on Android and web.
+import { StyleProp, TextStyle, OpaqueColorValue } from "react-native";
+import { SymbolWeight } from "expo-symbols";
 
+// --- Import des packs d'icônes disponibles ---
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { SymbolViewProps, SymbolWeight } from "expo-symbols";
-import { ComponentProps } from "react";
-import { OpaqueColorValue, type StyleProp, type TextStyle } from "react-native";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import Feather from "@expo/vector-icons/Feather";
 
+type IconLibrary = "MaterialIcons" | "FontAwesome5" | "Ionicons" | "Feather";
+
+// Mapping partiel pour n’ajouter que les symboles utiles
 type IconMapping = Record<
-  SymbolViewProps["name"],
-  ComponentProps<typeof MaterialIcons>["name"]
+  string, // ✅ autorise n’importe quelle clé
+  { name: string; lib: IconLibrary }
 >;
+
+const MAPPING: IconMapping = {
+  "house.fill": { name: "home", lib: "MaterialIcons" },
+  "paperplane.fill": { name: "send", lib: "MaterialIcons" },
+  "chevron.left.forwardslash.chevron.right": {
+    name: "code",
+    lib: "MaterialIcons",
+  },
+  "chevron.right": { name: "chevron-right", lib: "MaterialIcons" },
+  "person.crop.circle": { name: "person", lib: "MaterialIcons" },
+  clock: { name: "history", lib: "MaterialIcons" },
+  "medal.fill": { name: "leaderboard", lib: "MaterialIcons" },
+  "questionmark.circle": { name: "help", lib: "MaterialIcons" },
+  "checklist.checked": { name: "checklist", lib: "MaterialIcons" },
+  diamond: { name: "diamond", lib: "MaterialIcons" },
+};
+
 type IconSymbolName = keyof typeof MAPPING;
 
-/**
- * Add your SF Symbols to Material Icons mappings here.
- * - see Material Icons in the [Icons Directory](https://icons.expo.fyi).
- * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
- */
-const MAPPING = {
-  "house.fill": "home",
-  "paperplane.fill": "send",
-  "chevron.left.forwardslash.chevron.right": "code",
-  "chevron.right": "chevron-right",
-  "person.crop.circle": "person",
-  clock: "history",
-  "trophy.fill": "emoji-events",
-  "medal.fill": "leaderboard",
-  "questionmark.circle": "help",
-} as IconMapping;
+// Sélecteur de bibliothèque
+function getIconComponent(lib: IconLibrary) {
+  switch (lib) {
+    case "MaterialIcons":
+      return MaterialIcons;
+    case "FontAwesome5":
+      return FontAwesome5;
+    case "Ionicons":
+      return Ionicons;
+    case "Feather":
+      return Feather;
+    default:
+      return MaterialIcons;
+  }
+}
 
-/**
- * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.
- * This ensures a consistent look across platforms, and optimal resource usage.
- * Icon `name`s are based on SF Symbols and require manual mapping to Material Icons.
- */
+// --- Composant principal ---
 export function IconSymbol({
   name,
   size = 24,
   color,
   style,
+  weight,
 }: {
   name: IconSymbolName;
   size?: number;
@@ -45,11 +63,15 @@ export function IconSymbol({
   style?: StyleProp<TextStyle>;
   weight?: SymbolWeight;
 }) {
+  const mapping = MAPPING[name];
+  const IconComponent = mapping ? getIconComponent(mapping.lib) : MaterialIcons;
+  const iconName = mapping?.name || "help-outline";
+
   return (
-    <MaterialIcons
-      color={color}
+    <IconComponent
+      name={iconName as any}
       size={size}
-      name={MAPPING[name]}
+      color={color}
       style={style}
     />
   );
