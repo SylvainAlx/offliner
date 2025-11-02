@@ -1,8 +1,10 @@
 import { getCreditPool } from "@/api/config";
+import { useSession } from "@/contexts/SessionContext";
 import { useEffect, useState } from "react";
 
 export default function UseMining() {
   const [miningCapacity, setMiningCapacity] = useState<number | null>(null);
+  const { dailySyncSeconds } = useSession();
 
   useEffect(() => {
     const fetchMiningCapacity = async () => {
@@ -12,5 +14,5 @@ export default function UseMining() {
     fetchMiningCapacity();
   }, []);
 
-  return { miningCapacity };
+  return { miningCapacity, dailySyncSeconds };
 }
