@@ -40,3 +40,7 @@ export function formatDuration(
 
   return parts.join(" ");
 }
+
+export function countHoursFromSeconds(seconds: number): number {
+  return Math.round((seconds / 3600) * 100) / 100;
+}

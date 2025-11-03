@@ -3,7 +3,7 @@ import { useSession } from "@/contexts/SessionContext";
 import { globalStyles } from "@/styles/global.styles";
 import { FlatList, Text, View } from "react-native";
 import { Button } from "react-native-paper";
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import React from "react";
 import { useHistory } from "@/hooks/useHistory";
 import { formatDuration } from "shared/utils/formatDuration";
@@ -39,15 +39,14 @@ export default function HistoryScreen() {
         </Button>
       ) : (
         isOnline && (
-          <Link href={"/profile"} asChild>
-            <Button
-              mode="contained"
-              buttonColor={COLORS.secondary}
-              style={globalStyles.button}
-            >
-              Se connecter
-            </Button>
-          </Link>
+          <Button
+            mode="contained"
+            buttonColor={COLORS.secondary}
+            style={globalStyles.button}
+            onPress={() => router.push("../profile")}
+          >
+            Se connecter
+          </Button>
         )
       )}
     </>

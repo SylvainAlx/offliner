@@ -8,6 +8,7 @@ const UserSchema = z.object({
   country: z.string().nullable(),
   region: z.string().nullable(),
   subregion: z.string().nullable(),
+  gem_balance: z.number().min(0),
 });
 
 export type UserProfile = z.infer<typeof UserSchema>;
@@ -18,7 +19,7 @@ export async function getUser(session: Session): Promise<UserProfile | null> {
 
     const { data, error, status } = await supabase
       .from("users")
-      .select(`username, country, region, subregion`)
+      .select(`username, country, region, subregion, gem_balance`)
       .eq("id", session?.user.id)
       .single();
 

@@ -1,6 +1,6 @@
 import { config } from "@/config/env";
 import { globalStyles } from "@/styles/global.styles";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { Text, Linking, Pressable, ScrollView } from "react-native";
 import { Button } from "react-native-paper";
 import { PROJECT } from "shared/config";
@@ -13,10 +13,12 @@ export default function HelpScreen() {
   return (
     <ScrollView showsVerticalScrollIndicator style={globalStyles.container}>
       <Text style={globalStyles.title}>Mode d&apos;emploi</Text>
+      <Text style={globalStyles.cardTitle}>Généralité</Text>
       <Text style={globalStyles.contentText}>
         L&apos;application {PROJECT.TITLE} va déclencher un minuteur au moment
         où votre téléphone est mis hors ligne, wifi et données mobiles coupés.
       </Text>
+      <Text style={globalStyles.cardTitle}>Objectifs</Text>
       <Text style={globalStyles.contentText}>
         De nombreux objectifs peuvent être atteints au fur et à mesure des
         pauses hors connexion. Vous pouvez les consulter{" "}
@@ -25,6 +27,8 @@ export default function HelpScreen() {
         </Link>
         .
       </Text>
+
+      <Text style={globalStyles.cardTitle}>Compte</Text>
       <Text style={globalStyles.contentText}>
         Pour une expérience optimale, nous vous conseillons de créer un compte
         en vous rendant sur votre{" "}
@@ -32,12 +36,26 @@ export default function HelpScreen() {
           profil
         </Link>
         . Cela vous permettra de sauvegarder vos données et de les synchroniser
-        entre vos différents appareils. De plus vous participerez ainsi au
-        classement des meilleurs utilisateurs de l&apos;application{" "}
+        entre vos différents appareils et de miner des gemmes de temps (voir
+        ci-dessous). De plus vous participerez ainsi au classement des meilleurs
+        utilisateurs de l&apos;application{" "}
         <Pressable onPress={handlePress}>
           <Text style={globalStyles.link}>voir ici</Text>
         </Pressable>
       </Text>
+      <Text style={globalStyles.cardTitle}>Minage de gemmes</Text>
+      <Text style={globalStyles.contentText}>
+        Le minage de gemmes de temps vous permet de gagner des gemmes en
+        fonction de la durée de vos sessions hors ligne afin de valoriser votre
+        régularité. Les regles sont les suivantes : 1h passée hors ligne puis
+        synchronisée = 1 gemme. Tous les joueurs se partagent une mine commune.
+        La capacité de la mine descend au fur et à mesure des récoltes
+        quotidiennes. Elle augmentera lorsqu&apos;un utilisateur souscrira à un
+        abonnement premium. Sa durée d&apos;engagement en heures sera alors
+        convertie en gemmes et ajoutée à la mine. Pour le moment seul un
+        administrateur peut ajouter manuellement des gemmes à la mine.
+      </Text>
+      <Text style={globalStyles.cardTitle}>Informations importantes</Text>
       <Text style={globalStyles.contentText}>
         L&apos;application {PROJECT.TITLE} présente également certaines limites
         techniques. En effet, pour fonctionner correctement, elle doit rester
@@ -48,15 +66,14 @@ export default function HelpScreen() {
         Le minuteur est programmé pour ne pas se lancer entre minuit et 6h du
         matin afin de favoriser la déconnexion sur les temps d&apos;éveil.
       </Text>
-      <Link href={"../about"} asChild>
-        <Button
-          mode="contained"
-          buttonColor={COLORS.secondary}
-          style={globalStyles.button}
-        >
-          Retour
-        </Button>
-      </Link>
+      <Button
+        mode="contained"
+        buttonColor={COLORS.secondary}
+        style={globalStyles.button}
+        onPress={() => router.push("../about")}
+      >
+        Retour
+      </Button>
     </ScrollView>
   );
 }

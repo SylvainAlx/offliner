@@ -1,5 +1,5 @@
 import { globalStyles } from "@/styles/global.styles";
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import { View, Text, Linking } from "react-native";
 import { Button } from "react-native-paper";
 import { OWNER, PROJECT } from "shared/config";
@@ -28,15 +28,14 @@ export default function AboutScreen() {
         aussi des économies d’énergie contribuant à réduire l’empreinte carbone
         du numérique tout en allégeant vos dépenses énergétiques.
       </Text>
-      <Link href="../help" asChild>
-        <Button
-          mode="contained"
-          buttonColor={COLORS.secondary}
-          style={globalStyles.button}
-        >
-          Mode d&apos;emploi
-        </Button>
-      </Link>
+      <Button
+        mode="contained"
+        buttonColor={COLORS.secondary}
+        style={globalStyles.button}
+        onPress={() => router.push("../help")}
+      >
+        Mode d&apos;emploi
+      </Button>
       <Button
         mode="contained"
         onPress={() => Linking.openURL(`mailto:${OWNER.CONTACT}`)}
@@ -45,15 +44,14 @@ export default function AboutScreen() {
       >
         Contacter le développeur
       </Button>
-      <Link href={"../legals"} asChild>
-        <Button
-          mode="contained"
-          buttonColor={COLORS.secondary}
-          style={globalStyles.button}
-        >
-          Mentions légales
-        </Button>
-      </Link>
+      <Button
+        mode="contained"
+        buttonColor={COLORS.secondary}
+        style={globalStyles.button}
+        onPress={() => router.push("../legals")}
+      >
+        Mentions légales
+      </Button>
     </View>
   );
 }

@@ -1,4 +1,3 @@
-import GoalProgress from "@/components/GoalProgress";
 import TimerCard from "@/components/TimerCard";
 import { COLORS } from "shared/theme";
 import { useHome } from "@/hooks/useHome";
@@ -6,8 +5,11 @@ import { indexStyles } from "@/styles/custom.styles";
 import { globalStyles } from "@/styles/global.styles";
 import { ScrollView, Text, View } from "react-native";
 import { Button } from "react-native-paper";
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import { formatDuration } from "shared/utils/formatDuration";
+import MiningCard from "@/components/MiningCard";
+import GoalCard from "@/components/GoalCard";
+import PowerSavingCard from "@/components/PowerSavingCard";
 
 export default function Home() {
   const {
@@ -55,21 +57,18 @@ export default function Home() {
           </Text>
         )}
       </View>
-
-      <TimerCard />
-
-      <View style={globalStyles.card}>
-        <Text style={globalStyles.cardTitle}>Objectif en cours</Text>
-        {nextGoal && (
-          <Link href={"/goals"}>
-            <GoalProgress
-              goal={nextGoal}
-              totalSeconds={totalSyncSeconds + totalUnsync}
-              bgColor={COLORS.subCard}
-            />
-          </Link>
-        )}
-      </View>
+      <TimerCard
+        isOnline={isOnline}
+        totalSyncSeconds={totalSyncSeconds}
+        totalUnsync={totalUnsync}
+      />
+      <PowerSavingCard totalSeconds={totalSyncSeconds + totalUnsync} />
+      <MiningCard isOnline={isOnline} />
+      <GoalCard
+        nextGoal={nextGoal}
+        totalSyncSeconds={totalSyncSeconds}
+        totalUnsync={totalUnsync}
+      />
 
       <View style={globalStyles.card}>
         <Text style={globalStyles.cardTitle}>Synchronisation</Text>
@@ -99,15 +98,14 @@ export default function Home() {
           </Button>
         ) : (
           isOnline && (
-            <Link href={"/profile"} asChild>
-              <Button
-                mode="contained"
-                buttonColor={COLORS.secondary}
-                style={globalStyles.button}
-              >
-                Se connecter
-              </Button>
-            </Link>
+            <Button
+              mode="contained"
+              buttonColor={COLORS.secondary}
+              style={globalStyles.button}
+              onPress={() => router.push("/profile")}
+            >
+              Se connecter
+            </Button>
           )
         )}
       </View>

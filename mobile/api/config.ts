@@ -54,12 +54,12 @@ export async function checkMobileVersion(): Promise<string> {
   }
 }
 
-export async function getCreditPool(): Promise<string> {
+export async function getGemPool(): Promise<string> {
   try {
     const { data, error } = await supabase
       .from("config")
       .select("value")
-      .eq("label", "credit_pool")
+      .eq("label", "gem_pool")
       .single();
 
     if (error) {
@@ -72,13 +72,13 @@ export async function getCreditPool(): Promise<string> {
   } catch (error) {
     if (error instanceof Error) {
       showMessage(
-        `Impossible de récupérer la capacité de la mine de gemmes du temps : ${error.message}`,
+        `Impossible de récupérer la capacité de la mine de gemmes de temps : ${error.message}`,
         "error",
         "Erreur",
       );
     } else {
       showMessage(
-        "Une erreur inconnue est survenue lors de la récupération de la capacité de la mine de gemmes du temps.",
+        "Une erreur inconnue est survenue lors de la récupération de la capacité de la mine de gemmes de temps.",
         "error",
         "Erreur",
       );

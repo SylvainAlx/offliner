@@ -119,15 +119,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="mining"
-        options={{
-          title: "Minage",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol name="diamond" color={color} size={28} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="goals"
         options={{
           title: "Objectifs",

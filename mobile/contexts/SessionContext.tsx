@@ -24,6 +24,8 @@ type SessionContextType = {
   setWeeklySyncSeconds: (value: number) => void;
   dailySyncSeconds: number;
   setDailySyncSeconds: (value: number) => void;
+  totalGem: number;
+  setTotalGem: (value: number) => void;
 };
 
 const SessionContext = createContext<SessionContextType>({
@@ -44,6 +46,8 @@ const SessionContext = createContext<SessionContextType>({
   setWeeklySyncSeconds: () => {},
   dailySyncSeconds: 0,
   setDailySyncSeconds: () => {},
+  totalGem: 0,
+  setTotalGem: () => {},
 });
 
 export const SessionProvider = ({
@@ -63,6 +67,8 @@ export const SessionProvider = ({
   const [weeklySyncSeconds, setWeeklySyncSeconds] = useState<number>(0);
   const [dailySyncSeconds, setDailySyncSeconds] = useState<number>(0);
 
+  const [totalGem, setTotalGem] = useState<number>(0);
+
   async function getProfile() {
     try {
       if (!session) return;
@@ -72,6 +78,7 @@ export const SessionProvider = ({
         setCountry(data.country);
         setRegion(data.region);
         setSubregion(data.subregion);
+        setTotalGem(data.gem_balance);
       }
       const device = await getAndUpdateLocalDevice(session);
       setDeviceName(device);
@@ -123,6 +130,8 @@ export const SessionProvider = ({
         setWeeklySyncSeconds,
         dailySyncSeconds,
         setDailySyncSeconds,
+        totalGem,
+        setTotalGem,
       }}
     >
       {children}
