@@ -6,7 +6,9 @@ import { COLORS } from "shared/theme";
 import { Link, router } from "expo-router";
 import { Button } from "react-native-paper";
 import DigitDisplay from "./DigitDisplay";
-import { countHoursFromSeconds } from "shared/utils/formatDuration";
+import { countMinutesFromSeconds } from "shared/utils/formatDuration";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import { STORAGE_KEYS } from "@/constants/Labels";
 
 interface MiningCardProps {
   isOnline: boolean;
@@ -22,6 +24,9 @@ export default function MiningCard({ isOnline }: MiningCardProps) {
     session,
     mineGem,
   } = UseMining();
+
+  const gemAvailable = countMinutesFromSeconds(dailySyncSeconds);
+
   return (
     <View style={globalStyles.card}>
       <Text style={globalStyles.cardTitle}>
@@ -35,7 +40,7 @@ export default function MiningCard({ isOnline }: MiningCardProps) {
         </Link>
       </Text>
       <DigitDisplay
-        color={COLORS.primary}
+        color={COLORS.accent}
         digit={totalGem.toString()}
         label="gemmes minées"
       />
@@ -43,7 +48,7 @@ export default function MiningCard({ isOnline }: MiningCardProps) {
         <ActivityIndicator />
       ) : (
         <DigitDisplay
-          color={COLORS.primary}
+          color={COLORS.accent}
           digit={miningCapacity.toString()}
           label="gemmes dans la mine"
         />
@@ -53,21 +58,31 @@ export default function MiningCard({ isOnline }: MiningCardProps) {
       ) : (
         <>
           <DigitDisplay
-            color={COLORS.primary}
-            digit={countHoursFromSeconds(dailySyncSeconds).toString()}
+            color={miningAvailable ? COLORS.succes : COLORS.dark}
+            digit={gemAvailable.toString()}
             label="Gemmes à miner aujourd'hui"
           />
           <Button
             mode="contained"
-            onPress={async () =>
-              await mineGem(countHoursFromSeconds(dailySyncSeconds))
+            onPress={async () => await mineGem(gemAvailable)}
+            disabled={
+              !session || !isOnline || !miningAvailable || gemAvailable === 0
             }
-            disabled={!session || !isOnline || !miningAvailable}
             buttonColor={isOnline ? COLORS.secondary : COLORS.dark}
             style={globalStyles.button}
           >
             Miner
           </Button>
+          {/* <Button
+            mode="contained"
+            onPress={async () =>
+              await AsyncStorage.removeItem(STORAGE_KEYS.LAST_GEM_MINE_SYNC)
+            }
+            buttonColor={COLORS.danger}
+            style={globalStyles.button}
+          >
+            Vider
+          </Button> */}
           {!session && isOnline && (
             <Button
               mode="contained"
@@ -79,12 +94,11 @@ export default function MiningCard({ isOnline }: MiningCardProps) {
             </Button>
           )}
           {lastMineSync && (
-            <Text style={globalStyles.contentText}>
-              Dernier minage :{" "}
-              {lastMineSync instanceof Date
-                ? lastMineSync.toLocaleString()
-                : String(lastMineSync)}
-            </Text>
+            <>
+              <Text style={globalStyles.contentText}>
+                C&apos;est tout pour aujourd&apos;hui !
+              </Text>
+            </>
           )}
         </>
       )}

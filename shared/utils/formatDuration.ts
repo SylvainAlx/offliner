@@ -41,6 +41,14 @@ export function formatDuration(
   return parts.join(" ");
 }
 
-export function countHoursFromSeconds(seconds: number): number {
-  return Math.round((seconds / 3600) * 100) / 100;
+export function countMinutesFromSeconds(seconds: number): number {
+  return Math.floor(seconds / 60);
+}
+
+export function getFutureDateFromDuration(
+  date: Date,
+  durationSeconds: number,
+): Date {
+  const futureTime = date.getTime() + durationSeconds * 1000; // convertir secondes en ms
+  return new Date(futureTime);
 }

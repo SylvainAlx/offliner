@@ -1,15 +1,18 @@
 import { getGemPool } from "@/api/config";
+import { InsertTransaction } from "@/api/transactions";
 import { STORAGE_KEYS } from "@/constants/Labels";
 import { useSession } from "@/contexts/SessionContext";
 import { confirmDialog, showMessage } from "@/utils/formatNotification";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
+import { countMinutesFromSeconds } from "shared/utils/formatDuration";
 
 export default function UseMining() {
   const [miningCapacity, setMiningCapacity] = useState<number | null>(null);
   const [lastMineSync, setLastMineSync] = useState<Date | null>(null);
   const [miningAvailable, setMiningAvailable] = useState<boolean>(false);
-  const { dailySyncSeconds, totalGem, session } = useSession();
+  const { dailySyncSeconds, totalGem, setTotalGem, session, deviceName } =
+    useSession();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,31 +47,33 @@ export default function UseMining() {
 
   const mineGem = async (gemAmount: number) => {
     const confirmed = await confirmDialog(
-      `Confirmes-tu le minage de ${gemAmount} gemmes de temps ?`,
+      `Attention, un seul minage par jour possible ! Confirmes-tu le minage de ${gemAmount} gemme(s) de temps ?`,
     );
-
     if (!confirmed) return;
-    showMessage(
-      "Fonctionnalité de minage de gemmes de temps en cours de développement.",
-      "info",
-      "A venir",
-    );
+    if (session && deviceName) {
+      const result = await InsertTransaction({
+        session,
+        amount: countMinutesFromSeconds(dailySyncSeconds),
+        deviceName,
+        type: "mining",
+        direction: "out",
+        target: "pool",
+      });
 
-    // await AsyncStorage.removeItem(STORAGE_KEYS.LAST_GEM_MINE_SYNC);
-
-    // if (miningAvailable) {
-    //   await AsyncStorage.setItem(
-    //     STORAGE_KEYS.LAST_GEM_MINE_SYNC,
-    //     JSON.stringify(new Date()),
-    //   );
-    //   setLastMineSync(new Date());
-    // } else {
-    //   showMessage(
-    //     "Vous ne pouvez récolter des gemmes de temps qu'une fois par jour.",
-    //     "info",
-    //     "Attention",
-    //   );
-    // }
+      if (result.success) {
+        showMessage("Minage réalité", "success", "Gemmes de temps");
+        if (miningAvailable) {
+          await AsyncStorage.setItem(
+            STORAGE_KEYS.LAST_GEM_MINE_SYNC,
+            JSON.stringify(new Date()),
+          );
+          setLastMineSync(new Date());
+          setTotalGem(totalGem + gemAmount);
+        }
+        const newPool = await getGemPool();
+        setMiningCapacity(Number(newPool));
+      }
+    }
   };
 
   return {
