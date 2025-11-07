@@ -4,18 +4,15 @@ import { Button } from "react-native-paper";
 import { COLORS, SIZES } from "shared/theme";
 import { useStats } from "@/hooks/useStats";
 import { RankingCard } from "@/components/RankingCard";
-import { InfoCard } from "@/components/InfoCard";
 
 export default function StatsScreen() {
   const {
-    date,
     user,
     username,
     rankingWorld,
     rankingCountry,
     rankingRegion,
     rankingDepartment,
-    devices,
     openExternalLink,
   } = useStats();
 
@@ -24,7 +21,7 @@ export default function StatsScreen() {
       contentContainerStyle={globalStyles.container}
       showsVerticalScrollIndicator
     >
-      <Text style={globalStyles.title}>Statistiques de {username}</Text>
+      <Text style={globalStyles.title}>Classement de {username}</Text>
       <Text
         style={{
           color: COLORS.accent,
@@ -53,21 +50,6 @@ export default function StatsScreen() {
           Consulter le classement général
         </Button>
       </View>
-      <Text
-        style={{
-          color: COLORS.accent,
-          fontSize: SIZES.text_lg,
-          fontFamily: "Knewave",
-          textAlign: "center",
-        }}
-      >
-        Autres informations
-      </Text>
-      <InfoCard title="Appareil utilisé" value={devices} />
-      <InfoCard
-        title="Date d'inscription"
-        value={date ? new Date(date).toLocaleDateString() : null}
-      />
     </ScrollView>
   );
 }

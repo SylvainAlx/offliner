@@ -52,12 +52,12 @@ export default function TabLayout() {
                 onPress={() => router.push("/stats")}
                 hitSlop={8}
                 disabled={!isOnline || !username}
-                accessibilityLabel="Ouvrir la page externe"
+                accessibilityLabel="Le classement"
               >
                 {({ pressed }) => (
                   <IconSymbol
-                    name="medal.fill"
-                    size={24}
+                    name="trophy"
+                    size={20}
                     color={
                       pressed
                         ? COLORS.secondary

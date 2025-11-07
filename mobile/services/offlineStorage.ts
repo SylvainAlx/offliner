@@ -5,9 +5,24 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { confirmDialog } from "@/utils/formatNotification";
 
 // Récupérer les périodes
-async function getPeriods(): Promise<OfflinePeriod[]> {
+export async function getPeriods(): Promise<OfflinePeriod[]> {
   const json = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_PERIODS);
-  return json ? JSON.parse(json) : [];
+  if (!json) return [];
+
+  let data: OfflinePeriod[];
+  try {
+    data = JSON.parse(json) as OfflinePeriod[];
+  } catch {
+    console.warn("Invalid AsyncStorage data, clearing...");
+    await AsyncStorage.removeItem(STORAGE_KEYS.OFFLINE_PERIODS);
+    return [];
+  }
+
+  // Vérifie le format de chaque item
+  return data.filter(
+    (p: OfflinePeriod) =>
+      p.from && new Date(p.from).toString() !== "Invalid Date",
+  );
 }
 
 // Ajouter une période

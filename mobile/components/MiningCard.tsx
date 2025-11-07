@@ -62,6 +62,11 @@ export default function MiningCard({ isOnline }: MiningCardProps) {
             digit={gemAvailable.toString()}
             label="Gemmes à miner aujourd'hui"
           />
+          {dailySyncSeconds === 0 && (
+            <Text style={{ color: COLORS.warning }}>
+              Aucune durée n&apos;a été synchronisée aujourd&apos;hui
+            </Text>
+          )}
           <Button
             mode="contained"
             onPress={async () => await mineGem(gemAvailable)}
@@ -93,7 +98,7 @@ export default function MiningCard({ isOnline }: MiningCardProps) {
               Se connecter
             </Button>
           )}
-          {lastMineSync && (
+          {lastMineSync && lastMineSync.getDate() === new Date().getDate() && (
             <>
               <Text style={globalStyles.contentText}>
                 C&apos;est tout pour aujourd&apos;hui !

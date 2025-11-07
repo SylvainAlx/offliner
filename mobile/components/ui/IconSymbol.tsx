@@ -4,10 +4,8 @@ import { SymbolWeight } from "expo-symbols";
 // --- Import des packs d'icônes disponibles ---
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import Feather from "@expo/vector-icons/Feather";
 
-type IconLibrary = "MaterialIcons" | "FontAwesome5" | "Ionicons" | "Feather";
+type IconLibrary = "MaterialIcons" | "FontAwesome5";
 
 // Mapping partiel pour n’ajouter que les symboles utiles
 type IconMapping = Record<
@@ -29,6 +27,7 @@ const MAPPING: IconMapping = {
   "questionmark.circle": { name: "help", lib: "MaterialIcons" },
   "checklist.checked": { name: "checklist", lib: "MaterialIcons" },
   diamond: { name: "diamond", lib: "MaterialIcons" },
+  trophy: { name: "trophy", lib: "FontAwesome5" },
 };
 
 type IconSymbolName = keyof typeof MAPPING;
@@ -40,10 +39,6 @@ function getIconComponent(lib: IconLibrary) {
       return MaterialIcons;
     case "FontAwesome5":
       return FontAwesome5;
-    case "Ionicons":
-      return Ionicons;
-    case "Feather":
-      return Feather;
     default:
       return MaterialIcons;
   }

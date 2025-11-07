@@ -1,4 +1,3 @@
-import { getLatestDeviceNameByUserId } from "@/api/devices";
 import { getRanking, getUser } from "@/api/users";
 import { config } from "@/config/env";
 import { useSession } from "@/contexts/SessionContext";
@@ -35,16 +34,12 @@ export const useStats = () => {
     rank: number;
     total: number;
   } | null>(null);
-  const [devices, setDevices] = useState<string | null>(null);
 
   useEffect(() => {
     const initialize = async () => {
       if (session && username) {
         const userdata = await getUser(session);
         setUser(userdata);
-
-        const latestDevice = await getLatestDeviceNameByUserId(session.user.id);
-        setDevices(latestDevice);
 
         const world = await getRanking(null, username);
         setRankingWorld(world);
@@ -79,14 +74,12 @@ export const useStats = () => {
   }, [session, username]);
 
   return {
-    date: session?.user.created_at,
     user,
     username,
     rankingWorld,
     rankingCountry,
     rankingRegion,
     rankingDepartment,
-    devices,
     totalSyncSeconds,
     openExternalLink,
   };
