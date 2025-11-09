@@ -3,31 +3,28 @@ import { confirmDialog, showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
 import { useEffect, useRef, useState } from "react";
 import { AppState, TextInput } from "react-native";
-import { useBiometricAuth } from "./useBiometricAuth";
+import * as SecureStore from "expo-secure-store";
+import { Session } from "@supabase/supabase-js";
 
 export const useAuth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
 
-  const {
-    checkBiometricAvailability,
-    promptToEnableBiometrics,
-    saveSession,
-    loginWithBiometrics,
-  } = useBiometricAuth();
+  const REFRESH_TOKEN_KEY = "supabase_refresh_token";
 
   const passwordRef = useRef<TextInput>(null);
   const emailRef = useRef<TextInput>(null);
 
-  useEffect(() => {
-    const checkAvailability = async () => {
-      const available = await checkBiometricAvailability();
-      setIsBiometricAvailable(available);
-    };
-    checkAvailability();
-  }, [checkBiometricAvailability]);
+  const saveRefreshToken = async (refreshToken: string) => {
+    await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
+  };
+
+  const saveSession = async (session: Session | null) => {
+    if (session?.refresh_token) {
+      await saveRefreshToken(session.refresh_token);
+    }
+  };
 
   useEffect(() => {
     const appStateSubscription = AppState.addEventListener(
@@ -52,9 +49,7 @@ export const useAuth = () => {
       await signInWithEmail(email, password);
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        promptToEnableBiometrics(() => {
-          saveSession(data.session);
-        });
+        saveSession(data.session);
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -71,30 +66,7 @@ export const useAuth = () => {
       await signUpWithEmail(email, password);
       const { data } = await supabase.auth.getSession();
       if (data.session) {
-        promptToEnableBiometrics(() => {
-          saveSession(data.session);
-        });
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        showMessage(error.message, "error", "Erreur");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function signInWithBiometrics() {
-    setLoading(true);
-    try {
-      const success = await loginWithBiometrics();
-
-      if (success) {
-        // 🔑 récupérer la session à jour
-        const { data } = await supabase.auth.getSession();
         saveSession(data.session);
-      } else {
-        showMessage("Échec de la connexion biométrique.", "error", "Erreur");
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -115,8 +87,6 @@ export const useAuth = () => {
     emailRef,
     signIn,
     signUp,
-    signInWithBiometrics,
-    isBiometricAvailable,
     sendPasswordResetEmail,
   };
 };

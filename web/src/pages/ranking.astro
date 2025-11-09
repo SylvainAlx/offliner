@@ -9,11 +9,21 @@ import { getTotalDuration, getUsersRanking } from "src/api/users";
 import { formatDuration } from "shared/utils/formatDuration";
 import HomeIcon from "src/components/svg/homeIcon.astro";
 import Medal from "src/components/svg/medal.astro";
+import RankingScript from "src/scripts/rankingScript.astro";
 
 // 📡 Récupération des données côté serveur
 const data = await getUsersRanking();
 const totalDuration = await getTotalDuration();
 const powerSavingEstimate = getPowerSavingEstimate(totalDuration);
+
+const dataWithFormatted = (data || []).map((u) => ({
+  ...u,
+  // on prépare aussi des valeurs numériques sûres pour le tri
+  total_duration_num: u.total_duration || 0,
+  gem_balance_num: Number(u.gem_balance || 0),
+  // et on calcule l'affichage de la durée côté serveur (formatDuration est disponible)
+  formatted_total_duration: formatDuration(u.total_duration || 0),
+}));
 ---
 
 <Layout title={`${PROJECT.TITLE} | Top 100`} description={PROJECT.DESCRIPTION}>
@@ -31,23 +41,103 @@ const powerSavingEstimate = getPowerSavingEstimate(totalDuration);
         >{powerSavingEstimate}</span
       >.
     </p>
-    <fieldset class="fieldset">
-      <legend class="fieldset-legend">Rechercher un utilisateur</legend>
-      <div class="flex gap-2 items-center">
-        <input
-          id="usernameInput"
-          type="text"
-          class="input bg-secondary/30"
-          placeholder="Pseudo"
-        />
-        <button
-          id="searchBtn"
-          class="btn text-secondary btn-sm rounded-full hover:text-secondary/80"
-          >Rechercher</button
+    <!-- UI de tri (au-dessus du tableau) -->
+    <div
+      class="w-full mt-6 flex flex-col md:flex-row md:items-start justify-between gap-6"
+    >
+      <!-- Bloc tri -->
+      <div class="flex flex-col gap-2 w-full md:w-1/2">
+        <label
+          for="sortSelect"
+          class="text-sm font-semibold text-primary/90 flex items-center gap-2"
         >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-4 h-4 text-accent"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 4h18M7 8h10M10 12h4M12 16h0"></path>
+          </svg>
+          Trier le classement par
+        </label>
+        <div class="relative">
+          <select
+            id="sortSelect"
+            class="w-full appearance-none bg-secondary/20 border border-primary/20 text-primary rounded-xl px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-accent transition"
+          >
+            <option value="total_duration_num">Durée totale</option>
+            <option value="gem_balance_num">Gemmes minées</option>
+          </select>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-accent pointer-events-none"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </div>
       </div>
-      <p id="errorMsg" class="text-danger mt-2 hidden"></p>
-    </fieldset>
+
+      <!-- Bloc recherche -->
+      <fieldset
+        class="w-full md:w-1/2 border border-primary/20 rounded-2xl p-4 bg-secondary/10 backdrop-blur-sm"
+      >
+        <legend class="text-primary font-semibold px-2"
+          >Rechercher un utilisateur</legend
+        >
+        <div class="flex gap-2 items-center">
+          <div class="relative flex-1">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-accent w-5 h-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"
+              ></path>
+            </svg>
+            <input
+              id="usernameInput"
+              type="text"
+              class="input w-full bg-secondary/30 border border-primary/20 text-primary pl-10 pr-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent transition"
+              placeholder="Entrer un pseudo..."
+            />
+          </div>
+          <button
+            id="searchBtn"
+            class="btn btn-sm bg-accent text-black font-semibold rounded-xl px-4 py-2 hover:bg-accent/90 transition"
+          >
+            Rechercher
+          </button>
+        </div>
+        <p id="errorMsg" class="text-danger text-sm mt-2 hidden"></p>
+      </fieldset>
+    </div>
+
+    <!-- On expose les données sérialisées de façon sûre -->
+    <script
+      id="initial-data"
+      type="application/json"
+      set:html={JSON.stringify(dataWithFormatted)}
+    />
+
     <div class="overflow-x-auto w-full max-w-5xl mt-4 border border-primary/20">
       <table class="table text-base bg-sub-card/50 table-auto">
         <thead class="sticky top-0 bg-primary z-10 text-black">
@@ -55,80 +145,17 @@ const powerSavingEstimate = getPowerSavingEstimate(totalDuration);
             <th class="text-right">Rang</th>
             <th>Pseudo</th>
             <th class="text-right whitespace-nowrap">Durée totale</th>
+            <th>Gemmes minées</th>
             <th>Pays</th>
             <th>Région</th>
             <th>Département</th>
           </tr>
         </thead>
-        <tbody>
-          {
-            data && data.length > 0 ? (
-              data.map((user, index) => (
-                <tr class="hover:bg-secondary/20">
-                  <th class="text-right flex items-center gap-2">
-                    {index === 0 ? (
-                      <Medal classes="text-yellow-500" />
-                    ) : index === 1 ? (
-                      <Medal classes="text-gray-300" />
-                    ) : (
-                      index === 2 && <Medal classes="text-orange-600" />
-                    )}{" "}
-                    {index + 1}
-                  </th>
-                  <td>
-                    <a
-                      href={`/${user.username}`}
-                      class="text-primary font-bold hover:underline"
-                    >
-                      {user.username || "Utilisateur anonyme"}
-                    </a>
-                  </td>
-                  <td class="text-right text-accent">
-                    {formatDuration(user.total_duration || 0)}
-                  </td>
-                  <td>{user.country || "-"}</td>
-                  <td>{user.region || "-"}</td>
-                  <td>{user.subregion || "-"}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colspan="6" class="text-center">
-                  Aucun utilisateur trouvé.
-                </td>
-              </tr>
-            )
-          }
-        </tbody>
+        <!-- tbody vide: on le remplira côté client -->
+        <tbody id="rankingBody"></tbody>
       </table>
     </div>
-  </section>
-</Layout>
 
-<script>
-  import { getUser } from "src/api/users";
-
-  const input = document.getElementById("usernameInput") as HTMLInputElement;
-  const button = document.getElementById("searchBtn") as HTMLButtonElement;
-  const errorMsg = document.getElementById("errorMsg") as HTMLParagraphElement;
-
-  button.addEventListener("click", async () => {
-    const username = input.value.trim();
-    errorMsg.classList.add("hidden");
-    errorMsg.textContent = "";
-
-    if (!username) {
-      errorMsg.textContent = "Veuillez entrer un pseudo.";
-      errorMsg.classList.remove("hidden");
-      return;
-    }
-
-    const user = await getUser(username);
-    if (user) {
-      window.location.href = `/${user.username}`;
-    } else {
-      errorMsg.textContent = "Aucun utilisateur trouvé.";
-      errorMsg.classList.remove("hidden");
-    }
-  });
-</script>
+    <RankingScript />
+  </section></Layout
+>

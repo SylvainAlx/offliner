@@ -1,4 +1,9 @@
-import { getTotalDuration, insertMeasure } from "@/api/measures";
+import {
+  getDailyDuration,
+  getTotalDuration,
+  getWeeklyDuration,
+  insertMeasure,
+} from "@/api/measures";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
 import { clearPeriod, getUnsyncedPeriods } from "@/services/offlineStorage";
@@ -8,7 +13,14 @@ import { Session } from "@supabase/supabase-js";
 import { useEffect } from "react";
 
 export const useSyncSession = (session: Session | null) => {
-  const { setTotalSyncSeconds, totalSyncSeconds } = useSession();
+  const {
+    setTotalSyncSeconds,
+    totalSyncSeconds,
+    setWeeklySyncSeconds,
+    weeklySyncSeconds,
+    setDailySyncSeconds,
+    dailySyncSeconds,
+  } = useSession();
   const { setTotalUnsync } = useOfflineProgress();
 
   const syncMeasures = async (): Promise<boolean> => {
@@ -42,6 +54,8 @@ export const useSyncSession = (session: Session | null) => {
       if (globalSuccess) {
         setTotalUnsync(0);
         setTotalSyncSeconds(totalSyncSeconds + totalTime);
+        setWeeklySyncSeconds(weeklySyncSeconds + totalTime);
+        setDailySyncSeconds(dailySyncSeconds + totalTime);
       }
       return globalSuccess;
     } catch (error) {
@@ -57,9 +71,20 @@ export const useSyncSession = (session: Session | null) => {
       const totalSeconds = await getTotalDuration(session);
       setTotalSyncSeconds(totalSeconds);
     };
+    const loadWeeklySyncTime = async (session: Session) => {
+      const totalSeconds = await getWeeklyDuration(session);
+      setWeeklySyncSeconds(totalSeconds);
+    };
+
+    const loadDaylySyncTime = async (session: Session) => {
+      const totalSeconds = await getDailyDuration(session);
+      setDailySyncSeconds(totalSeconds);
+    };
 
     if (session != null) {
       loadTotalSyncTime(session);
+      loadWeeklySyncTime(session);
+      loadDaylySyncTime(session);
     }
 
     return () => {

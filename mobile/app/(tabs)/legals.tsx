@@ -1,5 +1,5 @@
 import { globalStyles } from "@/styles/global.styles";
-import { Link } from "expo-router";
+import { router } from "expo-router";
 import { Text, ScrollView } from "react-native";
 import { Button } from "react-native-paper";
 import { COLORS } from "shared/theme";
@@ -16,15 +16,14 @@ export default function LegalsScreen() {
         indisponibilités. L’utilisation de ce site se fait aux risques de
         l’utilisateur.
       </Text>
-      <Link href={"../about"} asChild>
-        <Button
-          mode="contained"
-          buttonColor={COLORS.secondary}
-          style={globalStyles.button}
-        >
-          Retour
-        </Button>
-      </Link>
+      <Button
+        mode="contained"
+        buttonColor={COLORS.secondary}
+        style={globalStyles.button}
+        onPress={() => router.push("../about")}
+      >
+        Retour
+      </Button>
     </ScrollView>
   );
 }

@@ -3,4 +3,5 @@ export const STORAGE_KEYS = {
   TOTAL_TIME: "total_time",
   COUNTRIES: "countries",
   COUNTRY_TREE: "country_tree",
+  LAST_GEM_MINE_SYNC: "last_gem_mine_sync",
 };

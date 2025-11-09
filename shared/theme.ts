@@ -8,7 +8,7 @@ export const COLORS = {
   card: "rgba(255, 255, 255, 0.15)",
   subCard: "#666666",
   text: "#ffffff",
-  dark: "#000000",
+  dark: "#111",
   border: "rgba(255, 255, 255, 0.3)",
   notification: "#EF476F",
   succes: "#06D6A0",

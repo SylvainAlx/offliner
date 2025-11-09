@@ -3,12 +3,26 @@ import { OfflinePeriod } from "../types/OfflinePeriod";
 import { config } from "@/config/env";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { confirmDialog } from "@/utils/formatNotification";
-import { formatDuration } from "shared/utils/formatDuration";
 
 // Récupérer les périodes
-async function getPeriods(): Promise<OfflinePeriod[]> {
+export async function getPeriods(): Promise<OfflinePeriod[]> {
   const json = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_PERIODS);
-  return json ? JSON.parse(json) : [];
+  if (!json) return [];
+
+  let data: OfflinePeriod[];
+  try {
+    data = JSON.parse(json) as OfflinePeriod[];
+  } catch {
+    console.warn("Invalid AsyncStorage data, clearing...");
+    await AsyncStorage.removeItem(STORAGE_KEYS.OFFLINE_PERIODS);
+    return [];
+  }
+
+  // Vérifie le format de chaque item
+  return data.filter(
+    (p: OfflinePeriod) =>
+      p.from && new Date(p.from).toString() !== "Invalid Date",
+  );
 }
 
 // Ajouter une période
@@ -72,12 +86,9 @@ export async function clearPeriod(index: number) {
 }
 
 // supprimer toutes les périodes
-export async function clearAllPeriods(duration: number) {
+export async function clearAllPeriods() {
   const confirmed = await confirmDialog(
-    `Es-tu sûr de vouloir supprimer toutes les périodes non synchronisées (${formatDuration(
-      duration,
-      true,
-    )}) ?`,
+    `Es-tu sûr de vouloir supprimer toutes les périodes non synchronisées ?`,
   );
 
   if (!confirmed) return;

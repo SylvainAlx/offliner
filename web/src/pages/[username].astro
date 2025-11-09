@@ -111,6 +111,10 @@ if (user) {
             title="Temps passé hors-ligne"
             data={formatDuration(user.total_duration)}
           />
+           <DataCard
+            title="Gemmes de temps minées"
+            data={user.gem_balance + " 💎"}
+          />
           <DataCard
             title="Économie d'énergie estimée"
             data={getPowerSavingEstimate(user.total_duration)}

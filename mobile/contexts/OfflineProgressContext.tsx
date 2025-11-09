@@ -10,6 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AppState, AppStateStatus } from "react-native";
 import { showMessage } from "@/utils/formatNotification";
 import { STORAGE_KEYS } from "@/constants/Labels";
+import { getPeriods } from "@/services/offlineStorage";
 
 type OfflineProgressContextType = {
   totalUnsync: number;
@@ -36,11 +37,6 @@ export const OfflineProgressProvider = ({
 
   // Helpers
   type OfflinePeriod = { from?: string | null; to?: string | null };
-
-  const getPeriods = async (): Promise<OfflinePeriod[]> => {
-    const json = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_PERIODS);
-    return json ? (JSON.parse(json) as OfflinePeriod[]) : [];
-  };
 
   const savePeriods = async (periods: OfflinePeriod[]) => {
     await AsyncStorage.setItem(
@@ -139,7 +135,6 @@ export const OfflineProgressProvider = ({
       handleAppStateChange,
     );
     return () => subscription.remove();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOnline]);
 
   // 🏁 Initialisation
@@ -148,7 +143,6 @@ export const OfflineProgressProvider = ({
       const total = await getTotalSeconds();
       setTotalUnsync(total);
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

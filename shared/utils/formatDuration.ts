@@ -28,6 +28,7 @@ export function formatDuration(
     if (mins > 0) parts.push(`${mins} minute${mins > 1 ? "s" : ""}`);
     if (secs > 0 || parts.length === 0)
       parts.push(`${secs} seconde${secs > 1 ? "s" : ""}`);
+    return parts.join(" ");
   } else {
     if (years > 0) parts.push(`${years}a`); // années
     if (months > 0) parts.push(`${months}m`); // mois
@@ -38,4 +39,16 @@ export function formatDuration(
   }
 
   return parts.join(" ");
+}
+
+export function countMinutesFromSeconds(seconds: number): number {
+  return Math.floor(seconds / 60);
+}
+
+export function getFutureDateFromDuration(
+  date: Date,
+  durationSeconds: number,
+): Date {
+  const futureTime = date.getTime() + durationSeconds * 1000; // convertir secondes en ms
+  return new Date(futureTime);
 }
