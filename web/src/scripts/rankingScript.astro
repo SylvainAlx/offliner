@@ -1,0 +1,107 @@
+<!-- script client : tri + recherche -->
+<script type="module">
+  // lecture sûre des données préparées côté serveur
+  const initialDataEl = document.getElementById("initial-data");
+  const initialData = initialDataEl
+    ? JSON.parse(initialDataEl.textContent || "[]")
+    : [];
+
+  const sortSelect = document.getElementById("sortSelect");
+  const tbody = document.getElementById("rankingBody");
+
+  // petite util pour échapper le HTML (sécurité)
+  function escapeHtml(str = "") {
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  // génère le HTML d'une ligne ; on utilise les valeurs préparées côté serveur
+  function rowHtml(user, displayIndex) {
+    const medal =
+      displayIndex === 0
+        ? "🥇"
+        : displayIndex === 1
+          ? "🥈"
+          : displayIndex === 2
+            ? "🥉"
+            : "";
+    const username = escapeHtml(user.username || "Utilisateur anonyme");
+    const country = escapeHtml(user.country || "-");
+    const region = escapeHtml(user.region || "-");
+    const subregion = escapeHtml(user.subregion || "-");
+    const formattedDuration = escapeHtml(user.formatted_total_duration || "0s");
+    const gemBalance = escapeHtml(String(user.gem_balance || 0));
+
+    return `
+      <tr class="hover:bg-secondary/20">
+        <th class="text-right flex items-center gap-2">${medal} ${displayIndex + 1}</th>
+        <td>
+          <a href="/${encodeURIComponent(user.username || "")}" class="text-primary font-bold hover:underline">${username}</a>
+        </td>
+        <td class="text-right text-accent">${formattedDuration}</td>
+        <td class="text-right text-accent">${gemBalance}</td>
+        <td>${country}</td>
+        <td>${region}</td>
+        <td>${subregion}</td>
+      </tr>
+    `;
+  }
+
+  // render
+  function renderTable(users) {
+    if (!tbody) return;
+    if (!users || users.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center">Aucun utilisateur trouvé.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = users.map((u, i) => rowHtml(u, i)).join("");
+  }
+
+  // tri initial (par total_duration_num décroissant)
+  function sortUsers(users, key) {
+    return [...users].sort((a, b) => (b[key] || 0) - (a[key] || 0));
+  }
+
+  // initial render
+  let currentSortKey = sortSelect ? sortSelect.value : "total_duration_num";
+  renderTable(sortUsers(initialData, currentSortKey));
+
+  // handler de changement de tri
+  if (sortSelect) {
+    sortSelect.addEventListener("change", () => {
+      currentSortKey = sortSelect.value;
+      renderTable(sortUsers(initialData, currentSortKey));
+    });
+  }
+</script>
+<script>
+  import { getUser } from "src/api/users";
+
+  const input = document.getElementById("usernameInput") as HTMLInputElement;
+  const button = document.getElementById("searchBtn") as HTMLButtonElement;
+  const errorMsg = document.getElementById("errorMsg") as HTMLParagraphElement;
+
+  button.addEventListener("click", async () => {
+    const username = input.value.trim();
+    errorMsg.classList.add("hidden");
+    errorMsg.textContent = "";
+
+    if (!username) {
+      errorMsg.textContent = "Veuillez entrer un pseudo.";
+      errorMsg.classList.remove("hidden");
+      return;
+    }
+
+    const user = await getUser(username);
+    if (user) {
+      window.location.href = `/${user.username}`;
+    } else {
+      errorMsg.textContent = "Aucun utilisateur trouvé.";
+      errorMsg.classList.remove("hidden");
+    }
+  });
+</script>

@@ -1,6 +1,17 @@
 import { supabase } from "src/lib/supabase";
 
-export async function getUser(username: string | undefined) {
+export type User = {
+  id: string;
+  username: string;
+  total_duration: number;
+  country: string | null;
+  region: string | null;
+  subregion: string | null;
+  gem_balance: number;
+  created_at: Date;
+};
+
+export async function getUser(username: string | undefined): Promise<User> {
   const { data: user, error } = await supabase
     .from("users")
     .select("*")
@@ -45,7 +56,7 @@ export async function getRanking(
 export async function getUsersRanking() {
   const { data, error } = await supabase
     .from("users")
-    .select("username, total_duration, country, region, subregion")
+    .select("username, total_duration, country, region, subregion, gem_balance")
     .not("total_duration", "is", null)
     .order("total_duration", { ascending: false })
     .limit(100); // 👉 top 100

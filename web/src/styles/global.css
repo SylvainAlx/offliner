@@ -25,3 +25,12 @@
   --font-title: "TitleFont", sans-serif;
   --font-main: "MainFont", sans-serif;
 }
+
+select {
+  color-scheme: dark;
+}
+
+select option {
+  background-color: #1a1a1a; /* fond sombre */
+  color: #f1f1f1; /* texte clair */
+}
