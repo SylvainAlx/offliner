@@ -1,15 +1,16 @@
-import { indexStyles } from "@/styles/custom.styles";
 import { globalStyles } from "@/styles/global.styles";
+import { UnsyncStats } from "@/types/TypOffline";
 import { Session } from "@supabase/supabase-js";
 import { router } from "expo-router";
 import { View, Text } from "react-native";
 import { Button } from "react-native-paper";
 import { COLORS } from "shared/theme";
-import { formatDuration } from "shared/utils/formatDuration";
+import Timer from "./Timer";
+import { indexStyles } from "@/styles/custom.styles";
 
 interface CommandCardProps {
   session: Session | null;
-  totalUnsync: number;
+  unsyncStats: UnsyncStats;
   isLoading: boolean;
   isOnline: boolean;
   sendPeriods: () => Promise<void>;
@@ -17,7 +18,7 @@ interface CommandCardProps {
 
 export default function CommandCard({
   session,
-  totalUnsync,
+  unsyncStats,
   isLoading,
   isOnline,
   sendPeriods,
@@ -25,25 +26,27 @@ export default function CommandCard({
   return (
     <View style={globalStyles.card}>
       <Text style={globalStyles.cardTitle}>Synchronisation</Text>
-      <Text style={indexStyles.message}>
-        {session
-          ? totalUnsync === 0
-            ? "Pas de temps hors ligne à synchroniser"
-            : !isLoading
-            ? `${formatDuration(
-                totalUnsync,
-              )} hors ligne en attente de synchronisation ${
-                isOnline ? "" : "(en cours...)"
-              }`
-            : "Synchronisation en cours..."
-          : "Vous devez avoir un compte pour synchroniser le temps hors ligne et miner des gemmes de temps"}
-      </Text>
+      <Timer label="temps non synchronisé" duration={unsyncStats.total} />
 
+      {!session && (
+        <Text style={indexStyles.message}>
+          Vous devez avoir un compte pour synchroniser le temps hors ligne et
+          miner des gemmes de temps
+        </Text>
+      )}
+
+      {/* <Button
+        mode="contained"
+        onPress={clearAllPeriods}
+        style={globalStyles.button}
+      >
+        Nettoyer
+      </Button> */}
       {session && isOnline ? (
         <Button
           mode="contained"
           onPress={sendPeriods}
-          disabled={totalUnsync === 0 || isLoading}
+          disabled={unsyncStats.total === 0 || isLoading}
           buttonColor={isOnline ? COLORS.secondary : COLORS.dark}
           style={globalStyles.button}
         >

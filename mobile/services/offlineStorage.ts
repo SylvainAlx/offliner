@@ -1,11 +1,69 @@
 import { STORAGE_KEYS } from "@/constants/Labels";
-import { OfflinePeriod } from "../types/OfflinePeriod";
-import { config } from "@/config/env";
+import { OfflinePeriod, UnsyncStats } from "../types/TypOffline";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { confirmDialog } from "@/utils/formatNotification";
+import { confirmDialog, showMessage } from "@/utils/formatNotification";
+import { config } from "@/config/env";
+
+export async function getLastOpenPeriod(): Promise<Date | null> {
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_PERIODS);
+    const list = raw ? JSON.parse(raw) : [];
+    const last = list[list.length - 1];
+    if (last && last.start && !last.end) {
+      return new Date(last.start);
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      showMessage(error.message, "error", "Erreur");
+    }
+  }
+  return null;
+}
+
+export async function getUnsyncStats(): Promise<UnsyncStats> {
+  const periods = await getPeriods();
+  let total = 0;
+  let weekly = 0;
+  let daily = 0;
+
+  const now = new Date();
+  const startOfDay = new Date(now);
+  startOfDay.setHours(0, 0, 0, 0);
+
+  // Lundi comme premier jour de la semaine
+  const startOfWeek = new Date(now);
+  const day = now.getDay(); // 0=dimanche, 1=lundi, etc.
+  const diffToMonday = (day === 0 ? -6 : 1) - day;
+  startOfWeek.setDate(now.getDate() + diffToMonday);
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  for (const p of periods) {
+    if (!p?.from) continue;
+
+    const start = new Date(p.from).getTime();
+    const end = p.to ? new Date(p.to).getTime() : Date.now();
+    const duration = Math.floor((end - start) / 1000);
+
+    total += duration;
+
+    if (end > startOfWeek.getTime()) {
+      const overlapStart = Math.max(start, startOfWeek.getTime());
+      const overlapEnd = end;
+      weekly += Math.floor((overlapEnd - overlapStart) / 1000);
+    }
+
+    if (end > startOfDay.getTime()) {
+      const overlapStart = Math.max(start, startOfDay.getTime());
+      const overlapEnd = end;
+      daily += Math.floor((overlapEnd - overlapStart) / 1000);
+    }
+  }
+
+  return { total, weekly, daily };
+}
 
 // Récupérer les périodes
-export async function getPeriods(): Promise<OfflinePeriod[]> {
+async function getPeriods(): Promise<OfflinePeriod[]> {
   const json = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_PERIODS);
   if (!json) return [];
 
@@ -25,48 +83,43 @@ export async function getPeriods(): Promise<OfflinePeriod[]> {
   );
 }
 
-// Ajouter une période
+// Ajout d'une période
 export async function addPeriod(period: OfflinePeriod) {
-  const data = await getPeriods();
-  data.push(period);
+  const periods = await getPeriods();
+  periods.push(period);
   await AsyncStorage.setItem(
     STORAGE_KEYS.OFFLINE_PERIODS,
-    JSON.stringify(data),
+    JSON.stringify(periods),
   );
 }
 
-// Fermer la dernière période
-export async function closeLastPeriod(to: string) {
-  const data = await getPeriods();
-  const reversed = [...data].reverse();
-  const last = reversed.find((p) => !p.to);
+// cloture d'une période
+export async function closeLastPeriod(to?: string) {
+  const periods = await getPeriods();
+  const reversed = [...periods].reverse();
 
+  function deleteElement(element: OfflinePeriod) {
+    const index = reversed.indexOf(element);
+    if (index !== -1) reversed.splice(index, 1);
+  }
+
+  const last = reversed.find((p) => !p.to);
   if (!last || !last.from) return;
 
-  const fromDate = new Date(last.from);
-  const toDate = new Date(to);
-  const duration = toDate.getTime() - fromDate.getTime();
-
-  if (duration >= config.minimumDurationMs) {
-    last.to = to;
+  if (to) {
+    const duration = new Date(to).getTime() - new Date(last.from).getTime();
+    if (duration >= config.minimumDurationMs) {
+      last.to = to;
+    } else {
+      deleteElement(last);
+    }
   } else {
-    const index = reversed.indexOf(last);
-    if (index !== -1) reversed.splice(index, 1);
+    deleteElement(last);
   }
 
   await AsyncStorage.setItem(
     STORAGE_KEYS.OFFLINE_PERIODS,
     JSON.stringify(reversed.reverse()),
-  );
-}
-
-// Supprimer les périodes non fermées
-export async function deleteUnclosePeriods() {
-  const data = await getPeriods();
-  const updated = data.filter((period) => period.to);
-  await AsyncStorage.setItem(
-    STORAGE_KEYS.OFFLINE_PERIODS,
-    JSON.stringify(updated),
   );
 }
 

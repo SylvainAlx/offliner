@@ -7,6 +7,7 @@ import {
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
 import { clearPeriod, getUnsyncedPeriods } from "@/services/offlineStorage";
+import { emptyStats } from "@/types/TypOffline";
 import { getReadableDeviceName } from "@/utils/deviceModelMap";
 import { showMessage } from "@/utils/formatNotification";
 import { Session } from "@supabase/supabase-js";
@@ -21,7 +22,7 @@ export const useSyncSession = (session: Session | null) => {
     setDailySyncSeconds,
     dailySyncSeconds,
   } = useSession();
-  const { setTotalUnsync } = useOfflineProgress();
+  const { setUnsyncStats } = useOfflineProgress();
 
   const syncMeasures = async (): Promise<boolean> => {
     try {
@@ -52,7 +53,7 @@ export const useSyncSession = (session: Session | null) => {
         }
       }
       if (globalSuccess) {
-        setTotalUnsync(0);
+        setUnsyncStats(emptyStats);
         setTotalSyncSeconds(totalSyncSeconds + totalTime);
         setWeeklySyncSeconds(weeklySyncSeconds + totalTime);
         setDailySyncSeconds(dailySyncSeconds + totalTime);

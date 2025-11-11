@@ -4,9 +4,9 @@ import { useSession } from "@/contexts/SessionContext";
 import { useSyncSession } from "@/hooks/useSyncSession";
 import { formatDuration } from "shared/utils/formatDuration";
 import { confirmDialog, showMessage } from "@/utils/formatNotification";
-import { getLastOpenPeriod } from "@/utils/getOfflineTime";
 import { useEffect, useRef, useState } from "react";
 import { getReadableDeviceName } from "@/utils/deviceModelMap";
+import { getLastOpenPeriod } from "@/services/offlineStorage";
 
 export const useHome = () => {
   const [since, setSince] = useState<Date | null>(null);
@@ -17,7 +17,7 @@ export const useHome = () => {
 
   const { totalSyncSeconds, session } = useSession();
   const { syncMeasures } = useSyncSession(session);
-  const { totalUnsync, isOnline } = useOfflineProgress();
+  const { unsyncStats, isOnline } = useOfflineProgress();
   const [nextGoal, setNextGoal] = useState<(typeof GOALS)[0] | undefined>(
     undefined,
   );
@@ -66,10 +66,10 @@ export const useHome = () => {
 
   useEffect(() => {
     const goal = GOALS.find(
-      (goal) => totalSyncSeconds + totalUnsync < goal.targetSeconds,
+      (goal) => totalSyncSeconds + unsyncStats.total < goal.targetSeconds,
     );
     setNextGoal(goal);
-  }, [totalSyncSeconds, totalUnsync]);
+  }, [totalSyncSeconds, unsyncStats]);
 
   useEffect(() => {
     if (since && !isOnline) {
@@ -93,7 +93,7 @@ export const useHome = () => {
     isLoading,
     sendPeriods,
     session,
-    totalUnsync,
+    unsyncStats,
     totalSyncSeconds,
     deviceName,
   };

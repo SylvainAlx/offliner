@@ -17,7 +17,7 @@ export default function Home() {
     isLoading,
     sendPeriods,
     session,
-    totalUnsync,
+    unsyncStats,
     totalSyncSeconds,
     deviceName,
   } = useHome();
@@ -36,22 +36,22 @@ export default function Home() {
       <TimerCard
         isOnline={isOnline}
         totalSyncSeconds={totalSyncSeconds}
-        totalUnsync={totalUnsync}
+        unsyncStats={unsyncStats}
       />
       <CommandCard
         isLoading={isLoading}
         isOnline={isOnline}
         sendPeriods={sendPeriods}
         session={session}
-        totalUnsync={totalUnsync}
+        unsyncStats={unsyncStats}
       />
       {session && <MiningCard isOnline={isOnline} />}
 
-      <PowerSavingCard totalSeconds={totalSyncSeconds + totalUnsync} />
+      <PowerSavingCard totalSeconds={totalSyncSeconds + unsyncStats.total} />
       <GoalCard
         nextGoal={nextGoal}
         totalSyncSeconds={totalSyncSeconds}
-        totalUnsync={totalUnsync}
+        totalUnsync={unsyncStats.total}
       />
     </ScrollView>
   );

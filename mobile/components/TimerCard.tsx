@@ -2,22 +2,23 @@ import { useSession } from "@/contexts/SessionContext";
 import { globalStyles } from "@/styles/global.styles";
 import { Text, View } from "react-native";
 import Timer from "./Timer";
+import { UnsyncStats } from "@/types/TypOffline";
 
 interface TimerCardProps {
   isOnline: boolean;
   totalSyncSeconds: number;
-  totalUnsync: number;
+  unsyncStats: UnsyncStats;
 }
 
 export default function TimerCard({
   totalSyncSeconds,
-  totalUnsync,
+  unsyncStats,
 }: TimerCardProps) {
   const { weeklySyncSeconds, dailySyncSeconds } = useSession();
 
-  const totalAll = totalSyncSeconds + totalUnsync;
-  const totalWeek = weeklySyncSeconds + totalUnsync;
-  const totalDay = dailySyncSeconds + totalUnsync;
+  const totalAll = totalSyncSeconds + unsyncStats.total;
+  const totalWeek = weeklySyncSeconds + unsyncStats.weekly;
+  const totalDay = dailySyncSeconds + unsyncStats.daily;
 
   return (
     <View style={globalStyles.card}>
