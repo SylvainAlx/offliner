@@ -5,6 +5,8 @@ import { showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
 import { Session, User } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useState } from "react";
+import * as Linking from "expo-linking";
+import { router } from "expo-router";
 
 type SessionContextType = {
   session: Session | null;
@@ -109,6 +111,25 @@ export const SessionProvider = ({
     getProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
+
+  useEffect(() => {
+    const handleDeepLink = async ({ url }: { url: string }) => {
+      const { path, queryParams } = Linking.parse(url);
+
+      if (path === "reset-password" && queryParams?.access_token) {
+        // Optionnel : connecter automatiquement l'utilisateur
+        await supabase.auth.setSession({
+          access_token: queryParams.access_token as string,
+          refresh_token: queryParams.refresh_token as string,
+        });
+
+        router.push("/reset-password");
+      }
+    };
+
+    const subscription = Linking.addEventListener("url", handleDeepLink);
+    return () => subscription.remove();
+  }, []);
 
   return (
     <SessionContext.Provider

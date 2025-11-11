@@ -1,66 +1,24 @@
-import { globalStyles } from "@/styles/global.styles";
-import { showMessage } from "@/utils/formatNotification";
-import { supabase } from "@/utils/supabase";
-import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { View } from "react-native";
-import { TextInput, Button } from "react-native-paper";
-import { COLORS } from "shared/theme";
+import { View, TextInput, Button } from "react-native";
+import { updatePassword } from "@/api/auth";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const params = useLocalSearchParams();
 
-  // Supabase fournit un access_token dans l’URL
-  // Expo Router mettra ça dans params (ex: params.access_token)
-
-  async function handleReset() {
-    const { error } = await supabase.auth.updateUser({
-      password,
-    });
-
-    if (error) {
-      if (error instanceof Error) {
-        showMessage(error.message, "error", "Erreur");
-      }
-    } else {
-      showMessage("Mot de passe mis à jour !", "success", "Mise à jour");
-    }
-  }
+  const handleSubmit = async () => {
+    await updatePassword(password);
+  };
 
   return (
-    <View style={globalStyles.verticallySpaced}>
+    <View style={{ padding: 20, gap: 10 }}>
       <TextInput
-        value={password}
-        onChangeText={setPassword}
-        style={globalStyles.input}
+        secureTextEntry
         placeholder="Nouveau mot de passe"
-        textColor={COLORS.text}
-        secureTextEntry={!showPassword}
-        autoCapitalize="none"
-        returnKeyType="done"
-        theme={{
-          colors: { text: COLORS.text, placeholder: COLORS.text },
-        }}
-        right={
-          <TextInput.Icon
-            icon={showPassword ? "eye-off" : "eye"}
-            onPress={() => setShowPassword(!showPassword)}
-          />
-        }
+        onChangeText={setPassword}
+        value={password}
+        style={{ borderWidth: 1, padding: 10 }}
       />
-      <View style={globalStyles.buttonContainer}>
-        <Button
-          mode="contained"
-          onPress={handleReset}
-          disabled={!password}
-          buttonColor={COLORS.secondary}
-          style={[globalStyles.button, { borderRadius: 100 }]}
-        >
-          Changer le mot de passe
-        </Button>
-      </View>
+      <Button title="Valider" onPress={handleSubmit} />
     </View>
   );
 }

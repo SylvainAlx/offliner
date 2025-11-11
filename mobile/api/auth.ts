@@ -147,13 +147,50 @@ export async function deleteAccount() {
     await supabase.auth.signOut();
 
     showMessage(
-      "Compte supprimé (données supprimées, utilisateur déconnecté).",
+      "Données supprimées, utilisateur déconnecté.",
       "success",
+      "Compte supprimé",
     );
     return true;
   } catch (error) {
     if (error instanceof Error) {
       showMessage(error.message, "error", "Erreur");
     }
+  }
+}
+
+export async function handleForgotPassword(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: "offliner://reset-password", // ton lien configuré
+  });
+
+  if (error) {
+    console.error(error);
+    showMessage(
+      "Une erreur est survenue, vérifie ton email.",
+      "error",
+      "Erreur",
+    );
+  } else {
+    showMessage(
+      "Un lien de réinitialisation vient d’être envoyé.",
+      "success",
+      "Mail envoyé",
+    );
+  }
+}
+
+export async function updatePassword(newPassword: string) {
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+  if (error) {
+    showMessage(error.message, "error", "Erreur");
+  } else {
+    showMessage(
+      "Mot de passe mis à jour avec succès !",
+      "success",
+      "Nouveau mot de passe",
+    );
   }
 }

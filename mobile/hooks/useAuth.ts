@@ -1,4 +1,8 @@
-import { signInWithEmail, signUpWithEmail } from "@/api/auth";
+import {
+  handleForgotPassword,
+  signInWithEmail,
+  signUpWithEmail,
+} from "@/api/auth";
 import { confirmDialog, showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
 import { useEffect, useRef, useState } from "react";
@@ -102,9 +106,7 @@ async function sendPasswordResetEmail(email: string) {
 
   if (confirmed) {
     try {
-      await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: "offliner://reset-password",
-      });
+      await handleForgotPassword(email);
       showMessage(
         "Un e-mail de réinitialisation du mot de passe vous sera envoyé prochainement.",
         "success",
