@@ -6,7 +6,6 @@ import MiningCard from "@/components/MiningCard";
 import GoalCard from "@/components/GoalCard";
 import PowerSavingCard from "@/components/PowerSavingCard";
 import HeaderCard from "@/components/HeaderCard";
-import CommandCard from "@/components/CommandCard";
 
 export default function Home() {
   const {
@@ -35,15 +34,10 @@ export default function Home() {
       />
       <TimerCard
         isOnline={isOnline}
+        isLoading={isLoading}
         totalSyncSeconds={totalSyncSeconds}
         unsyncStats={unsyncStats}
-      />
-      <CommandCard
-        isLoading={isLoading}
-        isOnline={isOnline}
         sendPeriods={sendPeriods}
-        session={session}
-        unsyncStats={unsyncStats}
       />
       {session && <MiningCard isOnline={isOnline} />}
 

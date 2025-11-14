@@ -1,4 +1,4 @@
-import { getRanking, getUser } from "@/api/users";
+import { getGemRanking, getRanking, getUser } from "@/api/users";
 import { config } from "@/config/env";
 import { useSession } from "@/contexts/SessionContext";
 import { useEffect, useState } from "react";
@@ -34,12 +34,19 @@ export const useStats = () => {
     rank: number;
     total: number;
   } | null>(null);
+  const [gemRanking, setGemRanking] = useState<{
+    rank: number;
+    total: number;
+  } | null>(null);
 
   useEffect(() => {
     const initialize = async () => {
       if (session && username) {
         const userdata = await getUser(session);
         setUser(userdata);
+
+        const gemData = await getGemRanking(null, username);
+        setGemRanking(gemData);
 
         const world = await getRanking(null, username);
         setRankingWorld(world);
@@ -76,6 +83,7 @@ export const useStats = () => {
   return {
     user,
     username,
+    gemRanking,
     rankingWorld,
     rankingCountry,
     rankingRegion,

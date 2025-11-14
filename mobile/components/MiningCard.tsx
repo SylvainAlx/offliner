@@ -58,7 +58,13 @@ export default function MiningCard({ isOnline }: MiningCardProps) {
       ) : (
         <>
           <DigitDisplay
-            color={miningAvailable ? COLORS.succes : COLORS.dark}
+            color={
+              miningAvailable
+                ? gemAvailable > 0
+                  ? COLORS.succes
+                  : COLORS.accent
+                : COLORS.dark
+            }
             digit={gemAvailable.toString()}
             label="Gemmes à miner aujourd'hui"
           />

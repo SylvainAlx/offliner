@@ -68,6 +68,35 @@ export async function getRanking(
   return { rank, total: users.length };
 }
 
+export async function getGemRanking(
+  scope: { column: string; value: string | null } | null,
+  username: string | undefined,
+) {
+  if (!username) return null;
+
+  // Construction de la requête
+  let query = supabase
+    .from("users")
+    .select("username, gem_balance")
+    .not("gem_balance", "is", null)
+    .order("gem_balance", { ascending: false }); // classement du plus grand au plus petit
+
+  // Filtrage si scope défini
+  if (scope?.value) {
+    query = query.eq(scope.column, scope.value);
+  }
+
+  const { data: users, error } = await query;
+
+  if (error || !users) {
+    console.error(error);
+    return null;
+  }
+
+  const rank = users.findIndex((u) => u.username === username) + 1;
+  return { rank, total: users.length };
+}
+
 export async function updateUser({
   session,
   username,

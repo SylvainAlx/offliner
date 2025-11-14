@@ -9,6 +9,7 @@ export default function StatsScreen() {
   const {
     user,
     username,
+    gemRanking,
     rankingWorld,
     rankingCountry,
     rankingRegion,
@@ -30,9 +31,10 @@ export default function StatsScreen() {
           textAlign: "center",
         }}
       >
-        Classement personnel
+        Position au classement général
       </Text>
 
+      <Text style={globalStyles.cardTitle}>Temps passé hors ligne</Text>
       <RankingCard title="Monde" ranking={rankingWorld} />
       <RankingCard title={user?.country ?? null} ranking={rankingCountry} />
       <RankingCard title={user?.region ?? null} ranking={rankingRegion} />
@@ -40,6 +42,8 @@ export default function StatsScreen() {
         title={user?.subregion ?? null}
         ranking={rankingDepartment}
       />
+      <Text style={globalStyles.cardTitle}>Collection</Text>
+      <RankingCard title="Gemmes de temps" ranking={gemRanking} />
       <View style={globalStyles.buttonContainer}>
         <Button
           mode="contained"

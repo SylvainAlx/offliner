@@ -34,7 +34,7 @@ export const indexStyles = StyleSheet.create({
     fontFamily: "Montserrat",
   },
   onlineText: {
-    color: COLORS.text,
+    color: COLORS.warning,
     fontFamily: "Montserrat",
   },
   offlineText: {
