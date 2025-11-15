@@ -1,7 +1,6 @@
 import { COLORS, SIZES } from "shared/theme";
 import { goalProgressStyles } from "@/styles/custom.styles";
 import { globalStyles } from "@/styles/global.styles";
-import React from "react";
 import { Text, View } from "react-native";
 import * as Progress from "react-native-progress";
 import { Goal } from "shared/goals";
@@ -31,7 +30,7 @@ export default function GoalProgress({ goal, totalSeconds, bgColor }: Props) {
         style={{
           color: COLORS.accent,
           fontSize: SIZES.text_lg,
-          fontFamily: "Knewave",
+          fontFamily: "Doto",
         }}
       >
         {goal.id}

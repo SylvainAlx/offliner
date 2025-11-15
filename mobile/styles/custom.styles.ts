@@ -55,9 +55,9 @@ export const accountStyles = StyleSheet.create({
 
 export const headerStyles = StyleSheet.create({
   headerTitle: {
-    fontSize: SIZES.text_2xl,
+    fontSize: SIZES.text_xl,
     color: COLORS.primary,
-    fontFamily: "Knewave",
+    fontFamily: "Doto",
   },
   version: {
     position: "absolute",

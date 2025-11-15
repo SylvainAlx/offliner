@@ -15,7 +15,7 @@ export function showMessage(
       text1: title,
       text2: text,
       position: "top",
-      visibilityTime: 5000,
+      visibilityTime: 3000,
       autoHide: true,
     });
   }

@@ -35,7 +35,7 @@ export default function HeaderCard({
         {isOnline === null
           ? "Chargement..."
           : isOnline
-          ? `Appareil ${deviceName} connecté à internet`
+          ? `Appareil ${deviceName} connecté à internet. Couper le wifi et les données mobiles pour commencer une session focus`
           : `Appareil ${deviceName} hors ligne`}
       </Text>
 

@@ -63,7 +63,7 @@ export async function getUnsyncStats(): Promise<UnsyncStats> {
 }
 
 // Récupérer les périodes
-async function getPeriods(): Promise<OfflinePeriod[]> {
+export async function getPeriods(): Promise<OfflinePeriod[]> {
   const json = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_PERIODS);
   if (!json) return [];
 

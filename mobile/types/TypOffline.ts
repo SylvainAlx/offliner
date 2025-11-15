@@ -17,3 +17,9 @@ export const emptyStats: UnsyncStats = {
   weekly: 0,
   total: 0,
 };
+
+export type DailySummary = {
+  date: string;
+  displayDate: string;
+  totalSeconds: number;
+};

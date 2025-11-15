@@ -78,10 +78,13 @@ export const globalStyles = StyleSheet.create({
     gap: SIZES.margin,
   },
   button: {
-    paddingVertical: SIZES.padding / 2,
-    paddingHorizontal: SIZES.padding,
+    paddingVertical: SIZES.padding / 4,
+    paddingHorizontal: SIZES.padding / 2,
+    marginTop: SIZES.margin / 2,
+    marginBottom: SIZES.margin,
     alignItems: "center",
     borderRadius: 100,
+    alignSelf: "center",
   },
   input: {
     borderWidth: 2,
