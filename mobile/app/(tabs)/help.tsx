@@ -5,6 +5,7 @@ import { Text, Linking, Pressable, ScrollView } from "react-native";
 import { Button } from "react-native-paper";
 import { PROJECT } from "shared/config";
 import { COLORS } from "shared/theme";
+import { ENERGY_CONSUMPTION } from "shared/utils/powerSaving";
 
 export default function HelpScreen() {
   const handlePress = () => {
@@ -54,6 +55,13 @@ export default function HelpScreen() {
         d&apos;engagement en minutes sera alors convertie en gemmes et ajoutée à
         la mine. Pour le moment seul un administrateur peut ajouter manuellement
         des gemmes à la mine.
+      </Text>
+      <Text style={globalStyles.cardTitle}>Énergie économisée</Text>
+      <Text style={globalStyles.contentText}>
+        L&apos;application calcule l&apos;économie d&apos;énergie en fonction de
+        la durée totale hors ligne. L&apos;estimation est basée sur une
+        consommation moyenne de {ENERGY_CONSUMPTION.WIFI}WH pour le wifi et de{" "}
+        {ENERGY_CONSUMPTION.GSM}WH pour les données mobiles.
       </Text>
       <Text style={globalStyles.cardTitle}>Informations importantes</Text>
       <Text style={globalStyles.contentText}>

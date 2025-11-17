@@ -6,6 +6,7 @@ import { SIZES, COLORS } from "shared/theme";
 import { Button } from "react-native-paper";
 import { router } from "expo-router";
 import { useSession } from "@/contexts/SessionContext";
+import DigitDisplay from "@/components/DigitDisplay";
 
 export default function HistoryScreen() {
   const { session } = useSession();
@@ -72,13 +73,11 @@ export default function HistoryScreen() {
         )}
         renderItem={({ item }) => (
           <View style={globalStyles.card}>
-            <Text style={globalStyles.cardTitle}>
-              📅 {item.totalSeconds > 86400 && "à partir du "}{" "}
-              {item.displayDate}
-            </Text>
-            <Text style={globalStyles.contentText}>
-              Total : {formatDuration(item.totalSeconds)}
-            </Text>
+            <DigitDisplay
+              digit={formatDuration(item.totalSeconds)}
+              label={item.displayDate}
+              color={COLORS.accent}
+            />
           </View>
         )}
       />

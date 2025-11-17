@@ -32,10 +32,10 @@ export default function TimerCard({
     <View style={globalStyles.card}>
       <Text style={globalStyles.cardTitle}>Temps passé hors ligne</Text>
 
-      <Timer label="total" duration={totalAll} />
-      <Timer label="cette semaine" duration={totalWeek} />
-      <Timer label="aujourd'hui" duration={totalDay} />
-      <Timer label="non synchronisé" duration={unsyncStats.total} />
+      <Timer label="Total" duration={totalAll} />
+      <Timer label="Cette semaine" duration={totalWeek} />
+      <Timer label="Aujourd'hui" duration={totalDay} />
+      <Timer label="Local (non synchronisé)" duration={unsyncStats.total} />
       {/* <Button
         mode="contained"
         onPress={clearAllPeriods}

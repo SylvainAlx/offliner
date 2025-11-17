@@ -18,10 +18,10 @@ export default function MiningCard({ isOnline }: MiningCardProps) {
   const {
     miningCapacity,
     dailySyncSeconds,
-    totalGem,
     lastMineSync,
     miningAvailable,
     session,
+    totalGem,
     mineGem,
   } = UseMining();
 
@@ -42,7 +42,7 @@ export default function MiningCard({ isOnline }: MiningCardProps) {
       <DigitDisplay
         color={COLORS.accent}
         digit={totalGem.toString()}
-        label="gemmes minées"
+        label="Gemmes minées"
       />
       {miningCapacity === null ? (
         <ActivityIndicator />
@@ -50,7 +50,7 @@ export default function MiningCard({ isOnline }: MiningCardProps) {
         <DigitDisplay
           color={COLORS.accent}
           digit={miningCapacity.toString()}
-          label="gemmes dans la mine"
+          label="Gemmes dans la mine"
         />
       )}
       {dailySyncSeconds === null ? (

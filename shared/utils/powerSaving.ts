@@ -1,4 +1,4 @@
-const ENERGY_CONSUMPTION = {
+export const ENERGY_CONSUMPTION = {
   WIFI: 0.1,
   GSM: 0.2,
 };

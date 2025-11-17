@@ -1,18 +1,23 @@
 import { COLORS, SIZES } from "shared/theme";
-import { goalProgressStyles } from "@/styles/custom.styles";
 import { globalStyles } from "@/styles/global.styles";
 import { Text, View } from "react-native";
-import * as Progress from "react-native-progress";
 import { Goal } from "shared/goals";
 import { formatDuration } from "shared/utils/formatDuration";
+import DigitDisplay from "./DigitDisplay";
 
 type Props = {
   goal: Goal;
   totalSeconds: number;
   bgColor?: string;
+  isOnline: boolean;
 };
 
-export default function GoalProgress({ goal, totalSeconds, bgColor }: Props) {
+export default function GoalProgress({
+  goal,
+  totalSeconds,
+  bgColor,
+  isOnline,
+}: Props) {
   const isAchieved = totalSeconds >= goal.targetSeconds;
   const percent = Math.min(1, totalSeconds / goal.targetSeconds);
 
@@ -23,18 +28,7 @@ export default function GoalProgress({ goal, totalSeconds, bgColor }: Props) {
         { backgroundColor: bgColor ? bgColor : COLORS.card },
       ]}
     >
-      <Text style={globalStyles.cardTitle}>
-        {formatDuration(goal.targetSeconds, true)}
-      </Text>
-      <Text
-        style={{
-          color: COLORS.accent,
-          fontSize: SIZES.text_lg,
-          fontFamily: "Doto",
-        }}
-      >
-        {goal.id}
-      </Text>
+      <Text style={globalStyles.cardTitle}>{goal.id}</Text>
       <Text
         style={{
           color: COLORS.text,
@@ -44,32 +38,20 @@ export default function GoalProgress({ goal, totalSeconds, bgColor }: Props) {
       >
         {goal.label}
       </Text>
-
-      {!isAchieved && (
-        <View
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <Progress.Bar
-            progress={percent}
-            color={COLORS.primary}
-            height={12}
-            borderRadius={10}
-          />
-          <Text style={goalProgressStyles.percentText}>
-            {(percent * 100).toFixed(2)}% complété
-          </Text>
-        </View>
-      )}
-
-      {isAchieved && (
-        <Text style={goalProgressStyles.achievedText}>
-          ✅ Objectif atteint !
-        </Text>
-      )}
+      <DigitDisplay
+        digit={formatDuration(goal.targetSeconds)}
+        label="Objectif"
+        color={COLORS.accent}
+      />
+      <DigitDisplay
+        digit={
+          isAchieved ? "objectif atteint" : (percent * 100).toFixed(2) + "%"
+        }
+        label="Progression"
+        color={
+          isAchieved ? COLORS.succes : isOnline ? COLORS.accent : COLORS.succes
+        }
+      />
     </View>
   );
 }

@@ -113,24 +113,49 @@ export const SessionProvider = ({
   }, [session]);
 
   useEffect(() => {
-    const handleDeepLink = async ({ url }: { url: string }) => {
+    const processResetPasswordUrl = async (url: string) => {
       const { path, queryParams } = Linking.parse(url);
 
-      if (path === "reset-password" && queryParams?.access_token) {
-        // Cette fonction gère automatiquement access_token / refresh_token
-        const { error } = await supabase.auth.exchangeCodeForSession(url);
+      let accessToken = queryParams?.access_token as string | undefined;
+      let refreshToken = queryParams?.refresh_token as string | undefined;
+
+      if (!accessToken || !refreshToken) {
+        try {
+          const u = new URL(url);
+          const hash = u.hash.startsWith("#") ? u.hash.slice(1) : u.hash;
+          const params = new URLSearchParams(hash);
+          accessToken = params.get("access_token") ?? undefined;
+          refreshToken = params.get("refresh_token") ?? undefined;
+        } catch {}
+      }
+
+      if (path === "reset-password" && accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
 
         if (error) {
-          console.error("Erreur lors de l'échange de session", error);
+          console.error("Erreur lors de l'activation de la session", error);
+          showMessage(
+            "Erreur lors de l'activation de la session",
+            "error",
+            "Erreur",
+          );
           return;
         }
 
-        // Maintenant la session est ACTIVE !
         router.push("/reset-password");
       }
     };
 
-    const subscription = Linking.addEventListener("url", handleDeepLink);
+    Linking.getInitialURL().then((url) => {
+      if (url) processResetPasswordUrl(url);
+    });
+
+    const subscription = Linking.addEventListener("url", ({ url }) =>
+      processResetPasswordUrl(url),
+    );
     return () => subscription.remove();
   }, []);
 
