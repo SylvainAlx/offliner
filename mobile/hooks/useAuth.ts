@@ -81,6 +81,31 @@ export const useAuth = () => {
     }
   }
 
+  async function sendPasswordResetEmail(email: string) {
+    if (!email) {
+      showMessage("Veuillez saisir votre adresse e-mail.", "warn", "Attention");
+      return;
+    }
+    const confirmed = await confirmDialog(
+      "Envoyer un e-mail de réinitialisation du mot de passe ?",
+    );
+
+    if (confirmed) {
+      try {
+        await handleForgotPassword(email);
+        showMessage(
+          "Un e-mail de réinitialisation du mot de passe vous sera envoyé prochainement.",
+          "success",
+          "Succès",
+        );
+      } catch (error) {
+        if (error instanceof Error) {
+          showMessage(error.message, "error", "Erreur");
+        }
+      }
+    }
+  }
+
   return {
     email,
     setEmail,
@@ -94,28 +119,3 @@ export const useAuth = () => {
     sendPasswordResetEmail,
   };
 };
-
-async function sendPasswordResetEmail(email: string) {
-  if (!email) {
-    showMessage("Veuillez saisir votre adresse e-mail.", "warn", "Attention");
-    return;
-  }
-  const confirmed = await confirmDialog(
-    "Envoyer un e-mail de réinitialisation du mot de passe ?",
-  );
-
-  if (confirmed) {
-    try {
-      await handleForgotPassword(email);
-      showMessage(
-        "Un e-mail de réinitialisation du mot de passe vous sera envoyé prochainement.",
-        "success",
-        "Succès",
-      );
-    } catch (error) {
-      if (error instanceof Error) {
-        showMessage(error.message, "error", "Erreur");
-      }
-    }
-  }
-}

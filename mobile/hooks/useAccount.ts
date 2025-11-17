@@ -17,6 +17,8 @@ export const useAccount = (session: Session) => {
   const [loading, setLoading] = useState(false);
   const {
     setTotalSyncSeconds,
+    setWeeklySyncSeconds,
+    setDailySyncSeconds,
     username,
     setUsername,
     country,
@@ -113,6 +115,8 @@ export const useAccount = (session: Session) => {
     if (result) {
       setUsername("");
       setTotalSyncSeconds(0);
+      setWeeklySyncSeconds(0);
+      setDailySyncSeconds(0);
     }
   };
 

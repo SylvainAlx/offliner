@@ -117,12 +117,15 @@ export const SessionProvider = ({
       const { path, queryParams } = Linking.parse(url);
 
       if (path === "reset-password" && queryParams?.access_token) {
-        // Optionnel : connecter automatiquement l'utilisateur
-        await supabase.auth.setSession({
-          access_token: queryParams.access_token as string,
-          refresh_token: queryParams.refresh_token as string,
-        });
+        // Cette fonction gère automatiquement access_token / refresh_token
+        const { error } = await supabase.auth.exchangeCodeForSession(url);
 
+        if (error) {
+          console.error("Erreur lors de l'échange de session", error);
+          return;
+        }
+
+        // Maintenant la session est ACTIVE !
         router.push("/reset-password");
       }
     };
