@@ -1,4 +1,5 @@
 import { headerStyles } from "@/styles/custom.styles";
+import { Link } from "expo-router";
 import { Text, View, Image } from "react-native";
 import { PROJECT } from "shared/config";
 
@@ -12,10 +13,12 @@ export function AppHeaderTitle() {
         gap: 5,
       }}
     >
-      <Image
-        source={require("../assets/images/icon.png")}
-        style={{ width: 40, height: 40 }} // expo-image a besoin d'un size
-      />
+      <Link href={"../"}>
+        <Image
+          source={require("../assets/images/icon.png")}
+          style={{ width: 40, height: 40 }} // expo-image a besoin d'un size
+        />
+      </Link>
       <Text style={headerStyles.headerTitle}>
         {PROJECT.TITLE.toUpperCase()}
       </Text>

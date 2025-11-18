@@ -17,6 +17,16 @@ export default function StatsScreen() {
     openExternalLink,
   } = useStats();
 
+  const formatDigit = (rank: number): string => {
+    let exposant;
+    exposant = rank === 1 ? " er" : rank >= 2 ? " ème" : "e";
+    return rank + exposant;
+  };
+
+  const formatLabel = (label: string, total: number): string => {
+    return `${label} (${total} utilisateurs)`;
+  };
+
   return (
     <ScrollView
       contentContainerStyle={globalStyles.container}
@@ -27,8 +37,8 @@ export default function StatsScreen() {
         <Text style={globalStyles.cardTitle}>Temps passé hors ligne</Text>
         {rankingWorld ? (
           <DigitDisplay
-            digit={rankingWorld.rank + " / " + rankingWorld.total}
-            label="Monde"
+            digit={formatDigit(rankingWorld.rank)}
+            label={formatLabel("Monde", rankingWorld.total)}
             color={COLORS.accent}
           />
         ) : (
@@ -36,8 +46,8 @@ export default function StatsScreen() {
         )}
         {rankingCountry ? (
           <DigitDisplay
-            digit={rankingCountry.rank + " / " + rankingCountry.total}
-            label={user?.country ?? ""}
+            digit={formatDigit(rankingCountry.rank)}
+            label={formatLabel(user?.country ?? "", rankingCountry.total)}
             color={COLORS.accent}
           />
         ) : (
@@ -45,8 +55,8 @@ export default function StatsScreen() {
         )}
         {rankingRegion ? (
           <DigitDisplay
-            digit={rankingRegion.rank + " / " + rankingRegion.total}
-            label={user?.region ?? ""}
+            digit={formatDigit(rankingRegion.rank)}
+            label={formatLabel(user?.region ?? "", rankingRegion.total)}
             color={COLORS.accent}
           />
         ) : (
@@ -54,8 +64,8 @@ export default function StatsScreen() {
         )}
         {rankingDepartment ? (
           <DigitDisplay
-            digit={rankingDepartment.rank + " / " + rankingDepartment.total}
-            label={user?.subregion ?? ""}
+            digit={formatDigit(rankingDepartment.rank)}
+            label={formatLabel(user?.subregion ?? "", rankingDepartment.total)}
             color={COLORS.accent}
           />
         ) : (
@@ -72,7 +82,7 @@ export default function StatsScreen() {
         />
         {gemRanking ? (
           <DigitDisplay
-            digit={gemRanking.rank + " / " + gemRanking.total}
+            digit={formatDigit(gemRanking.rank)}
             label="Gemmes de temps"
             color={COLORS.accent}
           />

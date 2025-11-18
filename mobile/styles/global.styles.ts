@@ -5,7 +5,7 @@ export const globalStyles = StyleSheet.create({
   container: {
     // flex: 1,
     paddingVertical: SIZES.padding,
-    paddingHorizontal: SIZES.padding * 4,
+    paddingHorizontal: SIZES.padding * 2,
     // flexGrow: 1, // important pour ScrollView
     backgroundColor: COLORS.background,
     display: "flex",

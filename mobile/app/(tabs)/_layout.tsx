@@ -24,9 +24,12 @@ export default function TabLayout() {
         drawerStyle: {
           backgroundColor: COLORS.tabs,
         },
-        sceneStyle: { backgroundColor: COLORS.background },
+        sceneStyle: {
+          backgroundColor: COLORS.background,
+          paddingBottom: SIZES.padding * 5,
+        },
         headerStyle: {
-          backgroundColor: COLORS.tabs,
+          backgroundColor: COLORS.background,
         },
         headerShadowVisible: false,
         headerTitleStyle: {

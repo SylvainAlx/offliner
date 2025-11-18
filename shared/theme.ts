@@ -15,6 +15,7 @@ export const COLORS = {
   danger: "#D72638",
   warning: "#FFA600",
   info: "#118AB2",
+  record: "#c3025a",
 };
 
 // export const COLORS = {

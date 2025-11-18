@@ -36,7 +36,8 @@ export default function DigitDisplay({
       </Text>
       <Animated.Text
         style={{
-          fontSize: SIZES.text_lg * 1.2,
+          paddingTop: 5,
+          fontSize: SIZES.text_xl * 1.1,
           fontFamily: "Doto",
           color: color,
         }}

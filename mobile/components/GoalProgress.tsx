@@ -4,22 +4,18 @@ import { Text, View } from "react-native";
 import { Goal } from "shared/goals";
 import { formatDuration } from "shared/utils/formatDuration";
 import DigitDisplay from "./DigitDisplay";
+import useAnimatedColor from "@/hooks/useAnimatedColor";
 
 type Props = {
   goal: Goal;
   totalSeconds: number;
   bgColor?: string;
-  isOnline: boolean;
 };
 
-export default function GoalProgress({
-  goal,
-  totalSeconds,
-  bgColor,
-  isOnline,
-}: Props) {
+export default function GoalProgress({ goal, totalSeconds, bgColor }: Props) {
   const isAchieved = totalSeconds >= goal.targetSeconds;
   const percent = Math.min(1, totalSeconds / goal.targetSeconds);
+  const { animatedColor } = useAnimatedColor();
 
   return (
     <View
@@ -44,13 +40,9 @@ export default function GoalProgress({
         color={COLORS.accent}
       />
       <DigitDisplay
-        digit={
-          isAchieved ? "objectif atteint" : (percent * 100).toFixed(2) + "%"
-        }
+        digit={isAchieved ? "100%" : (percent * 100).toFixed(2) + "%"}
         label="Progression"
-        color={
-          isAchieved ? COLORS.succes : isOnline ? COLORS.accent : COLORS.succes
-        }
+        color={isAchieved ? COLORS.succes : animatedColor}
       />
     </View>
   );

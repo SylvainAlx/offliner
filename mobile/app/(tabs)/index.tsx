@@ -18,7 +18,6 @@ export default function Home() {
     session,
     unsyncStats,
     totalSyncSeconds,
-    deviceName,
   } = useHome();
 
   return (
@@ -26,12 +25,7 @@ export default function Home() {
       contentContainerStyle={globalStyles.container}
       showsVerticalScrollIndicator
     >
-      <HeaderCard
-        isOnline={isOnline}
-        deviceName={deviceName}
-        since={since}
-        elapsed={elapsed}
-      />
+      <HeaderCard isOnline={isOnline} since={since} elapsed={elapsed} />
       <TimerCard
         isOnline={isOnline}
         isLoading={isLoading}

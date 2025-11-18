@@ -7,14 +7,12 @@ import { COLORS } from "shared/theme";
 
 interface HeaderCardProps {
   isOnline: boolean;
-  deviceName: string;
   since: Date | null;
   elapsed: string;
 }
 
 export default function HeaderCard({
   isOnline,
-  deviceName,
   since,
   elapsed,
 }: HeaderCardProps) {
@@ -35,8 +33,8 @@ export default function HeaderCard({
         {isOnline === null
           ? "Chargement..."
           : isOnline
-          ? `Appareil ${deviceName} connecté à internet. Couper le wifi et les données mobiles pour commencer une session focus`
-          : `Appareil ${deviceName} hors ligne`}
+          ? `Couper le wifi et les données mobiles pour commencer une session focus`
+          : `Enregistrement en cours`}
       </Text>
 
       {!isOnline && since && (
