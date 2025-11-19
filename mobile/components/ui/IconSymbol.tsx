@@ -29,6 +29,7 @@ const MAPPING: IconMapping = {
   "checklist.checked": { name: "checklist", lib: "MaterialIcons" },
   diamond: { name: "diamond-stone", lib: "MaterialCommunityIcons" },
   trophy: { name: "trophy", lib: "FontAwesome6" },
+  gearshape: { name: "settings", lib: "MaterialIcons" },
 };
 
 type IconSymbolName = keyof typeof MAPPING;

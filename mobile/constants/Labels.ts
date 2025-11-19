@@ -4,4 +4,5 @@ export const STORAGE_KEYS = {
   COUNTRIES: "countries",
   COUNTRY_TREE: "country_tree",
   LAST_GEM_MINE_SYNC: "last_gem_mine_sync",
+  PREF_NOTIFICATIONS: "pref_notifications",
 };

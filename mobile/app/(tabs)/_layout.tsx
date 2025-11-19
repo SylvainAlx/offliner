@@ -88,6 +88,25 @@ export default function TabLayout() {
         }}
       />
       <Drawer.Screen
+        name="mining"
+        listeners={{
+          drawerItemPress: (e) => {
+            if (!session) e.preventDefault();
+          },
+        }}
+        options={{
+          title: "Gemmes de temps",
+          drawerItemStyle: !session ? { opacity: 0.5 } : undefined,
+          drawerIcon: ({ color }) => (
+            <IconSymbol
+              name="diamond"
+              color={!session ? COLORS.card : color}
+              size={22}
+            />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="history"
         options={{
           title: "Historique",
@@ -96,6 +115,7 @@ export default function TabLayout() {
           ),
         }}
       />
+
       <Drawer.Screen
         name="stats"
         listeners={{
@@ -127,9 +147,18 @@ export default function TabLayout() {
       <Drawer.Screen
         name="profile"
         options={{
-          title: "Profil",
+          title: "Compte",
           drawerIcon: ({ color }) => (
             <IconSymbol name="person.crop.circle" color={color} size={22} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="settings"
+        options={{
+          title: "Paramètres",
+          drawerIcon: ({ color }) => (
+            <IconSymbol name="gearshape" color={color} size={22} />
           ),
         }}
       />

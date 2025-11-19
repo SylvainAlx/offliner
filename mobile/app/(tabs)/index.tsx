@@ -2,7 +2,6 @@ import TimerCard from "@/components/TimerCard";
 import { useHome } from "@/hooks/useHome";
 import { globalStyles } from "@/styles/global.styles";
 import { ScrollView } from "react-native";
-import MiningCard from "@/components/MiningCard";
 import GoalCard from "@/components/GoalCard";
 import PowerSavingCard from "@/components/PowerSavingCard";
 import HeaderCard from "@/components/HeaderCard";
@@ -10,12 +9,9 @@ import HeaderCard from "@/components/HeaderCard";
 export default function Home() {
   const {
     isOnline,
-    since,
-    elapsed,
     nextGoal,
     isLoading,
     sendPeriods,
-    session,
     unsyncStats,
     totalSyncSeconds,
   } = useHome();
@@ -25,7 +21,7 @@ export default function Home() {
       contentContainerStyle={globalStyles.container}
       showsVerticalScrollIndicator
     >
-      <HeaderCard isOnline={isOnline} since={since} elapsed={elapsed} />
+      <HeaderCard isOnline={isOnline} />
       <TimerCard
         isOnline={isOnline}
         isLoading={isLoading}
@@ -33,7 +29,6 @@ export default function Home() {
         unsyncStats={unsyncStats}
         sendPeriods={sendPeriods}
       />
-      {session && <MiningCard isOnline={isOnline} />}
 
       <PowerSavingCard totalSeconds={totalSyncSeconds + unsyncStats.total} />
       <GoalCard

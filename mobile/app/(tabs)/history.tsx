@@ -20,7 +20,7 @@ export default function HistoryScreen() {
       emptyText: "Aucune mesure hors ligne locale.",
     },
     {
-      title: "Mesures synchronisées",
+      title: "Dernières mesures synchronisées",
       data: syncDailyData,
       emptyText: "Aucune mesure hors ligne synchronisée.",
       renderHeaderExtra: () =>

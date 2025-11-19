@@ -2,7 +2,6 @@ import { GOALS } from "shared/goals";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
 import { useSyncSession } from "@/hooks/useSyncSession";
-import { formatDuration } from "shared/utils/formatDuration";
 import { confirmDialog, showMessage } from "@/utils/formatNotification";
 import { useEffect, useRef, useState } from "react";
 import { getReadableDeviceName } from "@/utils/deviceModelMap";
@@ -10,7 +9,6 @@ import { getLastOpenPeriod } from "@/services/offlineStorage";
 
 export const useHome = () => {
   const [since, setSince] = useState<Date | null>(null);
-  const [elapsed, setElapsed] = useState<string>("0s");
   const [deviceName, setDeviceName] = useState<string>("");
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -51,14 +49,9 @@ export const useHome = () => {
   useEffect(() => {
     getDeviceName();
     const loadStartTime = async () => {
-      const now = new Date();
       const startTime = await getLastOpenPeriod(); // Assume this function fetches the start time from storage
       if (startTime) {
         setSince(new Date(startTime));
-        const diff = Math.floor(
-          (now.getTime() - new Date(startTime).getTime()) / 1000,
-        );
-        setElapsed(formatDuration(diff));
       }
     };
     if (!isOnline) loadStartTime();
@@ -73,11 +66,7 @@ export const useHome = () => {
 
   useEffect(() => {
     if (since && !isOnline) {
-      intervalRef.current = setInterval(async () => {
-        const now = new Date();
-        const diff = Math.floor((now.getTime() - since.getTime()) / 1000);
-        setElapsed(formatDuration(diff));
-      }, 1000);
+      intervalRef.current = setInterval(async () => {}, 1000);
     }
 
     return () => {
@@ -87,8 +76,6 @@ export const useHome = () => {
 
   return {
     isOnline,
-    since,
-    elapsed,
     nextGoal,
     isLoading,
     sendPeriods,

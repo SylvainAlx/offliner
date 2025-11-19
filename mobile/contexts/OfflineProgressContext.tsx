@@ -36,6 +36,7 @@ export const OfflineProgressProvider = ({
   const currentPeriodStart = useRef<string | null>(null);
   const appState = useRef<AppStateStatus>(AppState.currentState);
   const liveInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isClosing = useRef<boolean>(false);
 
   // 🛰️ État réseau
   useEffect(() => {
@@ -61,17 +62,17 @@ export const OfflineProgressProvider = ({
         }
       }
 
-      if (connected && currentPeriodStart.current) {
-        // Fin hors ligne
-        await closeLastPeriod(new Date().toISOString());
+      if (connected && currentPeriodStart.current && !isClosing.current) {
+        isClosing.current = true;
+        const end = new Date().toISOString();
         currentPeriodStart.current = null;
+        await closeLastPeriod(end);
         showMessage("✅ Fin d'une période hors ligne");
-
-        // Stoppe le compteur visuel
         if (liveInterval.current) {
           clearInterval(liveInterval.current);
           liveInterval.current = null;
         }
+        isClosing.current = false;
       }
 
       const stats = await getUnsyncStats();

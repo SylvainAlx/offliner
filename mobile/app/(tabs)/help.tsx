@@ -47,8 +47,8 @@ export default function HelpScreen() {
       <Text style={globalStyles.contentText}>
         Le minage de gemmes de temps vous permet de gagner des gemmes en
         fonction de la durée de vos sessions hors ligne afin de valoriser votre
-        régularité. Les regles sont les suivantes : 1 minute passée hors ligne
-        puis synchronisée = 1 gemme disponible au minage. Tous les joueurs se
+        régularité. Les regles sont les suivantes : 4 heures passées hors ligne
+        puis synchronisées = 1 gemme disponible au minage. Tous les joueurs se
         partagent une mine commune. La capacité de la mine descend au fur et à
         mesure des récoltes quotidiennes. Elle augmentera lorsqu&apos;un
         utilisateur souscrira à un abonnement premium. Sa durée

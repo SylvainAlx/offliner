@@ -4,18 +4,13 @@ import { View, Text } from "react-native";
 import * as IntentLauncher from "expo-intent-launcher";
 import { Button } from "react-native-paper";
 import { COLORS } from "shared/theme";
+import DigitDisplay from "./DigitDisplay";
 
 interface HeaderCardProps {
   isOnline: boolean;
-  since: Date | null;
-  elapsed: string;
 }
 
-export default function HeaderCard({
-  isOnline,
-  since,
-  elapsed,
-}: HeaderCardProps) {
+export default function HeaderCard({ isOnline }: HeaderCardProps) {
   const openNetworkSettings = () => {
     IntentLauncher.startActivityAsync(
       IntentLauncher.ActivityAction.WIRELESS_SETTINGS,
@@ -24,26 +19,17 @@ export default function HeaderCard({
 
   return (
     <View style={globalStyles.card}>
-      <Text
-        style={[
-          indexStyles.statusText,
-          isOnline ? indexStyles.onlineText : indexStyles.offlineText,
-        ]}
-      >
-        {isOnline === null
-          ? "Chargement..."
-          : isOnline
-          ? `Couper le wifi et les données mobiles pour commencer une session focus`
-          : `Enregistrement en cours`}
-      </Text>
-
-      {!isOnline && since && (
-        <Text style={indexStyles.timer}>Depuis {elapsed}</Text>
+      {isOnline && (
+        <Text style={[indexStyles.statusText, indexStyles.onlineText]}>
+          Couper le wifi et les données mobiles pour commencer un enregistrement
+        </Text>
       )}
+      <DigitDisplay
+        digit={isOnline ? "En ligne" : "Enregistrement"}
+        color={isOnline ? COLORS.accent : COLORS.record}
+        label="Status"
+      />
       {isOnline ? (
-        // <Text style={[indexStyles.message, { color: COLORS.warning }]}>
-        //   Coupe ta connexion pour commencer une session focus.
-        // </Text>
         <Button
           mode="contained"
           onPress={openNetworkSettings}

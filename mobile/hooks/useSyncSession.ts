@@ -53,6 +53,7 @@ export const useSyncSession = (session: Session | null) => {
         }
       }
       if (globalSuccess) {
+        showMessage("Synchronisation réussie 🎉", "success");
         setUnsyncStats(emptyStats);
         setTotalSyncSeconds(totalSyncSeconds + totalTime);
         setWeeklySyncSeconds(weeklySyncSeconds + totalTime);

@@ -23,7 +23,9 @@ export async function getAllMeasures(
     const { data, error, status } = await supabase
       .from("measures")
       .select(`date, duration, user_id, device_id`)
-      .eq("user_id", session?.user.id);
+      .eq("user_id", session?.user.id)
+      .order("date", { ascending: false })
+      .limit(20);
     if (error && status !== 406) {
       throw error;
     }
@@ -227,8 +229,6 @@ export async function insertMeasure(
       showMessage(
         `Durée tronquée : seules ${durationToInsert} secondes ont été enregistrées (24h max atteintes).`,
       );
-    } else {
-      showMessage("Synchronisation réussie 🎉", "success");
     }
 
     return { success: true };
