@@ -15,6 +15,7 @@ export const COLORS = {
   danger: "#D72638",
   warning: "#FFA600",
   info: "#118AB2",
+  record: "#c3025a",
 };
 
 // export const COLORS = {
@@ -39,7 +40,7 @@ export const SIZES = {
   text_sm: 8,
   text_md: 12,
   text_lg: 16,
-  text_xl: 24,
+  text_xl: 20,
   text_2xl: 32,
   text_3xl: 36,
   text_4xl: 40,

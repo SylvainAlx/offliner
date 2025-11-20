@@ -3,9 +3,10 @@ import { SymbolWeight } from "expo-symbols";
 
 // --- Import des packs d'icônes disponibles ---
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome6";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
-type IconLibrary = "MaterialIcons" | "FontAwesome5";
+type IconLibrary = "MaterialIcons" | "FontAwesome6" | "MaterialCommunityIcons";
 
 // Mapping partiel pour n’ajouter que les symboles utiles
 type IconMapping = Record<
@@ -26,8 +27,9 @@ const MAPPING: IconMapping = {
   "medal.fill": { name: "leaderboard", lib: "MaterialIcons" },
   "questionmark.circle": { name: "help", lib: "MaterialIcons" },
   "checklist.checked": { name: "checklist", lib: "MaterialIcons" },
-  diamond: { name: "diamond", lib: "MaterialIcons" },
-  trophy: { name: "trophy", lib: "FontAwesome5" },
+  diamond: { name: "diamond-stone", lib: "MaterialCommunityIcons" },
+  trophy: { name: "trophy", lib: "FontAwesome6" },
+  gearshape: { name: "settings", lib: "MaterialIcons" },
 };
 
 type IconSymbolName = keyof typeof MAPPING;
@@ -37,8 +39,10 @@ function getIconComponent(lib: IconLibrary) {
   switch (lib) {
     case "MaterialIcons":
       return MaterialIcons;
-    case "FontAwesome5":
+    case "FontAwesome6":
       return FontAwesome5;
+    case "MaterialCommunityIcons":
+      return MaterialCommunityIcons;
     default:
       return MaterialIcons;
   }

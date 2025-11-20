@@ -1,176 +1,175 @@
 import { AppHeaderTitle } from "@/components/AppHeaderTitle";
-import { HapticTab } from "@/components/HapticTab";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { COLORS } from "shared/theme";
-import { router, Tabs, usePathname } from "expo-router";
-import React from "react";
-import { Platform, Pressable, View } from "react-native";
-import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
+import { COLORS, SIZES } from "shared/theme";
+import { Drawer } from "expo-router/drawer";
+import { DrawerToggleButton } from "@react-navigation/drawer";
+
+import { View, Text } from "react-native";
 import { useSession } from "@/contexts/SessionContext";
+import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 
 export default function TabLayout() {
-  const pathname = usePathname();
-  const { username } = useSession();
+  const { totalGem, session } = useSession();
   const { isOnline } = useOfflineProgress();
 
   return (
-    <Tabs
+    <Drawer
       screenOptions={{
         headerShown: true,
         headerTitle: () => <AppHeaderTitle />,
         headerTitleAlign: "left",
-        tabBarButton: HapticTab,
-        tabBarActiveTintColor: COLORS.secondary, // Couleur des icônes actives
-        tabBarInactiveTintColor: COLORS.accent, // Couleur des icônes inactives
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: "absolute",
-          },
-          default: {
-            backgroundColor: COLORS.tabs,
-            borderTopWidth: 0, // enlève la bordure en haut du footer
-            elevation: 0, // enlève l’ombre sur Android
-          },
-        }),
-        sceneStyle: { backgroundColor: COLORS.background },
-        headerStyle: {
+        drawerPosition: "right",
+        drawerActiveTintColor: COLORS.secondary,
+        drawerInactiveTintColor: COLORS.accent,
+        drawerStyle: {
           backgroundColor: COLORS.tabs,
         },
-        headerShadowVisible: false, // enlève la bordure du header sur iOS
+        sceneStyle: {
+          backgroundColor: COLORS.background,
+          paddingBottom: SIZES.padding * 5,
+        },
+        headerStyle: {
+          backgroundColor: COLORS.background,
+        },
+        headerShadowVisible: false,
         headerTitleStyle: {
           fontWeight: "bold",
           fontSize: 18,
         },
+        headerLeft: () => null,
         headerRight: () => {
-          const isProfile = pathname === "/profile";
-          const isAbout = pathname === "/about";
-
           return (
-            <View style={{ flexDirection: "row", gap: 12, marginRight: 16 }}>
-              <Pressable
-                onPress={() => router.push("/stats")}
-                hitSlop={8}
-                disabled={!isOnline || !username}
-                accessibilityLabel="Le classement"
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 2,
+                marginRight: 16,
+              }}
+            >
+              <Text
+                style={{
+                  color: COLORS.primary,
+                  fontSize: SIZES.text_xl,
+                  fontFamily: "Doto",
+                }}
               >
-                {({ pressed }) => (
-                  <IconSymbol
-                    name="trophy"
-                    size={20}
-                    color={
-                      pressed
-                        ? COLORS.secondary
-                        : !isOnline || !username
-                        ? COLORS.card
-                        : COLORS.accent
-                    }
-                  />
-                )}
-              </Pressable>
-              <Pressable
-                onPress={() => router.push("/about")}
-                hitSlop={8}
-                accessibilityLabel="A propos"
-              >
-                {({ pressed }) => (
-                  <IconSymbol
-                    name="questionmark.circle"
-                    size={24}
-                    color={
-                      pressed || isAbout ? COLORS.secondary : COLORS.accent
-                    }
-                  />
-                )}
-              </Pressable>
-              {/* Bouton profil */}
-              <Pressable
-                onPress={() => router.push("/profile")}
-                hitSlop={8}
-                disabled={!isOnline}
-                accessibilityLabel="Aller au profil"
-              >
-                {({ pressed }) => (
-                  <IconSymbol
-                    name="person.crop.circle"
-                    size={24}
-                    color={
-                      pressed || isProfile
-                        ? COLORS.secondary
-                        : !isOnline
-                        ? COLORS.card
-                        : COLORS.accent
-                    }
-                  />
-                )}
-              </Pressable>
+                {totalGem.toString()}
+                <IconSymbol
+                  name="diamond"
+                  size={SIZES.text_lg}
+                  color={COLORS.primary}
+                />
+              </Text>
+              <View style={{ transform: [{ scale: 1.6 }] }}>
+                <DrawerToggleButton tintColor={COLORS.accent} />
+              </View>
             </View>
           );
         },
       }}
     >
-      <Tabs.Screen
+      <Drawer.Screen
         name="index"
         options={{
           title: "Accueil",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+          drawerIcon: ({ color }) => (
+            <IconSymbol size={24} name="house.fill" color={color} />
           ),
         }}
       />
-      <Tabs.Screen
+      <Drawer.Screen
         name="goals"
         options={{
           title: "Objectifs",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol name="checklist.checked" color={color} size={28} />
+          drawerIcon: ({ color }) => (
+            <IconSymbol name="checklist.checked" color={color} size={24} />
           ),
         }}
       />
-      <Tabs.Screen
+      <Drawer.Screen
+        name="mining"
+        listeners={{
+          drawerItemPress: (e) => {
+            if (!session) e.preventDefault();
+          },
+        }}
+        options={{
+          title: "Gemmes de temps",
+          drawerItemStyle: !session ? { opacity: 0.5 } : undefined,
+          drawerIcon: ({ color }) => (
+            <IconSymbol
+              name="diamond"
+              color={!session ? COLORS.card : color}
+              size={22}
+            />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="history"
         options={{
           title: "Historique",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol name="clock" color={color} size={28} />
+          drawerIcon: ({ color }) => (
+            <IconSymbol name="clock" color={color} size={24} />
           ),
         }}
       />
-      <Tabs.Screen
+
+      <Drawer.Screen
+        name="stats"
+        listeners={{
+          drawerItemPress: (e) => {
+            if (!isOnline || !session) e.preventDefault();
+          },
+        }}
+        options={{
+          title: "Classement",
+          drawerItemStyle: !isOnline || !session ? { opacity: 0.5 } : undefined,
+          drawerIcon: ({ color }) => (
+            <IconSymbol
+              name="trophy"
+              color={!isOnline || !session ? COLORS.card : color}
+              size={22}
+            />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="about"
         options={{
-          href: null,
-          title: "About",
+          title: "A propos",
+          drawerIcon: ({ color }) => (
+            <IconSymbol name="questionmark.circle" color={color} size={22} />
+          ),
         }}
       />
-      <Tabs.Screen
-        name="legals"
-        options={{
-          href: null,
-          title: "Legals",
-        }}
-      />
-      <Tabs.Screen
-        name="help"
-        options={{
-          href: null,
-          title: "help",
-        }}
-      />
-      <Tabs.Screen
+      <Drawer.Screen
         name="profile"
         options={{
-          href: null,
-          title: "Profil",
+          title: "Compte",
+          drawerIcon: ({ color }) => (
+            <IconSymbol name="person.crop.circle" color={color} size={22} />
+          ),
         }}
       />
-      <Tabs.Screen
-        name="stats"
+      <Drawer.Screen
+        name="settings"
         options={{
-          href: null,
-          title: "Stats",
+          title: "Paramètres",
+          drawerIcon: ({ color }) => (
+            <IconSymbol name="gearshape" color={color} size={22} />
+          ),
         }}
       />
-    </Tabs>
+      <Drawer.Screen
+        name="legals"
+        options={{ drawerItemStyle: { display: "none" }, title: "Legals" }}
+      />
+      <Drawer.Screen
+        name="help"
+        options={{ drawerItemStyle: { display: "none" }, title: "help" }}
+      />
+    </Drawer>
   );
 }

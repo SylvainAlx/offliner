@@ -7,7 +7,7 @@ import { COLORS } from "shared/theme";
 export default function useAnimatedColor() {
   // Animation de couleur
   const colorAnim = useRef(new Animated.Value(0)).current;
-  const [prevColor, setPrevColor] = useState(COLORS.succes);
+  const [prevColor, setPrevColor] = useState(COLORS.record);
   const [isStarting, setIsStarting] = useState(false);
   const { isOnline } = useOfflineProgress();
 
@@ -16,7 +16,7 @@ export default function useAnimatedColor() {
     ? COLORS.warning
     : isOnline
     ? COLORS.accent
-    : COLORS.succes;
+    : COLORS.record;
 
   // Gérer le "mode démarrage" si offline
   useEffect(() => {

@@ -34,12 +34,14 @@ export const indexStyles = StyleSheet.create({
     fontFamily: "Montserrat",
   },
   onlineText: {
-    color: COLORS.text,
+    color: COLORS.accent,
     fontFamily: "Montserrat",
   },
   offlineText: {
-    color: COLORS.succes,
+    color: COLORS.record,
     fontFamily: "Montserrat",
+    fontSize: SIZES.text_xl,
+    fontWeight: "bold",
   },
 });
 
@@ -55,9 +57,9 @@ export const accountStyles = StyleSheet.create({
 
 export const headerStyles = StyleSheet.create({
   headerTitle: {
-    fontSize: SIZES.text_2xl,
+    fontSize: SIZES.text_xl,
     color: COLORS.primary,
-    fontFamily: "Knewave",
+    fontFamily: "Doto",
   },
   version: {
     position: "absolute",

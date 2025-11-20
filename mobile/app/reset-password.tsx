@@ -1,66 +1,80 @@
-import { globalStyles } from "@/styles/global.styles";
-import { showMessage } from "@/utils/formatNotification";
-import { supabase } from "@/utils/supabase";
-import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { View } from "react-native";
-import { TextInput, Button } from "react-native-paper";
-import { COLORS } from "shared/theme";
+import { View, TextInput, Text, TouchableOpacity } from "react-native";
+import { updatePassword } from "@/api/auth";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const params = useLocalSearchParams();
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
 
-  // Supabase fournit un access_token dans l’URL
-  // Expo Router mettra ça dans params (ex: params.access_token)
+  const isValid =
+    password.length >= 6 &&
+    confirmPassword.length >= 6 &&
+    password === confirmPassword;
 
-  async function handleReset() {
-    const { error } = await supabase.auth.updateUser({
-      password,
-    });
-
-    if (error) {
-      if (error instanceof Error) {
-        showMessage(error.message, "error", "Erreur");
-      }
-    } else {
-      showMessage("Mot de passe mis à jour !", "success", "Mise à jour");
+  const handleSubmit = async () => {
+    if (!isValid) {
+      setError("Les mots de passe ne correspondent pas.");
+      return;
     }
-  }
+
+    setError("");
+    await updatePassword(password);
+  };
 
   return (
-    <View style={globalStyles.verticallySpaced}>
+    <View style={{ padding: 24, gap: 16 }}>
+      <Text style={{ fontSize: 22, fontWeight: "600", marginBottom: 8 }}>
+        Nouveau mot de passe
+      </Text>
+
       <TextInput
-        value={password}
-        onChangeText={setPassword}
-        style={globalStyles.input}
+        secureTextEntry
         placeholder="Nouveau mot de passe"
-        textColor={COLORS.text}
-        secureTextEntry={!showPassword}
-        autoCapitalize="none"
-        returnKeyType="done"
-        theme={{
-          colors: { text: COLORS.text, placeholder: COLORS.text },
+        onChangeText={setPassword}
+        value={password}
+        style={{
+          borderWidth: 1,
+          borderColor: "#ccc",
+          padding: 12,
+          borderRadius: 10,
+          fontSize: 16,
         }}
-        right={
-          <TextInput.Icon
-            icon={showPassword ? "eye-off" : "eye"}
-            onPress={() => setShowPassword(!showPassword)}
-          />
-        }
       />
-      <View style={globalStyles.buttonContainer}>
-        <Button
-          mode="contained"
-          onPress={handleReset}
-          disabled={!password}
-          buttonColor={COLORS.secondary}
-          style={[globalStyles.button, { borderRadius: 100 }]}
-        >
-          Changer le mot de passe
-        </Button>
-      </View>
+
+      <TextInput
+        secureTextEntry
+        placeholder="Confirme ton mot de passe"
+        onChangeText={setConfirmPassword}
+        value={confirmPassword}
+        style={{
+          borderWidth: 1,
+          borderColor: "#ccc",
+          padding: 12,
+          borderRadius: 10,
+          fontSize: 16,
+        }}
+      />
+
+      {error ? (
+        <Text style={{ color: "red", marginTop: -8 }}>{error}</Text>
+      ) : null}
+
+      <TouchableOpacity
+        onPress={handleSubmit}
+        disabled={!isValid}
+        style={{
+          backgroundColor: isValid ? "#007bff" : "#9cbcf2",
+          paddingVertical: 14,
+          borderRadius: 10,
+          alignItems: "center",
+          marginTop: 6,
+        }}
+      >
+        <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
+          Valider
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }

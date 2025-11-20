@@ -1,11 +1,12 @@
 import { getGemPool } from "@/api/config";
 import { InsertTransaction } from "@/api/transactions";
 import { STORAGE_KEYS } from "@/constants/Labels";
+import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
 import { confirmDialog, showMessage } from "@/utils/formatNotification";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
-import { countMinutesFromSeconds } from "shared/utils/formatDuration";
+import { countGemAmountFromSeconds } from "shared/utils/formatDuration";
 
 export default function UseMining() {
   const [miningCapacity, setMiningCapacity] = useState<number | null>(null);
@@ -13,6 +14,7 @@ export default function UseMining() {
   const [miningAvailable, setMiningAvailable] = useState<boolean>(false);
   const { dailySyncSeconds, totalGem, setTotalGem, session, deviceName } =
     useSession();
+  const { isOnline } = useOfflineProgress();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,7 +55,7 @@ export default function UseMining() {
     if (session && deviceName) {
       const result = await InsertTransaction({
         session,
-        amount: countMinutesFromSeconds(dailySyncSeconds),
+        amount: countGemAmountFromSeconds(dailySyncSeconds),
         deviceName,
         type: "mining",
         direction: "out",
@@ -84,5 +86,6 @@ export default function UseMining() {
     miningAvailable,
     session,
     mineGem,
+    isOnline,
   };
 }

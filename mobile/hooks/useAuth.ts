@@ -1,4 +1,8 @@
-import { signInWithEmail, signUpWithEmail } from "@/api/auth";
+import {
+  handleForgotPassword,
+  signInWithEmail,
+  signUpWithEmail,
+} from "@/api/auth";
 import { confirmDialog, showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
 import { useEffect, useRef, useState } from "react";
@@ -77,6 +81,31 @@ export const useAuth = () => {
     }
   }
 
+  async function sendPasswordResetEmail(email: string) {
+    if (!email) {
+      showMessage("Veuillez saisir votre adresse e-mail.", "warn", "Attention");
+      return;
+    }
+    const confirmed = await confirmDialog(
+      "Envoyer un e-mail de réinitialisation du mot de passe ?",
+    );
+
+    if (confirmed) {
+      try {
+        await handleForgotPassword(email);
+        showMessage(
+          "Un e-mail de réinitialisation du mot de passe vous sera envoyé prochainement.",
+          "success",
+          "Succès",
+        );
+      } catch (error) {
+        if (error instanceof Error) {
+          showMessage(error.message, "error", "Erreur");
+        }
+      }
+    }
+  }
+
   return {
     email,
     setEmail,
@@ -90,30 +119,3 @@ export const useAuth = () => {
     sendPasswordResetEmail,
   };
 };
-
-async function sendPasswordResetEmail(email: string) {
-  if (!email) {
-    showMessage("Veuillez saisir votre adresse e-mail.", "warn", "Attention");
-    return;
-  }
-  const confirmed = await confirmDialog(
-    "Envoyer un e-mail de réinitialisation du mot de passe ?",
-  );
-
-  if (confirmed) {
-    try {
-      await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: "offliner://reset-password",
-      });
-      showMessage(
-        "Un e-mail de réinitialisation du mot de passe vous sera envoyé prochainement.",
-        "success",
-        "Succès",
-      );
-    } catch (error) {
-      if (error instanceof Error) {
-        showMessage(error.message, "error", "Erreur");
-      }
-    }
-  }
-}

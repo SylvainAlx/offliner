@@ -5,7 +5,7 @@
     },
     "name": "Offliner",
     "slug": "Offliner",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "offliner",
@@ -16,8 +16,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/icon_adaptive_fore.png",
+        "backgroundImage": "./assets/images/icon_adaptive_back.png"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.sylvainalx.Offliner"
@@ -35,7 +35,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#000000"
+          "backgroundColor": "#222222"
         }
       ],
       "expo-secure-store"

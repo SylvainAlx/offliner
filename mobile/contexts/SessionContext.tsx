@@ -5,6 +5,8 @@ import { showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
 import { Session, User } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useState } from "react";
+import * as Linking from "expo-linking";
+import { router } from "expo-router";
 
 type SessionContextType = {
   session: Session | null;
@@ -109,6 +111,53 @@ export const SessionProvider = ({
     getProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
+
+  useEffect(() => {
+    const processResetPasswordUrl = async (url: string) => {
+      const { path, queryParams } = Linking.parse(url);
+
+      let accessToken = queryParams?.access_token as string | undefined;
+      let refreshToken = queryParams?.refresh_token as string | undefined;
+
+      if (!accessToken || !refreshToken) {
+        try {
+          const u = new URL(url);
+          const hash = u.hash.startsWith("#") ? u.hash.slice(1) : u.hash;
+          const params = new URLSearchParams(hash);
+          accessToken = params.get("access_token") ?? undefined;
+          refreshToken = params.get("refresh_token") ?? undefined;
+        } catch {}
+      }
+
+      if (path === "reset-password" && accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        if (error) {
+          console.error("Erreur lors de l'activation de la session", error);
+          showMessage(
+            "Erreur lors de l'activation de la session",
+            "error",
+            "Erreur",
+          );
+          return;
+        }
+
+        router.push("/reset-password");
+      }
+    };
+
+    Linking.getInitialURL().then((url) => {
+      if (url) processResetPasswordUrl(url);
+    });
+
+    const subscription = Linking.addEventListener("url", ({ url }) =>
+      processResetPasswordUrl(url),
+    );
+    return () => subscription.remove();
+  }, []);
 
   return (
     <SessionContext.Provider

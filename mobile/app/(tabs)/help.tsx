@@ -5,6 +5,7 @@ import { Text, Linking, Pressable, ScrollView } from "react-native";
 import { Button } from "react-native-paper";
 import { PROJECT } from "shared/config";
 import { COLORS } from "shared/theme";
+import { ENERGY_CONSUMPTION } from "shared/utils/powerSaving";
 
 export default function HelpScreen() {
   const handlePress = () => {
@@ -46,14 +47,21 @@ export default function HelpScreen() {
       <Text style={globalStyles.contentText}>
         Le minage de gemmes de temps vous permet de gagner des gemmes en
         fonction de la durée de vos sessions hors ligne afin de valoriser votre
-        régularité. Les regles sont les suivantes : 1 minute passée hors ligne
-        puis synchronisée = 1 gemme disponible au minage. Tous les joueurs se
+        régularité. Les regles sont les suivantes : 4 heures passées hors ligne
+        puis synchronisées = 1 gemme disponible au minage. Tous les joueurs se
         partagent une mine commune. La capacité de la mine descend au fur et à
         mesure des récoltes quotidiennes. Elle augmentera lorsqu&apos;un
         utilisateur souscrira à un abonnement premium. Sa durée
         d&apos;engagement en minutes sera alors convertie en gemmes et ajoutée à
         la mine. Pour le moment seul un administrateur peut ajouter manuellement
         des gemmes à la mine.
+      </Text>
+      <Text style={globalStyles.cardTitle}>Énergie économisée</Text>
+      <Text style={globalStyles.contentText}>
+        L&apos;application calcule l&apos;économie d&apos;énergie en fonction de
+        la durée totale hors ligne. L&apos;estimation est basée sur une
+        consommation moyenne de {ENERGY_CONSUMPTION.WIFI}WH pour le wifi et de{" "}
+        {ENERGY_CONSUMPTION.GSM}WH pour les données mobiles.
       </Text>
       <Text style={globalStyles.cardTitle}>Informations importantes</Text>
       <Text style={globalStyles.contentText}>

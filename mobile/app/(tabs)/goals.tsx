@@ -8,7 +8,7 @@ import { FlatList, Text } from "react-native";
 
 export default function GoalsScreen() {
   const { totalSyncSeconds } = useSession();
-  const { totalUnsync } = useOfflineProgress();
+  const { unsyncStats } = useOfflineProgress();
 
   return (
     <FlatList
@@ -25,7 +25,7 @@ export default function GoalsScreen() {
       renderItem={({ item }) => (
         <GoalProgress
           goal={item}
-          totalSeconds={totalSyncSeconds + totalUnsync}
+          totalSeconds={totalSyncSeconds + unsyncStats.total}
         />
       )}
     />
