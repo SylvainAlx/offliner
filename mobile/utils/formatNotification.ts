@@ -29,6 +29,7 @@ export async function showMessage(
   text: string,
   type: ToastType = "info",
   title: string = "Information",
+  time: number = 3000,
 ) {
   if (Platform.OS === "web") {
     alert(text);
@@ -51,7 +52,7 @@ export async function showMessage(
             text1: titleSafe,
             text2: textSafe,
             position: "top",
-            visibilityTime: 3000,
+            visibilityTime: time,
             autoHide: true,
           });
           return;
@@ -68,7 +69,7 @@ export async function showMessage(
         text1: titleSafe,
         text2: textSafe,
         position: "top",
-        visibilityTime: 3000,
+        visibilityTime: time,
         autoHide: true,
       });
     }

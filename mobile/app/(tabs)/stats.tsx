@@ -4,6 +4,7 @@ import { Button } from "react-native-paper";
 import { COLORS } from "shared/theme";
 import { useStats } from "@/hooks/useStats";
 import DigitDisplay from "@/components/DigitDisplay";
+import RankingList from "@/components/RankingList";
 
 export default function StatsScreen() {
   const {
@@ -14,6 +15,8 @@ export default function StatsScreen() {
     rankingCountry,
     rankingRegion,
     rankingDepartment,
+    usersRanking,
+    weeklyLeagueRanking,
     openExternalLink,
   } = useStats();
 
@@ -23,8 +26,8 @@ export default function StatsScreen() {
     return rank + exposant;
   };
 
-  const formatLabel = (label: string, total: number): string => {
-    return `${label} (${total} utilisateurs)`;
+  const formatLabel = (label: string, total?: number): string => {
+    return total ? `${label} (${total} utilisateurs)` : label;
   };
 
   return (
@@ -34,7 +37,7 @@ export default function StatsScreen() {
     >
       <Text style={globalStyles.title}>Classement de {username}</Text>
       <View style={globalStyles.card}>
-        <Text style={globalStyles.cardTitle}>Temps passé hors ligne</Text>
+        <Text style={globalStyles.cardTitle}>Classement général</Text>
         {rankingWorld ? (
           <DigitDisplay
             digit={formatDigit(rankingWorld.rank)}
@@ -71,15 +74,27 @@ export default function StatsScreen() {
         ) : (
           <ActivityIndicator />
         )}
+        <Text style={globalStyles.cardTitle}>Top 10 mondial</Text>
+        {usersRanking ? (
+          <RankingList
+            users={usersRanking}
+            currentUsername={username ?? undefined}
+          />
+        ) : (
+          <ActivityIndicator />
+        )}
+        <Text style={globalStyles.cardTitle}>Top 10 hebdomadaire (ligue)</Text>
+        {weeklyLeagueRanking ? (
+          <RankingList
+            users={weeklyLeagueRanking}
+            currentUsername={username ?? undefined}
+          />
+        ) : (
+          <ActivityIndicator />
+        )}
       </View>
       <View style={globalStyles.card}>
-        <Text style={globalStyles.cardTitle}>Assiduité</Text>
-        <DigitDisplay digit="à venir" label="Ligue" color={COLORS.warning} />
-        <DigitDisplay
-          digit="à venir"
-          label="Position ligue"
-          color={COLORS.warning}
-        />
+        <Text style={globalStyles.cardTitle}>Autre</Text>
         {gemRanking ? (
           <DigitDisplay
             digit={formatDigit(gemRanking.rank)}
@@ -97,7 +112,7 @@ export default function StatsScreen() {
           onPress={openExternalLink}
           style={globalStyles.button}
         >
-          Consulter le classement général
+          Consulter le classement complet
         </Button>
       </View>
     </ScrollView>

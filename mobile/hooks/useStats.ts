@@ -1,4 +1,10 @@
-import { getGemRanking, getRanking, getUser } from "@/api/users";
+import {
+  getGemRanking,
+  getRanking,
+  getUser,
+  getUsersRanking,
+  getWeeklyLeagueRanking,
+} from "@/api/users";
 import { config } from "@/config/env";
 import { useSession } from "@/contexts/SessionContext";
 import { useEffect, useState } from "react";
@@ -38,6 +44,22 @@ export const useStats = () => {
     rank: number;
     total: number;
   } | null>(null);
+  const [usersRanking, setUsersRanking] = useState<Array<{
+    username: string;
+    total_duration: number;
+    country: string | null;
+    region: string | null;
+    subregion: string | null;
+    gem_balance: number;
+  }> | null>(null);
+  const [weeklyLeagueRanking, setWeeklyLeagueRanking] = useState<Array<{
+    username: string;
+    total_duration: number;
+    country: string | null;
+    region: string | null;
+    subregion: string | null;
+    gem_balance: number;
+  }> | null>(null);
 
   useEffect(() => {
     const initialize = async () => {
@@ -47,6 +69,12 @@ export const useStats = () => {
 
         const gemData = await getGemRanking(null, username);
         setGemRanking(gemData);
+
+        const rankingData = await getUsersRanking();
+        setUsersRanking(rankingData ?? null);
+
+        const weeklyData = await getWeeklyLeagueRanking();
+        setWeeklyLeagueRanking(weeklyData ?? null);
 
         const world = await getRanking(null, username);
         setRankingWorld(world);
@@ -89,6 +117,8 @@ export const useStats = () => {
     rankingRegion,
     rankingDepartment,
     totalSyncSeconds,
+    usersRanking,
+    weeklyLeagueRanking,
     openExternalLink,
   };
 };

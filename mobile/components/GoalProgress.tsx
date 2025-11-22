@@ -5,6 +5,8 @@ import { Goal } from "shared/goals";
 import { formatDuration } from "shared/utils/formatDuration";
 import DigitDisplay from "./DigitDisplay";
 import useAnimatedColor from "@/hooks/useAnimatedColor";
+import { showMessage } from "@/utils/formatNotification";
+import { useState } from "react";
 
 type Props = {
   goal: Goal;
@@ -16,6 +18,17 @@ export default function GoalProgress({ goal, totalSeconds, bgColor }: Props) {
   const isAchieved = totalSeconds >= goal.targetSeconds;
   const percent = Math.min(1, totalSeconds / goal.targetSeconds);
   const { animatedColor } = useAnimatedColor();
+  const [showNotification, setShowNotification] = useState(false);
+
+  if (percent >= 0.9 && !showNotification) {
+    showMessage(
+      `Vous avez bientôt atteint votre objectif ${goal.id} !`,
+      "info",
+      `Encore un effort !`,
+      5000,
+    );
+    setShowNotification(true);
+  }
 
   return (
     <View

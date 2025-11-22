@@ -4,6 +4,7 @@ import { Session } from "@supabase/supabase-js";
 import { getDeviceId } from "./devices";
 import { z } from "zod";
 import { updateTotalDuration } from "./users";
+import { getCurrentWeekRange } from "@/utils/dateUtils";
 
 const MeasureSchema = z.object({
   date: z.string(),
@@ -73,21 +74,7 @@ export async function getWeeklyDuration(session: Session): Promise<number> {
   try {
     if (!session?.user) throw new Error("Aucune session active.");
 
-    const today = new Date();
-
-    // nombre de jours depuis lundi (0 = lundi, 6 = dimanche)
-    const daysSinceMonday = (today.getDay() + 6) % 7;
-    const firstDayOfWeek = new Date(today);
-    firstDayOfWeek.setDate(today.getDate() - daysSinceMonday);
-
-    const lastDayOfWeek = new Date(firstDayOfWeek);
-    lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
-
-    // format YYYY-MM-DD en tenant compte du fuseau local
-    const formatDateLocal = (d: Date) => d.toLocaleDateString("en-CA"); // "en-CA" => yyyy-mm-dd
-
-    const start = formatDateLocal(firstDayOfWeek);
-    const end = formatDateLocal(lastDayOfWeek);
+    const { start, end } = getCurrentWeekRange();
 
     const { data, error, status } = await supabase
       .from("measures")
