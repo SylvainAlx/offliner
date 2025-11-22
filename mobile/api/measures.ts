@@ -4,7 +4,7 @@ import { Session } from "@supabase/supabase-js";
 import { getDeviceId } from "./devices";
 import { z } from "zod";
 import { updateTotalDuration } from "./users";
-import { getCurrentWeekRange } from "@/utils/dateUtils";
+import { getCurrentWeekRange } from "shared/utils/dateUtils";
 
 const MeasureSchema = z.object({
   date: z.string(),

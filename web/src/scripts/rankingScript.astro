@@ -6,8 +6,18 @@
     ? JSON.parse(initialDataEl.textContent || "[]")
     : [];
 
+  const weeklyDataEl = document.getElementById("weekly-data");
+  const weeklyData = weeklyDataEl
+    ? JSON.parse(weeklyDataEl.textContent || "[]")
+    : [];
+
   const sortSelect = document.getElementById("sortSelect");
   const tbody = document.getElementById("rankingBody");
+  const tabGlobal = document.getElementById("tab-global");
+  const tabWeekly = document.getElementById("tab-weekly");
+
+  let currentTab = "global"; // 'global' ou 'weekly'
+  let currentData = initialData;
 
   // petite util pour échapper le HTML (sécurité)
   function escapeHtml(str = "") {
@@ -20,7 +30,7 @@
   }
 
   // génère le HTML d'une ligne ; on utilise les valeurs préparées côté serveur
-  function rowHtml(user, displayIndex) {
+  function rowHtml(user, displayIndex, showGems = true) {
     const medal =
       displayIndex === 0
         ? "🥇"
@@ -36,6 +46,10 @@
     const formattedDuration = escapeHtml(user.formatted_total_duration || "0s");
     const gemBalance = escapeHtml(String(user.gem_balance || 0));
 
+    const gemColumn = showGems
+      ? `<td class="text-right text-accent">${gemBalance}</td>`
+      : "";
+
     return `
       <tr class="hover:bg-secondary/20">
         <th class="text-right flex items-center gap-2">${medal} ${displayIndex + 1}</th>
@@ -43,7 +57,7 @@
           <a href="/${encodeURIComponent(user.username || "")}" class="text-primary font-bold hover:underline">${username}</a>
         </td>
         <td class="text-right text-accent">${formattedDuration}</td>
-        <td class="text-right text-accent">${gemBalance}</td>
+        ${gemColumn}
         <td>${country}</td>
         <td>${region}</td>
         <td>${subregion}</td>
@@ -52,13 +66,13 @@
   }
 
   // render
-  function renderTable(users) {
+  function renderTable(users, showGems = true) {
     if (!tbody) return;
     if (!users || users.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" class="text-center">Aucun utilisateur trouvé.</td></tr>`;
       return;
     }
-    tbody.innerHTML = users.map((u, i) => rowHtml(u, i)).join("");
+    tbody.innerHTML = users.map((u, i) => rowHtml(u, i, showGems)).join("");
   }
 
   // tri initial (par total_duration_num décroissant)
@@ -66,15 +80,70 @@
     return [...users].sort((a, b) => (b[key] || 0) - (a[key] || 0));
   }
 
+  // fonction pour changer de tab
+  function switchTab(tab) {
+    currentTab = tab;
+    const sortContainer = document.getElementById("sortContainer");
+    const gemHeader = document.getElementById("gemHeader");
+
+    if (tab === "global") {
+      currentData = initialData;
+      tabGlobal.classList.add("btn-active");
+      tabGlobal.classList.remove("btn-outline");
+      tabWeekly.classList.remove("btn-active");
+      tabWeekly.classList.add("btn-outline");
+
+      // Afficher le tri et la colonne gemmes
+      if (sortContainer) sortContainer.style.display = "";
+      if (gemHeader) gemHeader.style.display = "";
+
+      const currentSortKey = sortSelect
+        ? sortSelect.value
+        : "total_duration_num";
+      renderTable(sortUsers(currentData, currentSortKey), true);
+    } else {
+      currentData = weeklyData;
+      tabWeekly.classList.add("btn-active");
+      tabWeekly.classList.remove("btn-outline");
+      tabGlobal.classList.remove("btn-active");
+      tabGlobal.classList.add("btn-outline");
+
+      // Masquer le tri et la colonne gemmes
+      if (sortContainer) sortContainer.style.display = "none";
+      if (gemHeader) gemHeader.style.display = "none";
+
+      // Toujours trier par durée pour la ligue
+      renderTable(sortUsers(currentData, "total_duration_num"), false);
+    }
+  }
+
   // initial render
   let currentSortKey = sortSelect ? sortSelect.value : "total_duration_num";
-  renderTable(sortUsers(initialData, currentSortKey));
+  renderTable(sortUsers(currentData, currentSortKey), true);
 
   // handler de changement de tri
   if (sortSelect) {
     sortSelect.addEventListener("change", () => {
       currentSortKey = sortSelect.value;
-      renderTable(sortUsers(initialData, currentSortKey));
+      // Le tri ne s'applique que pour le classement global
+      if (currentTab === "global") {
+        renderTable(sortUsers(currentData, currentSortKey), true);
+      }
+    });
+  }
+
+  // handlers pour les tabs
+  if (tabGlobal) {
+    tabGlobal.addEventListener("click", (e) => {
+      e.preventDefault();
+      switchTab("global");
+    });
+  }
+
+  if (tabWeekly) {
+    tabWeekly.addEventListener("click", (e) => {
+      e.preventDefault();
+      switchTab("weekly");
     });
   }
 </script>

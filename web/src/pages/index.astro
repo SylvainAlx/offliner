@@ -9,6 +9,7 @@ import RankingIcon from "src/components/svg/rankingIcon.astro";
 import GoalIcon from "src/components/svg/goalIcon.astro";
 import H2 from "src/components/h2.astro";
 import GettingStarted from "src/components/gettingStarted.astro";
+import PaypalButton from "src/components/paypalButton.astro";
 ---
 
 <Layout title={`${PROJECT.TITLE}`} description={PROJECT.DESCRIPTION}>
@@ -96,5 +97,8 @@ import GettingStarted from "src/components/gettingStarted.astro";
         />
       </div>
     </div>
+
+    <!-- Bouton de don PayPal -->
+    <PaypalButton />
   </section>
 </Layout>

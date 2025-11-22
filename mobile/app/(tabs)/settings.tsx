@@ -6,6 +6,7 @@ import { COLORS, SIZES } from "shared/theme";
 import { STORAGE_KEYS } from "@/constants/Labels";
 import { useEffect, useState } from "react";
 import { confirmDialog } from "@/utils/formatNotification";
+import { PayPalButton } from "@/components/PayPalButton";
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -61,6 +62,12 @@ export default function SettingsScreen() {
           </View>
         </View>
       </View>
+
+      <View style={globalStyles.card}>
+        <Text style={globalStyles.cardTitle}>Soutenir le projet</Text>
+        <PayPalButton />
+      </View>
+
       <Button
         mode="contained"
         onPress={async () => await resetOfflinePeriods()}

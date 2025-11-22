@@ -11,3 +11,7 @@ export const OWNER = {
   CONTACT: "sylvainalx.dev@gmail.com",
   WEBSITE: "https://sylvainalx.github.io/portfolio/",
 };
+
+export const DONATION = {
+  PAYPAL_URL: "https://paypal.me/sylvainalx", // Placeholder, replace with actual if known or keep generic
+};

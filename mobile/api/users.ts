@@ -2,7 +2,7 @@ import { showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
 import { Session } from "@supabase/supabase-js";
 import { z } from "zod";
-import { getCurrentWeekRange } from "@/utils/dateUtils";
+import { getCurrentWeekRange } from "shared/utils/dateUtils";
 
 const UserSchema = z.object({
   username: z.string().nullable(),
