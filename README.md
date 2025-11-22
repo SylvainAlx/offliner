@@ -1,6 +1,6 @@
 # Offliner
 
-**Offliner** est un projet en version **alpha** visant à offrir une expérience déconnectée enrichie. Il est composé de deux applications distinctes réunies dans un même dépot :
+**Offliner** est un projet en version **beta** visant à offrir une expérience déconnectée enrichie. Il est composé de deux applications distinctes réunies dans un même dépot :
 
 ## 📱 Application mobile (`mobile/`)
 
@@ -16,7 +16,7 @@
 
 ## ⚠️ État du projet
 
-- **Version :** 0.0.1 (alpha)
+- **Version :** Beta
 - **Déploiement :** déployé à l'adresse [offliner.vercel.app](https://offliner.vercel.app/)
 - Ce projet est actuellement en cours de développement actif. Des fonctionnalités peuvent être instables ou incomplètes.
 
