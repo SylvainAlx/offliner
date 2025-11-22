@@ -47,7 +47,7 @@ export const syncMeasures = async ({
       const { success } = await insertMeasure(
         session,
         modelName,
-        start.toDateString(),
+        start.toISOString().split("T")[0],
         duration,
       );
       if (success) {

@@ -1,5 +1,6 @@
 import { GOALS } from "shared/goals";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
+import { useOfflineTimer } from "@/hooks/useOfflineTimer";
 import { useSession } from "@/contexts/SessionContext";
 import { syncMeasures } from "@/services/syncMeasures";
 import { confirmDialog, showMessage } from "@/utils/formatNotification";
@@ -22,7 +23,8 @@ export const useHome = () => {
     dailySyncSeconds,
     setDailySyncSeconds,
   } = useSession();
-  const { unsyncStats, isOnline, setUnsyncStats } = useOfflineProgress();
+  const { isOnline, setUnsyncStats } = useOfflineProgress();
+  const liveStats = useOfflineTimer();
   const [nextGoal, setNextGoal] = useState<(typeof GOALS)[0] | undefined>(
     undefined,
   );
@@ -75,10 +77,10 @@ export const useHome = () => {
 
   useEffect(() => {
     const goal = GOALS.find(
-      (goal) => totalSyncSeconds + unsyncStats.total < goal.targetSeconds,
+      (goal) => totalSyncSeconds + liveStats.total < goal.targetSeconds,
     );
     setNextGoal(goal);
-  }, [totalSyncSeconds, unsyncStats]);
+  }, [totalSyncSeconds, liveStats]);
 
   useEffect(() => {
     if (since && !isOnline) {
@@ -96,7 +98,7 @@ export const useHome = () => {
     isLoading,
     sendPeriods,
     session,
-    unsyncStats,
+    unsyncStats: liveStats,
     totalSyncSeconds,
     deviceName,
   };

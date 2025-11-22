@@ -23,6 +23,7 @@ const OfflineProgressContext = createContext<OfflineProgressContextType>({
   unsyncStats: emptyStats,
   setUnsyncStats: () => {},
   isOnline: true,
+  currentPeriodStart: null,
 });
 
 export const OfflineProgressProvider = ({
@@ -30,12 +31,12 @@ export const OfflineProgressProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  // const [totalUnsync, setTotalUnsync] = useState<number>(0);
   const [unsyncStats, setUnsyncStats] = useState<UnsyncStats>(emptyStats);
   const [isOnline, setIsOnline] = useState(true);
-  const currentPeriodStart = useRef<string | null>(null);
+  const [currentPeriodStart, setCurrentPeriodStart] = useState<string | null>(
+    null,
+  );
   const appState = useRef<AppStateStatus>(AppState.currentState);
-  const liveInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const isClosing = useRef<boolean>(false);
 
   // 🛰️ État réseau
@@ -44,34 +45,20 @@ export const OfflineProgressProvider = ({
       const connected = state.isConnected && state.isInternetReachable;
       setIsOnline(!!connected);
 
-      if (!connected && !currentPeriodStart.current) {
+      if (!connected && !currentPeriodStart) {
         // Début hors ligne
-        currentPeriodStart.current = new Date().toISOString();
-        await addPeriod({ from: currentPeriodStart.current });
+        const startTime = new Date().toISOString();
+        setCurrentPeriodStart(startTime);
+        await addPeriod({ from: startTime });
         showMessage("⏳ Début d'une période hors ligne", "success");
-
-        // Démarre le compteur visuel
-        if (!liveInterval.current) {
-          liveInterval.current = setInterval(() => {
-            setUnsyncStats((prev) => ({
-              daily: prev.daily + 1,
-              weekly: prev.weekly + 1,
-              total: prev.total + 1,
-            }));
-          }, 1000);
-        }
       }
 
-      if (connected && currentPeriodStart.current && !isClosing.current) {
+      if (connected && currentPeriodStart && !isClosing.current) {
         isClosing.current = true;
         const end = new Date().toISOString();
-        currentPeriodStart.current = null;
+        setCurrentPeriodStart(null);
         await closeLastPeriod(end);
         showMessage("✅ Fin d'une période hors ligne");
-        if (liveInterval.current) {
-          clearInterval(liveInterval.current);
-          liveInterval.current = null;
-        }
         isClosing.current = false;
       }
 
@@ -80,7 +67,7 @@ export const OfflineProgressProvider = ({
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [currentPeriodStart]);
 
   // 💤 Gestion mise en arrière-plan / reprise
   useEffect(() => {
@@ -91,22 +78,6 @@ export const OfflineProgressProvider = ({
       if (wasBackground && isNowActive) {
         const stats = await getUnsyncStats();
         setUnsyncStats(stats);
-
-        // Si toujours hors ligne, on relance juste le compteur visuel
-        if (!isOnline && currentPeriodStart.current && !liveInterval.current) {
-          liveInterval.current = setInterval(() => {
-            setUnsyncStats((prev) => ({
-              daily: prev.daily + 1,
-              weekly: prev.weekly + 1,
-              total: prev.total + 1,
-            }));
-          }, 1000);
-        }
-      }
-
-      if (!isNowActive && liveInterval.current) {
-        clearInterval(liveInterval.current);
-        liveInterval.current = null;
       }
 
       appState.current = nextAppState;
@@ -117,7 +88,7 @@ export const OfflineProgressProvider = ({
       handleAppStateChange,
     );
     return () => subscription.remove();
-  }, [isOnline]);
+  }, []);
 
   // 🏁 Initialisation
   useEffect(() => {
@@ -130,7 +101,7 @@ export const OfflineProgressProvider = ({
 
   return (
     <OfflineProgressContext.Provider
-      value={{ unsyncStats, setUnsyncStats, isOnline }}
+      value={{ unsyncStats, setUnsyncStats, isOnline, currentPeriodStart }}
     >
       {children}
     </OfflineProgressContext.Provider>
