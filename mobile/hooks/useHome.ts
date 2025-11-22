@@ -1,7 +1,7 @@
 import { GOALS } from "shared/goals";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
-import { useSyncSession } from "@/hooks/useSyncSession";
+import { syncMeasures } from "@/services/syncMeasures";
 import { confirmDialog, showMessage } from "@/utils/formatNotification";
 import { useEffect, useRef, useState } from "react";
 import { getReadableDeviceName } from "@/utils/deviceModelMap";
@@ -13,9 +13,16 @@ export const useHome = () => {
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const { totalSyncSeconds, session } = useSession();
-  const { syncMeasures } = useSyncSession(session);
-  const { unsyncStats, isOnline } = useOfflineProgress();
+  const {
+    totalSyncSeconds,
+    session,
+    setTotalSyncSeconds,
+    weeklySyncSeconds,
+    setWeeklySyncSeconds,
+    dailySyncSeconds,
+    setDailySyncSeconds,
+  } = useSession();
+  const { unsyncStats, isOnline, setUnsyncStats } = useOfflineProgress();
   const [nextGoal, setNextGoal] = useState<(typeof GOALS)[0] | undefined>(
     undefined,
   );
@@ -36,7 +43,16 @@ export const useHome = () => {
     if (!confirmed) return;
     try {
       setIsLoading(true);
-      await syncMeasures();
+      await syncMeasures({
+        session,
+        setTotalSyncSeconds,
+        totalSyncSeconds,
+        setWeeklySyncSeconds,
+        weeklySyncSeconds,
+        setDailySyncSeconds,
+        dailySyncSeconds,
+        setUnsyncStats,
+      });
     } catch (error) {
       if (error instanceof Error) {
         showMessage(error.message, "error", "Erreur");

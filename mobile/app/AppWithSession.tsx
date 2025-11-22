@@ -1,6 +1,6 @@
 import { OfflineProgressProvider } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
-import { useSyncSession } from "@/hooks/useSyncSession";
+import { useSyncData } from "@/hooks/useSyncData";
 import { Stack } from "expo-router";
 import { useState, useEffect } from "react";
 import {
@@ -20,7 +20,7 @@ export default function AppWithSession() {
   const { session } = useSession();
   const [versionStatus, setVersionStatus] = useState("checking");
 
-  useSyncSession(session);
+  useSyncData(session);
 
   useEffect(() => {
     const verifyVersion = async () => {

@@ -97,7 +97,7 @@ export default function Auth() {
           <Button
             mode="text"
             onPress={() => sendPasswordResetEmail(email)}
-            disabled={true}
+            disabled={loading}
             textColor={COLORS.primary}
             style={{ marginTop: 16 }}
           >
