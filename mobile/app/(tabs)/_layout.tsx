@@ -51,13 +51,13 @@ export default function TabLayout() {
                 style={{
                   color: COLORS.primary,
                   fontSize: SIZES.text_xl,
-                  fontFamily: "Doto",
+                  fontFamily: "SairaStencilOne",
                 }}
               >
                 {totalGem.toString()}
                 <IconSymbol
                   name="diamond"
-                  size={SIZES.text_lg}
+                  size={SIZES.text_xl}
                   color={COLORS.primary}
                 />
               </Text>

@@ -1,4 +1,5 @@
-import { View, Text, FlatList, StyleSheet } from "react-native";
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
 import { COLORS, SIZES } from "shared/theme";
 import { formatDuration } from "shared/utils/formatDuration";
 
@@ -16,6 +17,34 @@ interface RankingListProps {
   currentUsername?: string;
 }
 
+const RankingItem = React.memo(
+  ({
+    item,
+    index,
+    isCurrentUser,
+  }: {
+    item: RankingUser;
+    index: number;
+    isCurrentUser: boolean;
+  }) => (
+    <View style={[styles.rankingItem, isCurrentUser && styles.currentUserItem]}>
+      <Text style={[styles.rankText, isCurrentUser && styles.currentUserText]}>
+        {index + 1}
+      </Text>
+      <Text
+        style={[styles.usernameText, isCurrentUser && styles.currentUserText]}
+      >
+        {item.username}
+      </Text>
+      <Text
+        style={[styles.durationText, isCurrentUser && styles.currentUserText]}
+      >
+        {formatDuration(item.total_duration)}
+      </Text>
+    </View>
+  ),
+);
+
 export default function RankingList({
   users,
   currentUsername,
@@ -28,46 +57,17 @@ export default function RankingList({
     );
   }
 
-  const renderItem = ({
-    item,
-    index,
-  }: {
-    item: RankingUser;
-    index: number;
-  }) => {
-    const isCurrentUser = item.username === currentUsername;
-    return (
-      <View
-        style={[styles.rankingItem, isCurrentUser && styles.currentUserItem]}
-      >
-        <Text
-          style={[styles.rankText, isCurrentUser && styles.currentUserText]}
-        >
-          {index + 1}
-        </Text>
-        <Text
-          style={[styles.usernameText, isCurrentUser && styles.currentUserText]}
-        >
-          {item.username}
-        </Text>
-        <Text
-          style={[styles.durationText, isCurrentUser && styles.currentUserText]}
-        >
-          {formatDuration(item.total_duration)}
-        </Text>
-      </View>
-    );
-  };
-
   return (
-    <FlatList
-      data={users}
-      renderItem={renderItem}
-      keyExtractor={(item, index) => `${item.username}-${index}`}
-      style={styles.list}
-      scrollEnabled={true}
-      nestedScrollEnabled={true}
-    />
+    <View style={styles.list}>
+      {users.map((item, index) => (
+        <RankingItem
+          key={item.username}
+          item={item}
+          index={index}
+          isCurrentUser={item.username === currentUsername}
+        />
+      ))}
+    </View>
   );
 }
 

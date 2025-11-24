@@ -57,23 +57,9 @@ import RankingIcon from "./svg/rankingIcon.astro";
   </div>
 
   <!-- Visual Content (Placeholder or Illustration) -->
-  <div
-    class="max-w-[30%] lg:max-w-[50%] lg:flex-1 hidden lg:flex justify-center items-center relative z-10"
-  >
-    <div class="relative w-full max-w-md aspect-square">
-      <!-- Abstract representation of disconnection -->
-      <div
-        class="absolute inset-0 bg-linear-to-tr from-primary to-secondary rounded-full opacity-20 animate-pulse"
-      >
-      </div>
-      <div
-        class="absolute inset-4 bg-base-100 rounded-2xl shadow-2xl flex items-center justify-center border border-base-300"
-      >
-        <div class="text-center p-8">
-          <p class="text-2xl font-bold">Mode Hors Ligne</p>
-          <p class="text-success font-mono mt-2">Activé</p>
-        </div>
-      </div>
-    </div>
-  </div>
+  <img
+    src="/preview.webp"
+    alt="Preview"
+    class="absolute inset-0 w-full h-full object-cover opacity-10 z-0 lg:relative lg:w-auto lg:h-auto lg:opacity-100 lg:z-10 lg:max-w-[30%] lg:flex-1"
+  />
 </section>

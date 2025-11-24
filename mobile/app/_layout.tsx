@@ -9,9 +9,10 @@ import { globalStyles } from "@/styles/global.styles";
 export default function RootLayout() {
   const [loaded] = useFonts({
     // SpaceMono: require("shared/fonts/SpaceMono-Regular.ttf"),
-    Knewave: require("shared/fonts/Knewave-Regular.ttf"),
+    // Knewave: require("shared/fonts/Knewave-Regular.ttf"),
     Montserrat: require("shared/fonts/montserrat-latin-400-normal.ttf"),
-    Doto: require("shared/fonts/Doto-Bold.ttf"),
+    // Doto: require("shared/fonts/Doto-Bold.ttf"),
+    SairaStencilOne: require("shared/fonts/SairaStencilOne-Regular.ttf"),
   });
 
   if (!loaded) return null;

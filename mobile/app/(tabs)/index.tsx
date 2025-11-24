@@ -31,11 +31,13 @@ export default function Home() {
       />
 
       <PowerSavingCard totalSeconds={totalSyncSeconds + unsyncStats.total} />
-      <GoalCard
-        nextGoal={nextGoal}
-        totalSyncSeconds={totalSyncSeconds}
-        totalUnsync={unsyncStats.total}
-      />
+      {nextGoal && (
+        <GoalCard
+          nextGoal={nextGoal}
+          totalSyncSeconds={totalSyncSeconds}
+          totalUnsync={unsyncStats.total}
+        />
+      )}
     </ScrollView>
   );
 }

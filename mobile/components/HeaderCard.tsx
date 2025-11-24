@@ -5,12 +5,14 @@ import * as IntentLauncher from "expo-intent-launcher";
 import { Button } from "react-native-paper";
 import { COLORS } from "shared/theme";
 import DigitDisplay from "./DigitDisplay";
+import useAnimatedColor from "@/hooks/useAnimatedColor";
 
 interface HeaderCardProps {
   isOnline: boolean;
 }
 
 export default function HeaderCard({ isOnline }: HeaderCardProps) {
+  const { animatedColor, isStarting } = useAnimatedColor();
   const openNetworkSettings = () => {
     IntentLauncher.startActivityAsync(
       IntentLauncher.ActivityAction.WIRELESS_SETTINGS,
@@ -25,8 +27,10 @@ export default function HeaderCard({ isOnline }: HeaderCardProps) {
         </Text>
       )}
       <DigitDisplay
-        digit={isOnline ? "En ligne" : "Enregistrement"}
-        color={isOnline ? COLORS.accent : COLORS.record}
+        digit={
+          isOnline ? "En ligne" : isStarting ? "Démarrage" : "Enregistrement"
+        }
+        color={animatedColor}
         label="Status"
       />
       {isOnline ? (

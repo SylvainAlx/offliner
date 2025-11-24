@@ -36,6 +36,7 @@ export const OfflineProgressProvider = ({
   const [currentPeriodStart, setCurrentPeriodStart] = useState<string | null>(
     null,
   );
+  const currentPeriodStartRef = useRef<string | null>(null);
   const appState = useRef<AppStateStatus>(AppState.currentState);
   const isClosing = useRef<boolean>(false);
 
@@ -45,17 +46,19 @@ export const OfflineProgressProvider = ({
       const connected = state.isConnected && state.isInternetReachable;
       setIsOnline(!!connected);
 
-      if (!connected && !currentPeriodStart) {
+      if (!connected && !currentPeriodStartRef.current) {
         // Début hors ligne
         const startTime = new Date().toISOString();
+        currentPeriodStartRef.current = startTime;
         setCurrentPeriodStart(startTime);
         await addPeriod({ from: startTime });
         showMessage("⏳ Début d'une période hors ligne", "success");
       }
 
-      if (connected && currentPeriodStart && !isClosing.current) {
+      if (connected && currentPeriodStartRef.current && !isClosing.current) {
         isClosing.current = true;
         const end = new Date().toISOString();
+        currentPeriodStartRef.current = null;
         setCurrentPeriodStart(null);
         await closeLastPeriod(end);
         showMessage("✅ Fin d'une période hors ligne");
@@ -67,7 +70,7 @@ export const OfflineProgressProvider = ({
     });
 
     return () => unsubscribe();
-  }, [currentPeriodStart]);
+  }, []);
 
   // 💤 Gestion mise en arrière-plan / reprise
   useEffect(() => {

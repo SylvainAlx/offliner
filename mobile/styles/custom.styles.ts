@@ -59,7 +59,7 @@ export const headerStyles = StyleSheet.create({
   headerTitle: {
     fontSize: SIZES.text_xl,
     color: COLORS.primary,
-    fontFamily: "Doto",
+    fontFamily: "SairaStencilOne",
   },
   version: {
     position: "absolute",
