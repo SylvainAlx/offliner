@@ -20,14 +20,6 @@ export default function SettingsScreen() {
     await AsyncStorage.setItem(key, JSON.stringify(value));
   };
 
-  const resetOfflinePeriods = async () => {
-    const confirm = await confirmDialog(
-      "Êtes-vous sûr de vouloir supprimer les périodes hors ligne locales ?",
-    );
-    if (!confirm) return;
-    await AsyncStorage.removeItem(STORAGE_KEYS.OFFLINE_PERIODS);
-  };
-
   useEffect(() => {
     loadPrefs();
   }, []);
@@ -67,15 +59,6 @@ export default function SettingsScreen() {
         <Text style={globalStyles.cardTitle}>Soutenir le projet</Text>
         <PayPalButton />
       </View>
-
-      <Button
-        mode="contained"
-        onPress={async () => await resetOfflinePeriods()}
-        buttonColor={COLORS.danger}
-        style={globalStyles.button}
-      >
-        Supprimer les périodes hors ligne locales
-      </Button>
     </ScrollView>
   );
 }

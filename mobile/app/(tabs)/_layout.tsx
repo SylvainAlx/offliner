@@ -136,15 +136,6 @@ export default function TabLayout() {
         }}
       />
       <Drawer.Screen
-        name="about"
-        options={{
-          title: "A propos",
-          drawerIcon: ({ color }) => (
-            <IconSymbol name="questionmark.circle" color={color} size={22} />
-          ),
-        }}
-      />
-      <Drawer.Screen
         name="profile"
         options={{
           title: "Compte",
@@ -159,6 +150,15 @@ export default function TabLayout() {
           title: "Paramètres",
           drawerIcon: ({ color }) => (
             <IconSymbol name="gearshape" color={color} size={22} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="about"
+        options={{
+          title: "A propos",
+          drawerIcon: ({ color }) => (
+            <IconSymbol name="questionmark.circle" color={color} size={22} />
           ),
         }}
       />

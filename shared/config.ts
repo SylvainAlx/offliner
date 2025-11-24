@@ -8,8 +8,8 @@ export const PROJECT = {
 
 export const OWNER = {
   NAME: "Sylvain Alexandre",
-  CONTACT: "sylvainalx.dev@gmail.com",
-  WEBSITE: "https://sylvainalx.github.io/portfolio/",
+  CONTACT: "contact@alx-solutions-numeriques.fr",
+  WEBSITE: "https://alx-solutions-numeriques.fr/",
 };
 
 export const DONATION = {

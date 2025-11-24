@@ -147,3 +147,11 @@ export async function clearAllPeriods() {
   if (!confirmed) return;
   await AsyncStorage.removeItem(STORAGE_KEYS.OFFLINE_PERIODS);
 }
+
+export const resetOfflinePeriods = async () => {
+  const confirm = await confirmDialog(
+    "Êtes-vous sûr de vouloir supprimer les périodes hors ligne locales ?",
+  );
+  if (!confirm) return;
+  await AsyncStorage.removeItem(STORAGE_KEYS.OFFLINE_PERIODS);
+};

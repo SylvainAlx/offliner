@@ -3,7 +3,6 @@ const { title, description } = Astro.props;
 import Footer from "src/components/footer.astro";
 import Header from "../components/header.astro";
 import "../styles/global.css";
-import Legals from "src/components/modals/legals.astro";
 ---
 
 <!doctype html>
@@ -55,6 +54,5 @@ import Legals from "src/components/modals/legals.astro";
       <slot />
     </main>
     <Footer />
-    <Legals />
   </body>
 </html>

@@ -1,0 +1,46 @@
+---
+import Check from "./svg/check.astro";
+import H2 from "./h2.astro";
+
+const benefits = [
+  {
+    title: "Déconnexion sans effort",
+    description:
+      "L'application détecte automatiquement vos moments hors ligne. Plus besoin de lancer un chronomètre manuellement.",
+  },
+  {
+    title: "Statistiques détaillées",
+    description:
+      "Visualisez vos progrès avec des graphiques clairs et suivez votre évolution jour après jour.",
+  },
+  {
+    title: "Économie d'énergie",
+    description:
+      "En coupant vos connexions, vous prolongez la batterie de votre téléphone et réduisez votre empreinte carbone.",
+  },
+  {
+    title: "Bien-être mental",
+    description:
+      "Retrouvez du temps pour vous, améliorez votre concentration et réduisez votre anxiété numérique.",
+  },
+];
+---
+
+<section class="w-full max-w-5xl mx-auto py-16 px-4">
+  <H2 title="Pourquoi choisir Offliner ?" />
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+    {
+      benefits.map((benefit) => (
+        <div class="card bg-base-200 shadow-xl">
+          <div class="card-body">
+            <h3 class="card-title flex items-center gap-2">
+              <Check />
+              {benefit.title}
+            </h3>
+            <p class="text-base-content/80">{benefit.description}</p>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</section>

@@ -1,0 +1,38 @@
+---
+import H2 from "./h2.astro";
+
+const faqs = [
+  {
+    question: "Est-ce que l'application est gratuite ?",
+    answer:
+      "Oui, Offliner est une application gratuite. Nous proposons des fonctionnalités optionnelles pour soutenir le développement.",
+  },
+  {
+    question: "Comment fonctionne la détection automatique ?",
+    answer:
+      "L'application surveille l'état de votre connexion réseau en arrière-plan (avec votre permission) pour comptabiliser le temps passé sans internet.",
+  },
+  {
+    question: "Puis-je utiliser mon téléphone tout en étant déconnecté ?",
+    answer:
+      "Oui ! Offliner encourage la déconnexion d'internet, pas nécessairement de votre téléphone. Vous pouvez lire, écouter de la musique hors ligne, ou utiliser des outils sans connexion.",
+  },
+];
+---
+
+<section class="w-full max-w-3xl mx-auto py-16 px-4">
+  <H2 title="Questions Fréquentes" />
+  <div class="join join-vertical w-full mt-8">
+    {
+      faqs.map((faq) => (
+        <div class="collapse collapse-arrow join-item border border-base-300">
+          <input type="radio" name="my-accordion-4" />
+          <div class="collapse-title text-xl font-medium">{faq.question}</div>
+          <div class="collapse-content">
+            <p>{faq.answer}</p>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</section>
