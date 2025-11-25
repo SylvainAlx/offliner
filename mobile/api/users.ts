@@ -10,6 +10,7 @@ const UserSchema = z.object({
   region: z.string().nullable(),
   subregion: z.string().nullable(),
   gem_balance: z.number().min(0),
+  daily_goal_seconds: z.number().nullable(),
 });
 
 export type UserProfile = z.infer<typeof UserSchema>;
@@ -20,7 +21,9 @@ export async function getUser(session: Session): Promise<UserProfile | null> {
 
     const { data, error, status } = await supabase
       .from("users")
-      .select(`username, country, region, subregion, gem_balance`)
+      .select(
+        `username, country, region, subregion, gem_balance, daily_goal_seconds`,
+      )
       .eq("id", session?.user.id)
       .single();
 
@@ -243,4 +246,27 @@ export async function updateTotalDuration(user_id: string, amount: number) {
     },
   );
   if (updateUserError) throw updateUserError;
+}
+
+export async function updateDailyGoal(
+  session: Session,
+  goalSeconds: number | null,
+) {
+  try {
+    if (!session?.user) throw new Error("Aucune session active.");
+
+    const { error } = await supabase
+      .from("users")
+      .update({ daily_goal_seconds: goalSeconds })
+      .eq("id", session.user.id);
+
+    if (error) {
+      throw error;
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      showMessage(error.message, "error", "Erreur");
+    }
+    throw error;
+  }
 }

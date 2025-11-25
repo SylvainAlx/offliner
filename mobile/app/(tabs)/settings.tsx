@@ -9,6 +9,7 @@ import { confirmDialog } from "@/utils/formatNotification";
 import { PayPalButton } from "@/components/PayPalButton";
 import ModernButton from "@/components/ui/ModernButton";
 import { resetOfflinePeriods } from "@/services/offlineStorage";
+import DailyGoalSettings from "@/components/DailyGoalSettings";
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
