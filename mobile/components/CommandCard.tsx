@@ -3,10 +3,10 @@ import { UnsyncStats } from "@/types/TypOffline";
 import { Session } from "@supabase/supabase-js";
 import { router } from "expo-router";
 import { View, Text } from "react-native";
-import { Button } from "react-native-paper";
 import { COLORS } from "shared/theme";
 import Timer from "./Timer";
 import { indexStyles } from "@/styles/custom.styles";
+import ModernButton from "./ui/ModernButton";
 
 interface CommandCardProps {
   session: Session | null;
@@ -43,25 +43,23 @@ export default function CommandCard({
         Nettoyer
       </Button> */}
       {session && isOnline ? (
-        <Button
-          mode="contained"
+        <ModernButton
+          variant="secondary"
           onPress={sendPeriods}
           disabled={unsyncStats.total === 0 || isLoading}
-          buttonColor={isOnline ? COLORS.secondary : COLORS.dark}
-          style={globalStyles.button}
+          loading={isLoading}
+          icon="sync"
         >
           Synchroniser
-        </Button>
+        </ModernButton>
       ) : (
         isOnline && (
-          <Button
-            mode="contained"
-            buttonColor={COLORS.secondary}
-            style={globalStyles.button}
+          <ModernButton
+            variant="primary"
             onPress={() => router.push("/profile")}
           >
             Se connecter
-          </Button>
+          </ModernButton>
         )
       )}
     </View>

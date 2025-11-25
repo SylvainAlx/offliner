@@ -130,7 +130,7 @@ export const SessionProvider = ({
       }
 
       if (path === "reset-password" && accessToken && refreshToken) {
-        const { error } = await supabase.auth.setSession({
+        const { data, error } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
         });
@@ -145,7 +145,15 @@ export const SessionProvider = ({
           return;
         }
 
-        router.push("/reset-password");
+        // Mettre à jour immédiatement la session dans le contexte
+        if (data.session) {
+          setSession(data.session);
+        }
+
+        // Attendre un peu pour s'assurer que la session est propagée
+        setTimeout(() => {
+          router.push("/reset-password");
+        }, 100);
       }
     };
 

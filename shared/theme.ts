@@ -18,6 +18,14 @@ export const COLORS = {
   record: "#f7054e",
 };
 
+export const BUTTON_GRADIENTS = {
+  primary: ["#ff89ff", "#ff5fff"],
+  secondary: ["#00abff", "#0088ff"],
+  accent: ["#ffffa8", "#ffff70"],
+  danger: ["#D72638", "#EF476F"],
+  warning: ["#FFA600", "#FF8800"],
+};
+
 // export const COLORS = {
 //   primary: "#ffd157",
 //   secondary: "#ffc6ff",

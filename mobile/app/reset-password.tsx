@@ -1,14 +1,9 @@
 import { useState, useEffect } from "react";
-import {
-  View,
-  TextInput,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
+import { View, TextInput, Text, ActivityIndicator } from "react-native";
 import { updatePassword } from "@/api/auth";
 import { useSession } from "@/contexts/SessionContext";
 import { router } from "expo-router";
+import ModernButton from "@/components/ui/ModernButton";
 
 export default function ResetPassword() {
   const { session } = useSession();
@@ -133,37 +128,15 @@ export default function ResetPassword() {
         <Text style={{ color: "red", marginTop: -8 }}>{error}</Text>
       ) : null}
 
-      <TouchableOpacity
+      <ModernButton
+        variant="secondary"
         onPress={handleSubmit}
-        disabled={!isValid || !session || isSubmitting}
-        style={{
-          backgroundColor:
-            isValid && session && !isSubmitting ? "#007bff" : "#9cbcf2",
-          paddingVertical: 14,
-          borderRadius: 10,
-          alignItems: "center",
-          marginTop: 6,
-          flexDirection: "row",
-          justifyContent: "center",
-        }}
+        disabled={!isValid || !session}
+        loading={isSubmitting}
+        fullWidth
       >
-        {isSubmitting ? (
-          <>
-            <ActivityIndicator
-              size="small"
-              color="white"
-              style={{ marginRight: 8 }}
-            />
-            <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
-              Mise à jour...
-            </Text>
-          </>
-        ) : (
-          <Text style={{ color: "white", fontWeight: "600", fontSize: 16 }}>
-            Valider
-          </Text>
-        )}
-      </TouchableOpacity>
+        Valider
+      </ModernButton>
     </View>
   );
 }

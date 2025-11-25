@@ -91,16 +91,16 @@ export default function TabLayout() {
         name="mining"
         listeners={{
           drawerItemPress: (e) => {
-            if (!session) e.preventDefault();
+            if (!session || !isOnline) e.preventDefault();
           },
         }}
         options={{
           title: "Gemmes de temps",
-          drawerItemStyle: !session ? { opacity: 0.5 } : undefined,
+          drawerItemStyle: !session || !isOnline ? { opacity: 0.5 } : undefined,
           drawerIcon: ({ color }) => (
             <IconSymbol
               name="diamond"
-              color={!session ? COLORS.card : color}
+              color={!session || !isOnline ? COLORS.card : color}
               size={22}
             />
           ),

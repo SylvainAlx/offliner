@@ -6,6 +6,7 @@ import { UnsyncStats } from "@/types/TypOffline";
 import { Button } from "react-native-paper";
 import { COLORS } from "shared/theme";
 import { router } from "expo-router";
+import ModernButton from "./ui/ModernButton";
 
 interface TimerCardProps {
   isOnline: boolean;
@@ -44,25 +45,22 @@ export default function TimerCard({
         Nettoyer
       </Button> */}
       {session && isOnline ? (
-        <Button
-          mode="contained"
+        <ModernButton
+          variant="secondary"
           onPress={sendPeriods}
           disabled={unsyncStats.total === 0 || isLoading}
-          buttonColor={isOnline ? COLORS.secondary : COLORS.dark}
-          style={globalStyles.button}
+          icon="sync"
         >
           Synchroniser
-        </Button>
+        </ModernButton>
       ) : (
         isOnline && (
-          <Button
-            mode="contained"
-            buttonColor={COLORS.secondary}
-            style={globalStyles.button}
+          <ModernButton
+            variant="secondary"
             onPress={() => router.push("/profile")}
           >
             Se connecter
-          </Button>
+          </ModernButton>
         )
       )}
     </View>

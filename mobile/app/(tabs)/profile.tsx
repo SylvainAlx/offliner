@@ -6,8 +6,8 @@ import { useSession } from "@/contexts/SessionContext";
 import { resetOfflinePeriods } from "@/services/offlineStorage";
 import { globalStyles } from "@/styles/global.styles";
 import { View } from "react-native";
-import { Button } from "react-native-paper";
 import { COLORS } from "shared/theme";
+import ModernButton from "@/components/ui/ModernButton";
 
 export default function ProfileScreen() {
   const { session } = useSession();
@@ -20,14 +20,6 @@ export default function ProfileScreen() {
       ) : (
         <Auth />
       )}
-      <Button
-        mode="contained"
-        onPress={async () => await resetOfflinePeriods()}
-        buttonColor={COLORS.danger}
-        style={globalStyles.button}
-      >
-        Supprimer les périodes hors ligne locales
-      </Button>
     </View>
   );
 }

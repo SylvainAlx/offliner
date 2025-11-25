@@ -1,10 +1,10 @@
 import { globalStyles } from "@/styles/global.styles";
 import { ScrollView, View, Text, ActivityIndicator } from "react-native";
-import { Button } from "react-native-paper";
 import { COLORS } from "shared/theme";
 import { useStats } from "@/hooks/useStats";
 import DigitDisplay from "@/components/DigitDisplay";
 import RankingList from "@/components/RankingList";
+import ModernButton from "@/components/ui/ModernButton";
 
 export default function StatsScreen() {
   const {
@@ -106,14 +106,13 @@ export default function StatsScreen() {
         )}
       </View>
       <View style={globalStyles.buttonContainer}>
-        <Button
-          mode="contained"
-          buttonColor={COLORS.secondary}
+        <ModernButton
+          variant="secondary"
           onPress={openExternalLink}
-          style={globalStyles.button}
+          icon="open-in-new"
         >
           Consulter le classement complet
-        </Button>
+        </ModernButton>
       </View>
     </ScrollView>
   );

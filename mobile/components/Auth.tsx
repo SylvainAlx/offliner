@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Text, View, Keyboard, TouchableWithoutFeedback } from "react-native";
-import { TextInput, Button } from "react-native-paper";
+import { TextInput } from "react-native-paper";
 import { COLORS } from "shared/theme";
 import { useAuth } from "@/hooks/useAuth";
 import { globalStyles } from "@/styles/global.styles";
+import ModernButton from "./ui/ModernButton";
 
 export default function Auth() {
   const {
@@ -73,36 +74,32 @@ export default function Auth() {
           </View>
 
           <View style={globalStyles.buttonContainer}>
-            <Button
-              mode="contained"
+            <ModernButton
+              variant="secondary"
               onPress={signIn}
               disabled={loading}
-              buttonColor={COLORS.secondary}
-              style={[globalStyles.button, { borderRadius: 100 }]}
+              loading={loading}
             >
               Se connecter
-            </Button>
+            </ModernButton>
 
-            <Button
-              mode="contained"
+            <ModernButton
+              variant="primary"
               onPress={signUp}
               disabled={loading}
-              buttonColor={COLORS.info}
-              style={[globalStyles.button, { borderRadius: 100 }]}
+              loading={loading}
             >
               Créer un compte
-            </Button>
+            </ModernButton>
           </View>
 
-          <Button
-            mode="text"
+          <ModernButton
+            variant="text"
             onPress={() => sendPasswordResetEmail(email)}
             disabled={loading}
-            textColor={COLORS.primary}
-            style={{ marginTop: 16 }}
           >
             Mot de passe oublié ?
-          </Button>
+          </ModernButton>
         </View>
       </View>
     </TouchableWithoutFeedback>

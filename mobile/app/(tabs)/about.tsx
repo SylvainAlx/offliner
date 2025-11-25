@@ -1,9 +1,9 @@
 import { globalStyles } from "@/styles/global.styles";
 import { router } from "expo-router";
 import { View, Text, Linking } from "react-native";
-import { Button } from "react-native-paper";
 import { OWNER, PROJECT } from "shared/config";
 import { COLORS } from "shared/theme";
+import ModernButton from "@/components/ui/ModernButton";
 
 export default function AboutScreen() {
   return (
@@ -28,30 +28,27 @@ export default function AboutScreen() {
         aussi des économies d’énergie contribuant à réduire l’empreinte carbone
         du numérique tout en allégeant vos dépenses énergétiques.
       </Text>
-      <Button
-        mode="contained"
-        buttonColor={COLORS.secondary}
-        style={globalStyles.button}
+      <ModernButton
+        variant="secondary"
         onPress={() => router.push("../help")}
+        icon="book"
       >
         Mode d&apos;emploi
-      </Button>
-      <Button
-        mode="contained"
+      </ModernButton>
+      <ModernButton
+        variant="secondary"
         onPress={() => Linking.openURL(`mailto:${OWNER.CONTACT}`)}
-        buttonColor={COLORS.secondary}
-        style={globalStyles.button}
+        icon="email"
       >
         Contacter le développeur
-      </Button>
-      <Button
-        mode="contained"
-        buttonColor={COLORS.secondary}
-        style={globalStyles.button}
+      </ModernButton>
+      <ModernButton
+        variant="secondary"
         onPress={() => router.push("../legals")}
+        icon="file-document"
       >
         Mentions légales
-      </Button>
+      </ModernButton>
     </View>
   );
 }

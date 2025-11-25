@@ -6,6 +6,7 @@ import { Button } from "react-native-paper";
 import { COLORS } from "shared/theme";
 import DigitDisplay from "./DigitDisplay";
 import useAnimatedColor from "@/hooks/useAnimatedColor";
+import ModernButton from "./ui/ModernButton";
 
 interface HeaderCardProps {
   isOnline: boolean;
@@ -34,23 +35,21 @@ export default function HeaderCard({ isOnline }: HeaderCardProps) {
         label="Status"
       />
       {isOnline ? (
-        <Button
-          mode="contained"
+        <ModernButton
+          variant="secondary"
           onPress={openNetworkSettings}
-          style={globalStyles.button}
-          buttonColor={COLORS.secondary}
+          icon="wifi-off"
         >
           Couper internet
-        </Button>
+        </ModernButton>
       ) : (
-        <Button
-          mode="contained"
+        <ModernButton
+          variant="secondary"
           onPress={openNetworkSettings}
-          style={globalStyles.button}
-          buttonColor={COLORS.secondary}
+          icon="wifi"
         >
           Réactiver internet
-        </Button>
+        </ModernButton>
       )}
     </View>
   );
