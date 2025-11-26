@@ -1,7 +1,8 @@
 import { GOALS } from "shared/goals";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
+import { useOfflineTimer } from "@/hooks/useOfflineTimer";
 import { useSession } from "@/contexts/SessionContext";
-import { useSyncSession } from "@/hooks/useSyncSession";
+import { syncMeasures } from "@/services/syncMeasures";
 import { confirmDialog, showMessage } from "@/utils/formatNotification";
 import { useEffect, useRef, useState } from "react";
 import { getReadableDeviceName } from "@/utils/deviceModelMap";
@@ -13,9 +14,17 @@ export const useHome = () => {
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const { totalSyncSeconds, session } = useSession();
-  const { syncMeasures } = useSyncSession(session);
-  const { unsyncStats, isOnline } = useOfflineProgress();
+  const {
+    totalSyncSeconds,
+    session,
+    setTotalSyncSeconds,
+    weeklySyncSeconds,
+    setWeeklySyncSeconds,
+    dailySyncSeconds,
+    setDailySyncSeconds,
+  } = useSession();
+  const { isOnline, setUnsyncStats } = useOfflineProgress();
+  const liveStats = useOfflineTimer();
   const [nextGoal, setNextGoal] = useState<(typeof GOALS)[0] | undefined>(
     undefined,
   );
@@ -36,7 +45,16 @@ export const useHome = () => {
     if (!confirmed) return;
     try {
       setIsLoading(true);
-      await syncMeasures();
+      await syncMeasures({
+        session,
+        setTotalSyncSeconds,
+        totalSyncSeconds,
+        setWeeklySyncSeconds,
+        weeklySyncSeconds,
+        setDailySyncSeconds,
+        dailySyncSeconds,
+        setUnsyncStats,
+      });
     } catch (error) {
       if (error instanceof Error) {
         showMessage(error.message, "error", "Erreur");
@@ -59,10 +77,10 @@ export const useHome = () => {
 
   useEffect(() => {
     const goal = GOALS.find(
-      (goal) => totalSyncSeconds + unsyncStats.total < goal.targetSeconds,
+      (goal) => totalSyncSeconds + liveStats.total < goal.targetSeconds,
     );
     setNextGoal(goal);
-  }, [totalSyncSeconds, unsyncStats]);
+  }, [totalSyncSeconds, liveStats]);
 
   useEffect(() => {
     if (since && !isOnline) {
@@ -80,7 +98,7 @@ export const useHome = () => {
     isLoading,
     sendPeriods,
     session,
-    unsyncStats,
+    unsyncStats: liveStats,
     totalSyncSeconds,
     deviceName,
   };

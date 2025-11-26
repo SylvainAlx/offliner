@@ -2,10 +2,11 @@ import { COLORS } from "shared/theme";
 import { globalStyles } from "@/styles/global.styles";
 import { Picker } from "@react-native-picker/picker";
 import { ScrollView, Text, View } from "react-native";
-import { TextInput, Button } from "react-native-paper";
+import { TextInput } from "react-native-paper";
 import { Session } from "@supabase/supabase-js";
 import { useAccount } from "@/hooks/useAccount";
 import PickerInput from "./PickerInput";
+import ModernButton from "./ui/ModernButton";
 
 export default function Account({ session }: { session: Session }) {
   const {
@@ -96,33 +97,27 @@ export default function Account({ session }: { session: Session }) {
         />
 
         <View style={globalStyles.buttonContainer}>
-          <Button
-            mode="contained"
+          <ModernButton
+            variant="secondary"
             onPress={() => updateProfile({ username: username ?? "" })}
             disabled={loading}
-            buttonColor={COLORS.secondary}
-            style={globalStyles.button}
+            loading={loading}
+            icon="update"
           >
-            {loading ? "Chargement ..." : "Mettre à jour"}
-          </Button>
+            Mettre à jour
+          </ModernButton>
 
-          <Button
-            mode="contained"
-            onPress={handleLogout}
-            buttonColor={COLORS.warning}
-            style={globalStyles.button}
-          >
+          <ModernButton variant="warning" onPress={handleLogout} icon="logout">
             Se déconnecter
-          </Button>
+          </ModernButton>
 
-          <Button
-            mode="contained"
+          <ModernButton
+            variant="danger"
             onPress={handleDeleteAccount}
-            buttonColor={COLORS.danger}
-            style={globalStyles.button}
+            icon="delete"
           >
             Supprimer le compte
-          </Button>
+          </ModernButton>
         </View>
       </View>
     </ScrollView>

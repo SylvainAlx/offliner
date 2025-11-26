@@ -6,7 +6,7 @@ import { Goal } from "shared/goals";
 import { COLORS } from "shared/theme";
 
 interface GoalCardProps {
-  nextGoal: Goal | undefined;
+  nextGoal: Goal;
   totalSyncSeconds: number;
   totalUnsync: number;
 }
@@ -19,15 +19,13 @@ export default function GoalCard({
   return (
     <View style={globalStyles.card}>
       <Text style={globalStyles.cardTitle}>Objectif en cours</Text>
-      {nextGoal && (
-        <Link href={"/goals"}>
-          <GoalProgress
-            goal={nextGoal}
-            totalSeconds={totalSyncSeconds + totalUnsync}
-            bgColor={COLORS.subCard}
-          />
-        </Link>
-      )}
+      <Link href={"/goals"}>
+        <GoalProgress
+          goal={nextGoal}
+          totalSeconds={totalSyncSeconds + totalUnsync}
+          bgColor={COLORS.subCard}
+        />
+      </Link>
     </View>
   );
 }

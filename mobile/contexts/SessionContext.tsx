@@ -28,6 +28,8 @@ type SessionContextType = {
   setDailySyncSeconds: (value: number) => void;
   totalGem: number;
   setTotalGem: (value: number) => void;
+  dailyGoalSeconds: number | null;
+  setDailyGoalSeconds: (value: number | null) => void;
 };
 
 const SessionContext = createContext<SessionContextType>({
@@ -50,6 +52,8 @@ const SessionContext = createContext<SessionContextType>({
   setDailySyncSeconds: () => {},
   totalGem: 0,
   setTotalGem: () => {},
+  dailyGoalSeconds: null,
+  setDailyGoalSeconds: () => {},
 });
 
 export const SessionProvider = ({
@@ -70,6 +74,7 @@ export const SessionProvider = ({
   const [dailySyncSeconds, setDailySyncSeconds] = useState<number>(0);
 
   const [totalGem, setTotalGem] = useState<number>(0);
+  const [dailyGoalSeconds, setDailyGoalSeconds] = useState<number | null>(null);
 
   async function getProfile() {
     try {
@@ -81,6 +86,7 @@ export const SessionProvider = ({
         setRegion(data.region);
         setSubregion(data.subregion);
         setTotalGem(data.gem_balance);
+        setDailyGoalSeconds(data.daily_goal_seconds);
       }
       const device = await getAndUpdateLocalDevice(session);
       setDeviceName(device);
@@ -130,7 +136,7 @@ export const SessionProvider = ({
       }
 
       if (path === "reset-password" && accessToken && refreshToken) {
-        const { error } = await supabase.auth.setSession({
+        const { data, error } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
         });
@@ -145,7 +151,15 @@ export const SessionProvider = ({
           return;
         }
 
-        router.push("/reset-password");
+        // Mettre à jour immédiatement la session dans le contexte
+        if (data.session) {
+          setSession(data.session);
+        }
+
+        // Attendre un peu pour s'assurer que la session est propagée
+        setTimeout(() => {
+          router.push("/reset-password");
+        }, 100);
       }
     };
 
@@ -181,6 +195,8 @@ export const SessionProvider = ({
         setDailySyncSeconds,
         totalGem,
         setTotalGem,
+        dailyGoalSeconds,
+        setDailyGoalSeconds,
       }}
     >
       {children}

@@ -6,6 +6,10 @@ import { COLORS, SIZES } from "shared/theme";
 import { STORAGE_KEYS } from "@/constants/Labels";
 import { useEffect, useState } from "react";
 import { confirmDialog } from "@/utils/formatNotification";
+import { PayPalButton } from "@/components/PayPalButton";
+import ModernButton from "@/components/ui/ModernButton";
+import { resetOfflinePeriods } from "@/services/offlineStorage";
+import DailyGoalSettings from "@/components/DailyGoalSettings";
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -17,14 +21,6 @@ export default function SettingsScreen() {
 
   const savePref = async (key: string, value: boolean) => {
     await AsyncStorage.setItem(key, JSON.stringify(value));
-  };
-
-  const resetOfflinePeriods = async () => {
-    const confirm = await confirmDialog(
-      "Êtes-vous sûr de vouloir supprimer les périodes hors ligne locales ?",
-    );
-    if (!confirm) return;
-    await AsyncStorage.removeItem(STORAGE_KEYS.OFFLINE_PERIODS);
   };
 
   useEffect(() => {
@@ -39,7 +35,7 @@ export default function SettingsScreen() {
       <Text style={globalStyles.title}>Paramètres de l&apos;application</Text>
 
       <View style={globalStyles.card}>
-        <Text style={globalStyles.cardTitle}>Expérience utilisateur</Text>
+        <Text style={globalStyles.cardTitle}>Paramètres locaux</Text>
         <View style={{ width: "100%", paddingHorizontal: SIZES.padding }}>
           <View
             style={{
@@ -60,15 +56,19 @@ export default function SettingsScreen() {
             />
           </View>
         </View>
+        <ModernButton
+          variant="danger"
+          onPress={async () => await resetOfflinePeriods()}
+          icon="delete-forever"
+        >
+          Supprimer les périodes locales
+        </ModernButton>
       </View>
-      <Button
-        mode="contained"
-        onPress={async () => await resetOfflinePeriods()}
-        buttonColor={COLORS.danger}
-        style={globalStyles.button}
-      >
-        Supprimer les périodes hors ligne locales
-      </Button>
+
+      <View style={globalStyles.card}>
+        <Text style={globalStyles.cardTitle}>Soutenir le projet</Text>
+        <PayPalButton />
+      </View>
     </ScrollView>
   );
 }

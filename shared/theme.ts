@@ -15,7 +15,15 @@ export const COLORS = {
   danger: "#D72638",
   warning: "#FFA600",
   info: "#118AB2",
-  record: "#c3025a",
+  record: "#f7054e",
+};
+
+export const BUTTON_GRADIENTS = {
+  primary: ["#ff89ff", "#ff5fff"],
+  secondary: ["#00abff", "#0088ff"],
+  accent: ["#ffffa8", "#ffff70"],
+  danger: ["#D72638", "#EF476F"],
+  warning: ["#FFA600", "#FF8800"],
 };
 
 // export const COLORS = {

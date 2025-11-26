@@ -1,14 +1,15 @@
 import GoalProgress from "@/components/GoalProgress";
 import { GOALS } from "shared/goals";
 import { SIZES } from "shared/theme";
-import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
+import { useOfflineTimer } from "@/hooks/useOfflineTimer";
 import { useSession } from "@/contexts/SessionContext";
 import { globalStyles } from "@/styles/global.styles";
-import { FlatList, Text } from "react-native";
+import { FlatList, Text, View } from "react-native";
+import DailyGoalSettings from "@/components/DailyGoalSettings";
 
 export default function GoalsScreen() {
   const { totalSyncSeconds } = useSession();
-  const { unsyncStats } = useOfflineProgress();
+  const liveStats = useOfflineTimer();
 
   return (
     <FlatList
@@ -20,12 +21,19 @@ export default function GoalsScreen() {
       }}
       showsVerticalScrollIndicator
       ListHeaderComponent={
-        <Text style={globalStyles.title}>Objectifs hors ligne</Text>
+        <>
+          <Text style={globalStyles.title}>Objectifs hors ligne</Text>
+          <View style={[globalStyles.card, { marginBottom: SIZES.margin }]}>
+            <Text style={globalStyles.cardTitle}>Objectif quotidien</Text>
+            <DailyGoalSettings />
+          </View>
+          <Text style={globalStyles.title}>Objectifs communs</Text>
+        </>
       }
       renderItem={({ item }) => (
         <GoalProgress
           goal={item}
-          totalSeconds={totalSyncSeconds + unsyncStats.total}
+          totalSeconds={totalSyncSeconds + liveStats.total}
         />
       )}
     />

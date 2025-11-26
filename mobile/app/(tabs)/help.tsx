@@ -2,10 +2,10 @@ import { config } from "@/config/env";
 import { globalStyles } from "@/styles/global.styles";
 import { Link, router } from "expo-router";
 import { Text, Linking, Pressable, ScrollView } from "react-native";
-import { Button } from "react-native-paper";
 import { PROJECT } from "shared/config";
 import { COLORS } from "shared/theme";
 import { ENERGY_CONSUMPTION } from "shared/utils/powerSaving";
+import ModernButton from "@/components/ui/ModernButton";
 
 export default function HelpScreen() {
   const handlePress = () => {
@@ -74,14 +74,9 @@ export default function HelpScreen() {
         Le minuteur est programmé pour ne pas se lancer entre minuit et 6h du
         matin afin de favoriser la déconnexion sur les temps d&apos;éveil.
       </Text>
-      <Button
-        mode="contained"
-        buttonColor={COLORS.secondary}
-        style={globalStyles.button}
-        onPress={() => router.push("../about")}
-      >
+      <ModernButton variant="secondary" onPress={() => router.push("../about")}>
         Retour
-      </Button>
+      </ModernButton>
     </ScrollView>
   );
 }

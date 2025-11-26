@@ -38,7 +38,7 @@ export default function DigitDisplay({
         style={{
           paddingTop: 5,
           fontSize: SIZES.text_xl * 1.1,
-          fontFamily: "Doto",
+          fontFamily: "SairaStencilOne",
           color: color,
         }}
       >

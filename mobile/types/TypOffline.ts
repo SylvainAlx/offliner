@@ -4,6 +4,7 @@ export type OfflineProgressContextType = {
   unsyncStats: UnsyncStats;
   setUnsyncStats: React.Dispatch<React.SetStateAction<UnsyncStats>>;
   isOnline: boolean;
+  currentPeriodStart: string | null;
 };
 
 export type UnsyncStats = {

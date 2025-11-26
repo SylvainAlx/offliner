@@ -49,5 +49,5 @@ export default function useAnimatedColor() {
     outputRange: [prevColor, targetColor],
   });
 
-  return { animatedColor };
+  return { animatedColor, isStarting };
 }

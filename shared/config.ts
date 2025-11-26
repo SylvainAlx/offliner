@@ -1,6 +1,6 @@
 export const PROJECT = {
   TITLE: "Offliner",
-  VERSION: "0.0.7",
+  VERSION: "0.1.0",
   DESCRIPTION:
     "L'application mobile qui compte et encourage le temps passé hors ligne",
   SLOGAN: "Déconnectez pour mieux vous reconnecter",
@@ -8,6 +8,10 @@ export const PROJECT = {
 
 export const OWNER = {
   NAME: "Sylvain Alexandre",
-  CONTACT: "sylvainalx.dev@gmail.com",
-  WEBSITE: "https://sylvainalx.github.io/portfolio/",
+  CONTACT: "contact@alx-solutions-numeriques.fr",
+  WEBSITE: "https://alx-solutions-numeriques.fr/",
+};
+
+export const DONATION = {
+  PAYPAL_URL: "https://paypal.me/sylvainalx", // Placeholder, replace with actual if known or keep generic
 };

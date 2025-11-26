@@ -5,23 +5,31 @@ import * as Notifications from "expo-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "@/constants/Labels";
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldSetBadge: false,
-  }),
-});
+try {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldPlaySound: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldSetBadge: false,
+    }),
+  });
+} catch (error) {
+  console.warn("Notifications handler setup failed:", error);
+}
 
 let channelInitialized = false;
 async function ensureAndroidChannel() {
   if (Platform.OS === "android" && !channelInitialized) {
-    await Notifications.setNotificationChannelAsync("default", {
-      name: "default",
-      importance: Notifications.AndroidImportance.DEFAULT,
-    });
-    channelInitialized = true;
+    try {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.DEFAULT,
+      });
+      channelInitialized = true;
+    } catch (error) {
+      console.warn("Failed to set notification channel:", error);
+    }
   }
 }
 
@@ -29,6 +37,7 @@ export async function showMessage(
   text: string,
   type: ToastType = "info",
   title: string = "Information",
+  time: number = 3000,
 ) {
   if (Platform.OS === "web") {
     alert(text);
@@ -39,38 +48,40 @@ export async function showMessage(
       return;
     }
 
-    const pref = await AsyncStorage.getItem(STORAGE_KEYS.PREF_NOTIFICATIONS);
-    const enabled = pref ? JSON.parse(pref) : false;
-    if (enabled) {
-      const { status } = await Notifications.getPermissionsAsync();
-      if (status !== "granted") {
-        const req = await Notifications.requestPermissionsAsync();
-        if (req.status !== "granted") {
-          Toast.show({
-            type,
-            text1: titleSafe,
-            text2: textSafe,
-            position: "top",
-            visibilityTime: 3000,
-            autoHide: true,
-          });
-          return;
-        }
-      }
-      await ensureAndroidChannel();
-      await Notifications.scheduleNotificationAsync({
-        content: { title: titleSafe, body: textSafe },
-        trigger: null,
-      });
-    } else {
+    const showToast = () => {
       Toast.show({
         type,
         text1: titleSafe,
         text2: textSafe,
         position: "top",
-        visibilityTime: 3000,
+        visibilityTime: time,
         autoHide: true,
       });
+    };
+
+    try {
+      const pref = await AsyncStorage.getItem(STORAGE_KEYS.PREF_NOTIFICATIONS);
+      const enabled = pref ? JSON.parse(pref) : false;
+      if (enabled) {
+        const { status } = await Notifications.getPermissionsAsync();
+        if (status !== "granted") {
+          const req = await Notifications.requestPermissionsAsync();
+          if (req.status !== "granted") {
+            showToast();
+            return;
+          }
+        }
+        await ensureAndroidChannel();
+        await Notifications.scheduleNotificationAsync({
+          content: { title: titleSafe, body: textSafe },
+          trigger: null,
+        });
+      } else {
+        showToast();
+      }
+    } catch (error) {
+      console.warn("Notification failed, falling back to toast:", error);
+      showToast();
     }
   }
 }

@@ -1,5 +1,6 @@
 # App React Native
 mobile/node_modules/
+mobile/.HELP
 mobile/.expo/
 mobile/android/
 mobile/.expo-shared/
@@ -10,6 +11,7 @@ mobile/help.md
 # Environment files
 mobile/.env
 mobile/.env*.local
+mobile/expo-env.d.ts
 # Native credentials and keys
 mobile/.kotlin/
 mobile/*.orig.*

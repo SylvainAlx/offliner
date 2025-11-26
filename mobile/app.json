@@ -5,7 +5,8 @@
     },
     "name": "Offliner",
     "slug": "Offliner",
-    "version": "0.0.7",
+    "version": "0.1.0",
+    "description": "Suivez et améliorez votre temps hors ligne pour une relation plus saine avec le numérique",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "offliner",
@@ -20,7 +21,9 @@
         "backgroundImage": "./assets/images/icon_adaptive_back.png"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.sylvainalx.Offliner"
+      "package": "com.sylvainalx.Offliner",
+      "versionCode": 1,
+      "permissions": ["INTERNET", "ACCESS_NETWORK_STATE"]
     },
     "web": {
       "bundler": "metro",

@@ -5,6 +5,8 @@ import { Goal } from "shared/goals";
 import { formatDuration } from "shared/utils/formatDuration";
 import DigitDisplay from "./DigitDisplay";
 import useAnimatedColor from "@/hooks/useAnimatedColor";
+import { showMessage } from "@/utils/formatNotification";
+import { useState } from "react";
 
 type Props = {
   goal: Goal;
@@ -15,13 +17,14 @@ type Props = {
 export default function GoalProgress({ goal, totalSeconds, bgColor }: Props) {
   const isAchieved = totalSeconds >= goal.targetSeconds;
   const percent = Math.min(1, totalSeconds / goal.targetSeconds);
+  const remaining = Math.max(0, goal.targetSeconds - totalSeconds);
   const { animatedColor } = useAnimatedColor();
 
   return (
     <View
       style={[
         globalStyles.card,
-        { backgroundColor: bgColor ? bgColor : COLORS.card },
+        { backgroundColor: bgColor ? bgColor : COLORS.card, width: "100%" },
       ]}
     >
       <Text style={globalStyles.cardTitle}>{goal.id}</Text>
@@ -44,6 +47,13 @@ export default function GoalProgress({ goal, totalSeconds, bgColor }: Props) {
         label="Progression"
         color={isAchieved ? COLORS.succes : animatedColor}
       />
+      {!isAchieved && (
+        <DigitDisplay
+          digit={formatDuration(remaining)}
+          label="Restant"
+          color={animatedColor}
+        />
+      )}
     </View>
   );
 }

@@ -5,6 +5,8 @@ import { ScrollView } from "react-native";
 import GoalCard from "@/components/GoalCard";
 import PowerSavingCard from "@/components/PowerSavingCard";
 import HeaderCard from "@/components/HeaderCard";
+import DailyGoalCard from "@/components/DailyGoalCard";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function Home() {
   const {
@@ -15,6 +17,9 @@ export default function Home() {
     unsyncStats,
     totalSyncSeconds,
   } = useHome();
+  const { dailyGoalSeconds, dailySyncSeconds } = useSession();
+
+  const currentDailySeconds = dailySyncSeconds + unsyncStats.daily;
 
   return (
     <ScrollView
@@ -29,13 +34,20 @@ export default function Home() {
         unsyncStats={unsyncStats}
         sendPeriods={sendPeriods}
       />
-
       <PowerSavingCard totalSeconds={totalSyncSeconds + unsyncStats.total} />
-      <GoalCard
-        nextGoal={nextGoal}
-        totalSyncSeconds={totalSyncSeconds}
-        totalUnsync={unsyncStats.total}
-      />
+      {dailyGoalSeconds !== null && (
+        <DailyGoalCard
+          goalSeconds={dailyGoalSeconds}
+          currentSeconds={currentDailySeconds}
+        />
+      )}
+      {nextGoal && (
+        <GoalCard
+          nextGoal={nextGoal}
+          totalSyncSeconds={totalSyncSeconds}
+          totalUnsync={unsyncStats.total}
+        />
+      )}
     </ScrollView>
   );
 }

@@ -82,3 +82,86 @@ export async function getTotalDuration(): Promise<number> {
   // somme côté JS
   return data.reduce((acc, row) => acc + (row.total_duration ?? 0), 0);
 }
+
+export async function getWeeklyLeagueRanking() {
+  try {
+    const { getCurrentWeekRange } = await import("shared/utils/dateUtils");
+    const { start, end } = getCurrentWeekRange();
+
+    // Récupérer toutes les mesures de la semaine avec les informations utilisateur
+    const { data, error } = await supabase
+      .from("measures")
+      .select(
+        `
+        duration,
+        user_id,
+        users!inner (
+          username,
+          country,
+          region,
+          subregion,
+          gem_balance
+        )
+      `,
+      )
+      .gte("date", start)
+      .lte("date", end);
+
+    if (error) {
+      console.error(
+        "Erreur lors de la récupération du classement hebdomadaire:",
+        error,
+      );
+      return null;
+    }
+
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    // Agréger les durées par utilisateur
+    const userMap = new Map<
+      string,
+      {
+        username: string;
+        total_duration: number;
+        country: string | null;
+        region: string | null;
+        subregion: string | null;
+        gem_balance: number;
+      }
+    >();
+
+    data.forEach((measure: any) => {
+      const user = measure.users;
+      if (!user || !user.username) return;
+
+      const existing = userMap.get(user.username);
+      if (existing) {
+        existing.total_duration += measure.duration;
+      } else {
+        userMap.set(user.username, {
+          username: user.username,
+          total_duration: measure.duration,
+          country: user.country,
+          region: user.region,
+          subregion: user.subregion,
+          gem_balance: user.gem_balance,
+        });
+      }
+    });
+
+    // Convertir en tableau et trier par durée décroissante
+    const ranking = Array.from(userMap.values())
+      .sort((a, b) => b.total_duration - a.total_duration)
+      .slice(0, 100); // Top 10
+
+    return ranking;
+  } catch (error) {
+    console.error(
+      "Erreur lors de la récupération du classement hebdomadaire:",
+      error,
+    );
+    return null;
+  }
+}

@@ -1,0 +1,16 @@
+---
+import PaypalButton from "src/components/paypalButton.astro";
+---
+
+<section class="py-16 px-4 text-center">
+  <h2 class="text-3xl font-bold mb-8">Prêt à déconnecter ?</h2>
+  <div class="flex flex-col justify-center items-center gap-4">
+    <a
+      href={import.meta.env.PUBLIC_DOWNLOADS_URL}
+      class="max-w-md btn btn-primary btn-lg rounded-full"
+    >
+      Commencer maintenant
+    </a>
+    <PaypalButton />
+  </div>
+</section>

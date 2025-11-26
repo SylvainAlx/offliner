@@ -1,6 +1,8 @@
+import { config } from "@/config/env";
 import { confirmDialog, showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
 import * as SecureStore from "expo-secure-store";
+import { PROJECT } from "shared/config";
 import { z } from "zod";
 
 // Zod Schemas for Supabase Auth
@@ -161,7 +163,7 @@ export async function deleteAccount() {
 
 export async function handleForgotPassword(email: string) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: "offliner://reset-password", // ton lien configuré
+    redirectTo: `${config.websiteUrl}/reset-password`,
   });
 
   if (error) {
@@ -173,7 +175,7 @@ export async function handleForgotPassword(email: string) {
     );
   } else {
     showMessage(
-      "Un lien de réinitialisation vient d’être envoyé.",
+      "Un lien de réinitialisation vient d'être envoyé.",
       "success",
       "Mail envoyé",
     );

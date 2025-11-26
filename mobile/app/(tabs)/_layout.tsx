@@ -51,13 +51,13 @@ export default function TabLayout() {
                 style={{
                   color: COLORS.primary,
                   fontSize: SIZES.text_xl,
-                  fontFamily: "Doto",
+                  fontFamily: "SairaStencilOne",
                 }}
               >
                 {totalGem.toString()}
                 <IconSymbol
                   name="diamond"
-                  size={SIZES.text_lg}
+                  size={SIZES.text_xl}
                   color={COLORS.primary}
                 />
               </Text>
@@ -91,16 +91,16 @@ export default function TabLayout() {
         name="mining"
         listeners={{
           drawerItemPress: (e) => {
-            if (!session) e.preventDefault();
+            if (!session || !isOnline) e.preventDefault();
           },
         }}
         options={{
           title: "Gemmes de temps",
-          drawerItemStyle: !session ? { opacity: 0.5 } : undefined,
+          drawerItemStyle: !session || !isOnline ? { opacity: 0.5 } : undefined,
           drawerIcon: ({ color }) => (
             <IconSymbol
               name="diamond"
-              color={!session ? COLORS.card : color}
+              color={!session || !isOnline ? COLORS.card : color}
               size={22}
             />
           ),
@@ -136,15 +136,6 @@ export default function TabLayout() {
         }}
       />
       <Drawer.Screen
-        name="about"
-        options={{
-          title: "A propos",
-          drawerIcon: ({ color }) => (
-            <IconSymbol name="questionmark.circle" color={color} size={22} />
-          ),
-        }}
-      />
-      <Drawer.Screen
         name="profile"
         options={{
           title: "Compte",
@@ -159,6 +150,15 @@ export default function TabLayout() {
           title: "Paramètres",
           drawerIcon: ({ color }) => (
             <IconSymbol name="gearshape" color={color} size={22} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="about"
+        options={{
+          title: "A propos",
+          drawerIcon: ({ color }) => (
+            <IconSymbol name="questionmark.circle" color={color} size={22} />
           ),
         }}
       />

@@ -1,8 +1,8 @@
 import { globalStyles } from "@/styles/global.styles";
 import { router } from "expo-router";
 import { Text, ScrollView } from "react-native";
-import { Button } from "react-native-paper";
 import { COLORS } from "shared/theme";
+import ModernButton from "@/components/ui/ModernButton";
 
 export default function LegalsScreen() {
   return (
@@ -16,14 +16,9 @@ export default function LegalsScreen() {
         indisponibilités. L’utilisation de ce site se fait aux risques de
         l’utilisateur.
       </Text>
-      <Button
-        mode="contained"
-        buttonColor={COLORS.secondary}
-        style={globalStyles.button}
-        onPress={() => router.push("../about")}
-      >
+      <ModernButton variant="secondary" onPress={() => router.push("../about")}>
         Retour
-      </Button>
+      </ModernButton>
     </ScrollView>
   );
 }

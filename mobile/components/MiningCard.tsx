@@ -10,6 +10,7 @@ import {
   countGemAmountFromSeconds,
   getPercentBeforeNextGem,
 } from "shared/utils/formatDuration";
+import ModernButton from "./ui/ModernButton";
 
 export default function MiningCard() {
   const {
@@ -78,27 +79,24 @@ export default function MiningCard() {
               Aucune durée n&apos;a été synchronisée aujourd&apos;hui
             </Text>
           )}
-          <Button
-            mode="contained"
+          <ModernButton
+            variant="secondary"
             onPress={async () => await mineGem(gemAvailable)}
             disabled={
               !session || !isOnline || !miningAvailable || gemAvailable === 0
             }
-            buttonColor={isOnline ? COLORS.secondary : COLORS.dark}
-            style={globalStyles.button}
+            icon="pickaxe"
           >
             Miner
-          </Button>
+          </ModernButton>
 
           {!session && isOnline && (
-            <Button
-              mode="contained"
-              buttonColor={COLORS.secondary}
-              style={globalStyles.button}
+            <ModernButton
+              variant="secondary"
               onPress={() => router.push("/profile")}
             >
               Se connecter
-            </Button>
+            </ModernButton>
           )}
           {lastMineSync && lastMineSync.getDate() === new Date().getDate() && (
             <>

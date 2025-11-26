@@ -1,68 +1,79 @@
 ---
 import { PROJECT } from "shared/config";
 import Check from "./svg/check.astro";
+import H2 from "./h2.astro";
 ---
 
-<ul class="timeline timeline-vertical">
-  <li>
-    <div class="timeline-start">Étape 1</div>
-    <div class="timeline-middle">
-      <Check />
+<!-- Getting Started -->
+<section class="bg-base-200 py-16 px-4">
+  <div class="max-w-4xl mx-auto">
+    <H2 title="Comment ça marche ?" />
+    <div class="mt-8">
+      <ul class="timeline timeline-vertical">
+        <li>
+          <div class="timeline-start">Étape 1</div>
+          <div class="timeline-middle">
+            <Check />
+          </div>
+          <div class="timeline-end timeline-box">
+            Téléchargez et installez {PROJECT.TITLE} avec le lien ci-dessus
+          </div>
+          <hr class="bg-accent" />
+        </li>
+        <li>
+          <hr class="bg-accent" />
+          <div class="timeline-start">Étape 2</div>
+          <div class="timeline-middle">
+            <Check />
+          </div>
+          <div class="timeline-end timeline-box">
+            Créez un compte (facultatif)
+          </div>
+          <hr class="bg-accent" />
+        </li>
+        <li>
+          <hr class="bg-accent" />
+          <div class="timeline-start">Étape 3</div>
+          <div class="timeline-middle">
+            <Check />
+          </div>
+          <div class="timeline-end timeline-box">
+            Coupez le Wifi et les données mobiles !
+          </div>
+          <hr class="bg-accent" />
+        </li>
+        <li>
+          <hr class="bg-accent" />
+          <div class="timeline-start">Étape 5</div>
+          <div class="timeline-middle">
+            <Check />
+          </div>
+          <div class="timeline-end timeline-box">
+            Commulez le temps hors ligne pour atteindre les objectifs
+          </div>
+          <hr class="bg-accent" />
+        </li>
+        <li>
+          <hr class="bg-accent" />
+          <div class="timeline-start">Étape 6</div>
+          <div class="timeline-middle">
+            <Check />
+          </div>
+          <div class="timeline-end timeline-box">
+            Partagez votre performance avec la communauté
+          </div>
+        </li>
+        <li>
+          <hr class="bg-accent" />
+          <div class="timeline-start">Étape 7</div>
+          <div class="timeline-middle">
+            <Check />
+          </div>
+          <div class="timeline-end timeline-box">
+            Minez des gemmes de temps pour montrer votre régularité
+          </div>
+        </li>
+      </ul>
     </div>
-    <div class="timeline-end timeline-box">
-      Téléchargez et installez {PROJECT.TITLE} avec le lien ci-dessus
-    </div>
-    <hr class="bg-accent" />
-  </li>
-  <li>
-    <hr class="bg-accent" />
-    <div class="timeline-start">Étape 2</div>
-    <div class="timeline-middle">
-      <Check />
-    </div>
-    <div class="timeline-end timeline-box">Créez un compte (facultatif)</div>
-    <hr class="bg-accent" />
-  </li>
-  <li>
-    <hr class="bg-accent" />
-    <div class="timeline-start">Étape 3</div>
-    <div class="timeline-middle">
-      <Check />
-    </div>
-    <div class="timeline-end timeline-box">
-      Coupez le Wifi et les données mobiles !
-    </div>
-    <hr class="bg-accent" />
-  </li>
-  <li>
-    <hr class="bg-accent" />
-    <div class="timeline-start">Étape 5</div>
-    <div class="timeline-middle">
-      <Check />
-    </div>
-    <div class="timeline-end timeline-box">
-      Commulez le temps hors ligne pour atteindre les objectifs
-    </div>
-    <hr class="bg-accent" />
-  </li>
-  <li>
-    <hr class="bg-accent" />
-    <div class="timeline-start">Étape 6</div>
-    <div class="timeline-middle">
-      <Check />
-    </div>
-    <div class="timeline-end timeline-box">
-      Partagez votre performance avec la communauté
-    </div>
-  </li>
-  <li>
-    <hr class="bg-accent" />
-    <div class="timeline-start">Étape 7</div>
-    <div class="timeline-middle">
-      <Check />
-    </div>
-    <div class="timeline-end timeline-box">
-      Minez des gemmes de temps pour montrer votre régularité
-    </div>
-  </li>
-</ul>
+  </div>
+</section>

@@ -3,10 +3,10 @@ import { useHistory } from "@/hooks/useHistory";
 import { formatDuration } from "shared/utils/formatDuration";
 import { globalStyles } from "@/styles/global.styles";
 import { SIZES, COLORS } from "shared/theme";
-import { Button } from "react-native-paper";
 import { router } from "expo-router";
 import { useSession } from "@/contexts/SessionContext";
 import DigitDisplay from "@/components/DigitDisplay";
+import ModernButton from "@/components/ui/ModernButton";
 
 export default function HistoryScreen() {
   const { session } = useSession();
@@ -26,14 +26,12 @@ export default function HistoryScreen() {
       renderHeaderExtra: () =>
         !session &&
         isOnline && (
-          <Button
-            mode="contained"
-            buttonColor={COLORS.secondary}
-            style={globalStyles.button}
+          <ModernButton
+            variant="primary"
             onPress={() => router.push("../profile")}
           >
             Se connecter
-          </Button>
+          </ModernButton>
         ),
     },
   ];
@@ -41,14 +39,9 @@ export default function HistoryScreen() {
   return (
     <>
       <Text style={globalStyles.title}>Historique des mesures</Text>
-      <Button
-        mode="contained"
-        onPress={refreshLists}
-        buttonColor={COLORS.secondary}
-        style={globalStyles.button}
-      >
+      <ModernButton variant="secondary" onPress={refreshLists} icon="refresh">
         Actualiser
-      </Button>
+      </ModernButton>
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.date}

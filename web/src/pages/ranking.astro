@@ -5,18 +5,31 @@ import H1 from "../components/h1.astro";
 import Layout from "../layouts/Layout.astro";
 import { PROJECT } from "shared/config";
 import { getPowerSavingEstimate } from "shared/utils/powerSaving";
-import { getTotalDuration, getUsersRanking } from "src/api/users";
+import {
+  getTotalDuration,
+  getUsersRanking,
+  getWeeklyLeagueRanking,
+} from "src/api/users";
 import { formatDuration } from "shared/utils/formatDuration";
 import HomeIcon from "src/components/svg/homeIcon.astro";
-import Medal from "src/components/svg/medal.astro";
 import RankingScript from "src/scripts/rankingScript.astro";
 
 // 📡 Récupération des données côté serveur
 const data = await getUsersRanking();
+const weeklyData = await getWeeklyLeagueRanking();
 const totalDuration = await getTotalDuration();
 const powerSavingEstimate = getPowerSavingEstimate(totalDuration);
 
 const dataWithFormatted = (data || []).map((u) => ({
+  ...u,
+  // on prépare aussi des valeurs numériques sûres pour le tri
+  total_duration_num: u.total_duration || 0,
+  gem_balance_num: Number(u.gem_balance || 0),
+  // et on calcule l'affichage de la durée côté serveur (formatDuration est disponible)
+  formatted_total_duration: formatDuration(u.total_duration || 0),
+}));
+
+const weeklyDataWithFormatted = (weeklyData || []).map((u) => ({
   ...u,
   // on prépare aussi des valeurs numériques sûres pour le tri
   total_duration_num: u.total_duration || 0,
@@ -42,11 +55,9 @@ const dataWithFormatted = (data || []).map((u) => ({
       >.
     </p>
     <!-- UI de tri (au-dessus du tableau) -->
-    <div
-      class="w-full mt-6 flex flex-col md:flex-row md:items-start justify-between gap-6"
-    >
+    <div class="w-full mt-6 flex flex-col items-center gap-6">
       <!-- Bloc tri -->
-      <div class="flex flex-col gap-2 w-full md:w-1/2">
+      <div id="sortContainer" class="flex flex-col gap-2 w-full md:w-1/2">
         <label
           for="sortSelect"
           class="text-sm font-semibold text-primary/90 flex items-center gap-2"
@@ -137,6 +148,27 @@ const dataWithFormatted = (data || []).map((u) => ({
       type="application/json"
       set:html={JSON.stringify(dataWithFormatted)}
     />
+    <script
+      id="weekly-data"
+      type="application/json"
+      set:html={JSON.stringify(weeklyDataWithFormatted)}
+    />
+
+    <!-- Boutons pour choisir entre classement global et hebdomadaire -->
+    <div class="w-full max-w-5xl mt-6 flex justify-center gap-4">
+      <button
+        id="tab-global"
+        class="btn text-primary btn-lg hover:text-primary/80"
+      >
+        Top 100 mondial
+      </button>
+      <button
+        id="tab-weekly"
+        class="btn text-primary btn-lg hover:text-primary/80"
+      >
+        Top 100 hebdomadaire (ligue)
+      </button>
+    </div>
 
     <div class="overflow-x-auto w-full max-w-5xl mt-4 border border-primary/20">
       <table class="table text-base bg-sub-card/50 table-auto">
@@ -145,7 +177,7 @@ const dataWithFormatted = (data || []).map((u) => ({
             <th class="text-right">Rang</th>
             <th>Pseudo</th>
             <th class="text-right whitespace-nowrap">Durée totale</th>
-            <th>Gemmes minées</th>
+            <th id="gemHeader">Gemmes minées</th>
             <th>Pays</th>
             <th>Région</th>
             <th>Département</th>
