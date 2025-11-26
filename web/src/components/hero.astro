@@ -1,7 +1,7 @@
 ---
-import { PROJECT } from "shared/config";
-import Download from "./svg/download.astro";
-import RankingIcon from "./svg/rankingIcon.astro";
+import { DONATION, PROJECT } from "shared/config";
+import GradientButton from "./GradientButton.astro";
+import { Download, Trophy, Heart } from "lucide-astro";
 ---
 
 <section
@@ -39,20 +39,26 @@ import RankingIcon from "./svg/rankingIcon.astro";
     </p>
 
     <div class="flex flex-col sm:flex-row gap-4 mt-4">
-      <a
+      <GradientButton
         href={import.meta.env.PUBLIC_DOWNLOADS_URL}
-        class="btn btn-primary btn-lg rounded-full gap-2 shadow-lg hover:scale-105 transition-transform"
+        variant="primary"
+        icon={Download}
       >
-        <Download />
-        Télécharger l'app
-      </a>
-      <a
-        href="/ranking"
-        class="btn btn-outline btn-secondary btn-lg rounded-full gap-2 hover:scale-105 transition-transform"
+        Télécharger
+      </GradientButton>
+      <GradientButton href="/ranking" variant="secondary" icon={Trophy}>
+        Classement
+      </GradientButton>
+      <GradientButton
+        href={DONATION.PAYPAL_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        variant="secondary"
+        fullWidth
+        icon={Heart}
       >
-        <RankingIcon />
-        Voir le classement
-      </a>
+        Don
+      </GradientButton>
     </div>
   </div>
 

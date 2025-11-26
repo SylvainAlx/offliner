@@ -11,8 +11,15 @@ import {
   getWeeklyLeagueRanking,
 } from "src/api/users";
 import { formatDuration } from "shared/utils/formatDuration";
-import HomeIcon from "src/components/svg/homeIcon.astro";
+import {
+  ChevronDown,
+  Search,
+  SortDesc,
+  Globe,
+  CalendarCheck,
+} from "lucide-astro";
 import RankingScript from "src/scripts/rankingScript.astro";
+import GradientButton from "../components/GradientButton.astro";
 
 // 📡 Récupération des données côté serveur
 const data = await getUsersRanking();
@@ -42,11 +49,6 @@ const weeklyDataWithFormatted = (weeklyData || []).map((u) => ({
 <Layout title={`${PROJECT.TITLE} | Top 100`} description={PROJECT.DESCRIPTION}>
   <section class="flex flex-col items-center w-full max-w-5xl px-4 gap-4">
     <H1 title="Classement des 100 meilleurs utilisateurs" />
-    <a
-      href="/"
-      class="btn text-secondary btn-lg rounded-full hover:text-secondary/80"
-      ><HomeIcon /> Accueil</a
-    >
     <p>
       Les utilisateur de {PROJECT.TITLE} ont, en totalité, passé <span
         class="text-accent">{formatDuration(totalDuration, true)}</span
@@ -62,19 +64,7 @@ const weeklyDataWithFormatted = (weeklyData || []).map((u) => ({
           for="sortSelect"
           class="text-sm font-semibold text-primary/90 flex items-center gap-2"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="w-4 h-4 text-accent"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M3 4h18M7 8h10M10 12h4M12 16h0"></path>
-          </svg>
+          <SortDesc class="w-4 h-4 text-accent" />
           Trier le classement par
         </label>
         <div class="relative">
@@ -85,19 +75,9 @@ const weeklyDataWithFormatted = (weeklyData || []).map((u) => ({
             <option value="total_duration_num">Durée totale</option>
             <option value="gem_balance_num">Gemmes minées</option>
           </select>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
+          <ChevronDown
             class="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-accent pointer-events-none"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 9l-7 7-7-7"></path>
-          </svg>
+          />
         </div>
       </div>
 
@@ -110,20 +90,9 @@ const weeklyDataWithFormatted = (weeklyData || []).map((u) => ({
         >
         <div class="flex gap-2 items-center">
           <div class="relative flex-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
+            <Search
               class="absolute left-3 top-1/2 -translate-y-1/2 text-accent w-5 h-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"
-              ></path>
-            </svg>
+            />
             <input
               id="usernameInput"
               type="text"
@@ -131,12 +100,14 @@ const weeklyDataWithFormatted = (weeklyData || []).map((u) => ({
               placeholder="Entrer un pseudo..."
             />
           </div>
-          <button
+          <GradientButton
             id="searchBtn"
-            class="btn btn-sm bg-accent text-black font-semibold rounded-xl px-4 py-2 hover:bg-accent/90 transition"
+            variant="accent"
+            class="px-4 py-2 min-h-[32px] h-auto"
+            icon={Search}
           >
             Rechercher
-          </button>
+          </GradientButton>
         </div>
         <p id="errorMsg" class="text-danger text-sm mt-2 hidden"></p>
       </fieldset>
@@ -156,18 +127,14 @@ const weeklyDataWithFormatted = (weeklyData || []).map((u) => ({
 
     <!-- Boutons pour choisir entre classement global et hebdomadaire -->
     <div class="w-full max-w-5xl mt-6 flex justify-center gap-4">
-      <button
-        id="tab-global"
-        class="btn text-primary btn-lg hover:text-primary/80"
-      >
+      <GradientButton id="tab-global" variant="accent">
+        <Globe class="w-5 h-5" />
         Top 100 mondial
-      </button>
-      <button
-        id="tab-weekly"
-        class="btn text-primary btn-lg hover:text-primary/80"
-      >
+      </GradientButton>
+      <GradientButton id="tab-weekly" variant="accent">
+        <CalendarCheck class="w-5 h-5" />
         Top 100 hebdomadaire (ligue)
-      </button>
+      </GradientButton>
     </div>
 
     <div class="overflow-x-auto w-full max-w-5xl mt-4 border border-primary/20">
@@ -186,8 +153,10 @@ const weeklyDataWithFormatted = (weeklyData || []).map((u) => ({
         <!-- tbody vide: on le remplira côté client -->
         <tbody id="rankingBody"></tbody>
       </table>
+      <!-- tbody vide: on le remplira côté client -->
+      <tbody id="rankingBody"></tbody>
     </div>
+  </section>
 
-    <RankingScript />
-  </section></Layout
->
+  <RankingScript />
+</Layout>

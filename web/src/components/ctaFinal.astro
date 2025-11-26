@@ -1,16 +1,18 @@
 ---
-import PaypalButton from "src/components/paypalButton.astro";
+import GradientButton from "./GradientButton.astro";
+import { Download } from "lucide-astro";
 ---
 
 <section class="py-16 px-4 text-center">
   <h2 class="text-3xl font-bold mb-8">Prêt à déconnecter ?</h2>
   <div class="flex flex-col justify-center items-center gap-4">
-    <a
+    <GradientButton
       href={import.meta.env.PUBLIC_DOWNLOADS_URL}
-      class="max-w-md btn btn-primary btn-lg rounded-full"
+      variant="primary"
+      class="max-w-md"
+      icon={Download}
     >
       Commencer maintenant
-    </a>
-    <PaypalButton />
+    </GradientButton>
   </div>
 </section>
