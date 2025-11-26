@@ -26,6 +26,8 @@
   --font-main: "MainFont", sans-serif;
 }
 
+@plugin 'tailwind-scrollbar';
+
 select {
   color-scheme: dark;
 }

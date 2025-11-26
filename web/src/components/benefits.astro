@@ -1,5 +1,5 @@
 ---
-import Check from "./svg/check.astro";
+import { Check } from "lucide-astro";
 import H2 from "./h2.astro";
 
 const benefits = [
@@ -34,7 +34,7 @@ const benefits = [
         <div class="card bg-base-200 shadow-xl">
           <div class="card-body">
             <h3 class="card-title flex items-center gap-2">
-              <Check />
+              <Check class="w-6 h-6 text-primary" />
               {benefit.title}
             </h3>
             <p class="text-base-content/80">{benefit.description}</p>

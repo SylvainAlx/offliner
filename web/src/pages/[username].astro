@@ -9,9 +9,9 @@ import { getRanking, getUser } from "src/api/users";
 import DataCard from "src/components/dataCard.astro";
 import { getLatestDeviceNameByUserId } from "src/api/devices";
 import Devider from "src/components/devider.astro";
-import RankingIcon from "src/components/svg/rankingIcon.astro";
-import HomeIcon from "src/components/svg/homeIcon.astro";
+import { Trophy, Home } from "lucide-astro";
 import { getPowerSavingEstimate } from "shared/utils/powerSaving";
+import GradientButton from "../components/GradientButton.astro";
 
 const { username } = Astro.params;
 
@@ -143,16 +143,22 @@ if (user) {
     <div
       class="my-8 flex flex-col sm:flex-row items-center justify-center gap-3"
     >
-      <a
+      <GradientButton
         href="/ranking"
-        class="btn text-secondary btn-lg rounded-full hover:text-secondary/80"
-        ><RankingIcon /> Les meilleurs offliners</a
+        variant="secondary"
+        class="hover:text-secondary/80"
+        icon={Trophy}
       >
-      <a
+        Les meilleurs offliners
+      </GradientButton>
+      <GradientButton
         href="/"
-        class="btn text-secondary btn-lg rounded-full hover:text-secondary/80"
-        ><HomeIcon /> Accueil</a
+        variant="secondary"
+        class="hover:text-secondary/80"
+        icon={Home}
       >
+        Accueil
+      </GradientButton>
     </div>
   </section>
 </Layout>
