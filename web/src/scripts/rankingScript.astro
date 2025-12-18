@@ -11,7 +11,6 @@
     ? JSON.parse(weeklyDataEl.textContent || "[]")
     : [];
 
-  const sortSelect = document.getElementById("sortSelect");
   const tbody = document.getElementById("rankingBody");
   const tabGlobal = document.getElementById("tab-global");
   const tabWeekly = document.getElementById("tab-weekly");
@@ -44,11 +43,6 @@
     const region = escapeHtml(user.region || "-");
     const subregion = escapeHtml(user.subregion || "-");
     const formattedDuration = escapeHtml(user.formatted_total_duration || "0s");
-    const gemBalance = escapeHtml(String(user.gem_balance || 0));
-
-    const gemColumn = showGems
-      ? `<td class="text-right text-accent">${gemBalance}</td>`
-      : "";
 
     return `
       <tr class="hover:bg-secondary/20">
@@ -57,7 +51,6 @@
           <a href="/${encodeURIComponent(user.username || "")}" class="text-primary font-bold hover:underline">${username}</a>
         </td>
         <td class="text-right text-accent">${formattedDuration}</td>
-        ${gemColumn}
         <td>${country}</td>
         <td>${region}</td>
         <td>${subregion}</td>
@@ -83,7 +76,6 @@
   // fonction pour changer de tab
   function switchTab(tab) {
     currentTab = tab;
-    const sortContainer = document.getElementById("sortContainer");
     const gemHeader = document.getElementById("gemHeader");
 
     if (tab === "global") {
@@ -93,14 +85,9 @@
       tabWeekly.classList.remove("btn-active");
       tabWeekly.classList.add("btn-outline");
 
-      // Afficher le tri et la colonne gemmes
-      if (sortContainer) sortContainer.style.display = "";
       if (gemHeader) gemHeader.style.display = "";
 
-      const currentSortKey = sortSelect
-        ? sortSelect.value
-        : "total_duration_num";
-      renderTable(sortUsers(currentData, currentSortKey), true);
+      renderTable(sortUsers(currentData, "total_duration_num"), true);
     } else {
       currentData = weeklyData;
       tabWeekly.classList.add("btn-active");
@@ -108,8 +95,6 @@
       tabGlobal.classList.remove("btn-active");
       tabGlobal.classList.add("btn-outline");
 
-      // Masquer le tri et la colonne gemmes
-      if (sortContainer) sortContainer.style.display = "none";
       if (gemHeader) gemHeader.style.display = "none";
 
       // Toujours trier par durée pour la ligue
@@ -118,19 +103,7 @@
   }
 
   // initial render
-  let currentSortKey = sortSelect ? sortSelect.value : "total_duration_num";
-  renderTable(sortUsers(currentData, currentSortKey), true);
-
-  // handler de changement de tri
-  if (sortSelect) {
-    sortSelect.addEventListener("change", () => {
-      currentSortKey = sortSelect.value;
-      // Le tri ne s'applique que pour le classement global
-      if (currentTab === "global") {
-        renderTable(sortUsers(currentData, currentSortKey), true);
-      }
-    });
-  }
+  renderTable(sortUsers(currentData, "total_duration_num"), true);
 
   // handlers pour les tabs
   if (tabGlobal) {

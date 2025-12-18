@@ -1,16 +1,23 @@
 ---
 import { PROJECT } from "shared/config";
+import logo from "../../public/logo.png";
+import { Image } from "astro:assets";
 ---
 
 <header class="navbar bg-background shadow-sm sticky top-0 z-50 px-4">
   <div class="flex-1">
     <a href="/" class="flex items-center gap-2 h-auto py-2">
-      <img src="/logo.png" alt={PROJECT.TITLE} class="w-10 h-10 rounded-full" />
+      <Image
+        src={logo}
+        loading="eager"
+        alt={PROJECT.TITLE}
+        class="w-10 h-10 rounded-full"
+      />
       <span class="hidden sm:inline font-title text-2xl">{PROJECT.TITLE}</span>
     </a>
   </div>
   <div class="flex-none">
-    <ul class="menu menu-horizontal px-1 gap-2">
+    <ul class="menu menu-horizontal px-1 gap-2 [&>li]:hover:text-primary">
       <li><a href="/">Accueil</a></li>
       <li><a href="/ranking">Classement</a></li>
       <li><a href="/goals">Objectifs</a></li>

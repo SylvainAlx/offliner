@@ -2,6 +2,8 @@
 import { DONATION, PROJECT } from "shared/config";
 import GradientButton from "./GradientButton.astro";
 import { Download, Trophy, Heart } from "lucide-astro";
+import { Image } from "astro:assets";
+import preview from "../../public/preview.webp";
 ---
 
 <section
@@ -63,8 +65,9 @@ import { Download, Trophy, Heart } from "lucide-astro";
   </div>
 
   <!-- Visual Content (Placeholder or Illustration) -->
-  <img
-    src="/preview.webp"
+  <Image
+    src={preview}
+    loading="eager"
     alt="Preview"
     class="absolute inset-0 w-full h-full object-cover opacity-10 z-0 lg:relative lg:w-auto lg:h-auto lg:opacity-100 lg:z-10 lg:max-w-[30%] lg:flex-1"
   />

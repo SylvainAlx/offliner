@@ -10,16 +10,16 @@
   },
   "dependencies": {
     "@astrojs/vercel": "^9.0.2",
-    "@supabase/supabase-js": "^2.85.0",
-    "astro": "^5.16.1",
+    "@supabase/supabase-js": "^2.89.0",
+    "astro": "^5.16.6",
     "lucide-astro": "^0.554.0",
     "shared": "file:..\\shared"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.17",
-    "daisyui": "^5.5.5",
+    "@tailwindcss/vite": "^4.1.18",
+    "daisyui": "^5.5.14",
     "tailwind-scrollbar": "^4.0.2",
-    "tailwindcss": "^4.1.17"
+    "tailwindcss": "^4.1.18"
   },
   "overrides": {
     "path-to-regexp": "^6.2.3"
