@@ -39,17 +39,12 @@ export const useStats = () => {
     rank: number;
     total: number;
   } | null>(null);
-  const [gemRanking, setGemRanking] = useState<{
-    rank: number;
-    total: number;
-  } | null>(null);
   const [usersRanking, setUsersRanking] = useState<Array<{
     username: string;
     total_duration: number;
     country: string | null;
     region: string | null;
     subregion: string | null;
-    gem_balance: number;
   }> | null>(null);
   const [weeklyLeagueRanking, setWeeklyLeagueRanking] = useState<Array<{
     username: string;
@@ -57,7 +52,6 @@ export const useStats = () => {
     country: string | null;
     region: string | null;
     subregion: string | null;
-    gem_balance: number;
   }> | null>(null);
 
   useEffect(() => {
@@ -70,6 +64,7 @@ export const useStats = () => {
         setUsersRanking(rankingData ?? null);
 
         const weeklyData = await getWeeklyLeagueRanking();
+
         setWeeklyLeagueRanking(weeklyData ?? null);
 
         const world = await getRanking(null, username);
@@ -107,7 +102,6 @@ export const useStats = () => {
   return {
     user,
     username,
-    gemRanking,
     rankingWorld,
     rankingCountry,
     rankingRegion,

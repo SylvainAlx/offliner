@@ -119,11 +119,7 @@ export async function getUsersRanking() {
       total_duration, 
       country, 
       region, 
-      subregion, 
-      team:teams (
-        id,
-        name
-      )
+      subregion
     `,
     )
     .not("total_duration", "is", null)
@@ -137,7 +133,6 @@ export async function getUsersRanking() {
 
   return data.map((u: any) => ({
     ...u,
-    team: Array.isArray(u.team) ? u.team[0] || null : u.team || null,
   }));
 }
 
@@ -156,11 +151,7 @@ export async function getWeeklyLeagueRanking() {
           username,
           country,
           region,
-          subregion,
-          team:teams (
-            id,
-            name
-          )
+          subregion
         )
       `,
       )

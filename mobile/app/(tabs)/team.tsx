@@ -103,6 +103,7 @@ export default function TeamScreen() {
               color={COLORS.accent}
               digit={team.invite_code || "N/A"}
               label="Code d'invitation"
+              copyable
             />
           </View>
           <View style={{ width: "100%", marginVertical: 10 }}>

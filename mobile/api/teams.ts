@@ -16,14 +16,20 @@ export async function getTeams() {
   return data;
 }
 
-export async function getTeam(TeamId: string) {
+export async function getUserTeam(userId: string) {
   const { data, error } = await supabase
-    .from("teams")
-    .select("*")
-    .eq("id", TeamId)
+    .from("users")
+    .select("team_id")
+    .eq("id", userId)
     .single();
   if (error) throw error;
-  return data as Team;
+  const { data: team, error: teamError } = await supabase
+    .from("teams")
+    .select("*")
+    .eq("id", data.team_id)
+    .single();
+  if (teamError) throw teamError;
+  return team as Team;
 }
 
 export async function createTeam(

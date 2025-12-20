@@ -1,8 +1,8 @@
 import {
   createTeam,
   deleteTeam,
-  getTeam,
   getTeamMembers,
+  getUserTeam,
   joinTeamByInviteCode,
   leaveTeam,
   Team,
@@ -10,7 +10,7 @@ import {
 } from "@/api/teams";
 import { useSession } from "@/contexts/SessionContext";
 import { showMessage } from "@/utils/formatNotification";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export type TeamMember = {
   id: string;
@@ -22,11 +22,10 @@ export const useTeam = () => {
   const [team, setTeam] = useState<Team | null>(null);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const { teamId } = useSession();
-
+  const { session } = useSession();
   useEffect(() => {
     fetchTeam();
-  }, [teamId]);
+  }, []);
 
   useEffect(() => {
     fetchTeamMembers();
@@ -35,10 +34,11 @@ export const useTeam = () => {
   const fetchTeam = async () => {
     try {
       setLoading(true);
-      if (!teamId) {
+      if (!session) {
+        setTeam(null);
         return;
       }
-      const myTeam = await getTeam(teamId);
+      const myTeam = await getUserTeam(session.user.id);
       setTeam(myTeam);
     } catch (error) {
       console.error(error);
@@ -52,6 +52,7 @@ export const useTeam = () => {
     try {
       setLoading(true);
       if (!team) {
+        setMembers([]);
         return;
       }
       const teamMembers = await getTeamMembers(team.id);

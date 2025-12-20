@@ -9,7 +9,6 @@ type RankingUser = {
   country: string | null;
   region: string | null;
   subregion: string | null;
-  gem_balance: number;
 };
 
 interface RankingListProps {
