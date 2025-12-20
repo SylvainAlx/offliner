@@ -30,6 +30,7 @@ type SessionContextType = {
   setTotalGem: (value: number) => void;
   dailyGoalSeconds: number | null;
   setDailyGoalSeconds: (value: number | null) => void;
+  teamId: string | null;
 };
 
 const SessionContext = createContext<SessionContextType>({
@@ -54,6 +55,7 @@ const SessionContext = createContext<SessionContextType>({
   setTotalGem: () => {},
   dailyGoalSeconds: null,
   setDailyGoalSeconds: () => {},
+  teamId: null,
 });
 
 export const SessionProvider = ({
@@ -74,6 +76,7 @@ export const SessionProvider = ({
   const [dailySyncSeconds, setDailySyncSeconds] = useState<number>(0);
 
   const [totalGem, setTotalGem] = useState<number>(0);
+  const [teamId, setTeamId] = useState<string | null>(null);
   const [dailyGoalSeconds, setDailyGoalSeconds] = useState<number | null>(null);
 
   async function getProfile() {
@@ -87,6 +90,7 @@ export const SessionProvider = ({
         setSubregion(data.subregion);
         setTotalGem(data.gem_balance);
         setDailyGoalSeconds(data.daily_goal_seconds);
+        setTeamId(data.team_id);
       }
       const device = await getAndUpdateLocalDevice(session);
       setDeviceName(device);
@@ -118,61 +122,6 @@ export const SessionProvider = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
-  useEffect(() => {
-    const processResetPasswordUrl = async (url: string) => {
-      const { path, queryParams } = Linking.parse(url);
-
-      let accessToken = queryParams?.access_token as string | undefined;
-      let refreshToken = queryParams?.refresh_token as string | undefined;
-
-      if (!accessToken || !refreshToken) {
-        try {
-          const u = new URL(url);
-          const hash = u.hash.startsWith("#") ? u.hash.slice(1) : u.hash;
-          const params = new URLSearchParams(hash);
-          accessToken = params.get("access_token") ?? undefined;
-          refreshToken = params.get("refresh_token") ?? undefined;
-        } catch {}
-      }
-
-      if (path === "reset-password" && accessToken && refreshToken) {
-        const { data, error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-
-        if (error) {
-          console.error("Erreur lors de l'activation de la session", error);
-          showMessage(
-            "Erreur lors de l'activation de la session",
-            "error",
-            "Erreur",
-          );
-          return;
-        }
-
-        // Mettre à jour immédiatement la session dans le contexte
-        if (data.session) {
-          setSession(data.session);
-        }
-
-        // Attendre un peu pour s'assurer que la session est propagée
-        setTimeout(() => {
-          router.push("/reset-password");
-        }, 100);
-      }
-    };
-
-    Linking.getInitialURL().then((url) => {
-      if (url) processResetPasswordUrl(url);
-    });
-
-    const subscription = Linking.addEventListener("url", ({ url }) =>
-      processResetPasswordUrl(url),
-    );
-    return () => subscription.remove();
-  }, []);
-
   return (
     <SessionContext.Provider
       value={{
@@ -197,6 +146,7 @@ export const SessionProvider = ({
         setTotalGem,
         dailyGoalSeconds,
         setDailyGoalSeconds,
+        teamId,
       }}
     >
       {children}

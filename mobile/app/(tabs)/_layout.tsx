@@ -79,6 +79,25 @@ export default function TabLayout() {
         }}
       />
       <Drawer.Screen
+        name="team"
+        listeners={{
+          drawerItemPress: (e) => {
+            if (!session || !isOnline) e.preventDefault();
+          },
+        }}
+        options={{
+          title: "Équipe",
+          drawerItemStyle: !session || !isOnline ? { opacity: 0.5 } : undefined,
+          drawerIcon: ({ color }) => (
+            <IconSymbol
+              name="team"
+              color={!session || !isOnline ? COLORS.card : color}
+              size={24}
+            />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="goals"
         options={{
           title: "Objectifs",

@@ -30,6 +30,8 @@ const MAPPING: IconMapping = {
   diamond: { name: "diamond-stone", lib: "MaterialCommunityIcons" },
   trophy: { name: "trophy", lib: "FontAwesome6" },
   gearshape: { name: "settings", lib: "MaterialIcons" },
+  team: { name: "people-group", lib: "FontAwesome6" },
+  giveOwnership: { name: "angles-up", lib: "FontAwesome6" },
 };
 
 type IconSymbolName = keyof typeof MAPPING;

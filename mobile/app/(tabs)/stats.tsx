@@ -10,7 +10,6 @@ export default function StatsScreen() {
   const {
     user,
     username,
-    gemRanking,
     rankingWorld,
     rankingCountry,
     rankingRegion,
@@ -88,18 +87,6 @@ export default function StatsScreen() {
           <RankingList
             users={weeklyLeagueRanking}
             currentUsername={username ?? undefined}
-          />
-        ) : (
-          <ActivityIndicator />
-        )}
-      </View>
-      <View style={globalStyles.card}>
-        <Text style={globalStyles.cardTitle}>Autre</Text>
-        {gemRanking ? (
-          <DigitDisplay
-            digit={formatDigit(gemRanking.rank)}
-            label="Gemmes de temps"
-            color={COLORS.accent}
           />
         ) : (
           <ActivityIndicator />

@@ -11,6 +11,7 @@ const UserSchema = z.object({
   subregion: z.string().nullable(),
   gem_balance: z.number().min(0),
   daily_goal_seconds: z.number().nullable(),
+  team_id: z.string().nullable(),
 });
 
 export type UserProfile = z.infer<typeof UserSchema>;
@@ -22,7 +23,7 @@ export async function getUser(session: Session): Promise<UserProfile | null> {
     const { data, error, status } = await supabase
       .from("users")
       .select(
-        `username, country, region, subregion, gem_balance, daily_goal_seconds`,
+        `username, country, region, subregion, gem_balance, daily_goal_seconds, team_id`,
       )
       .eq("id", session?.user.id)
       .single();
@@ -36,6 +37,7 @@ export async function getUser(session: Session): Promise<UserProfile | null> {
     }
     return null;
   } catch (error) {
+    console.error(error);
     if (error instanceof Error) {
       showMessage(error.message, "error", "Erreur");
     }
@@ -57,35 +59,6 @@ export async function getRanking(
     .order("total_duration", { ascending: false });
 
   // Si scope défini et valeur présente, on filtre
-  if (scope?.value) {
-    query = query.eq(scope.column, scope.value);
-  }
-
-  const { data: users, error } = await query;
-
-  if (error || !users) {
-    console.error(error);
-    return null;
-  }
-
-  const rank = users.findIndex((u) => u.username === username) + 1;
-  return { rank, total: users.length };
-}
-
-export async function getGemRanking(
-  scope: { column: string; value: string | null } | null,
-  username: string | undefined,
-) {
-  if (!username) return null;
-
-  // Construction de la requête
-  let query = supabase
-    .from("users")
-    .select("username, gem_balance")
-    .not("gem_balance", "is", null)
-    .order("gem_balance", { ascending: false }); // classement du plus grand au plus petit
-
-  // Filtrage si scope défini
   if (scope?.value) {
     query = query.eq(scope.column, scope.value);
   }
@@ -140,17 +113,32 @@ export async function updateUser({
 export async function getUsersRanking() {
   const { data, error } = await supabase
     .from("users")
-    .select("username, total_duration, country, region, subregion, gem_balance")
+    .select(
+      `
+      username, 
+      total_duration, 
+      country, 
+      region, 
+      subregion, 
+      team:teams (
+        id,
+        name
+      )
+    `,
+    )
     .not("total_duration", "is", null)
     .order("total_duration", { ascending: false })
     .limit(10); // 👉 top 10
 
   if (error) {
     console.error("Erreur Supabase :", error);
-    return;
+    return null;
   }
 
-  return data;
+  return data.map((u: any) => ({
+    ...u,
+    team: Array.isArray(u.team) ? u.team[0] || null : u.team || null,
+  }));
 }
 
 export async function getWeeklyLeagueRanking() {
@@ -169,7 +157,10 @@ export async function getWeeklyLeagueRanking() {
           country,
           region,
           subregion,
-          gem_balance
+          team:teams (
+            id,
+            name
+          )
         )
       `,
       )
@@ -197,7 +188,7 @@ export async function getWeeklyLeagueRanking() {
         country: string | null;
         region: string | null;
         subregion: string | null;
-        gem_balance: number;
+        team: { id: string; name: string } | null;
       }
     >();
 
@@ -215,7 +206,9 @@ export async function getWeeklyLeagueRanking() {
           country: user.country,
           region: user.region,
           subregion: user.subregion,
-          gem_balance: user.gem_balance,
+          team: Array.isArray(user.team)
+            ? user.team[0] || null
+            : user.team || null,
         });
       }
     });

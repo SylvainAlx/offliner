@@ -2,7 +2,6 @@ import { config } from "@/config/env";
 import { confirmDialog, showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
 import * as SecureStore from "expo-secure-store";
-import { PROJECT } from "shared/config";
 import { z } from "zod";
 
 // Zod Schemas for Supabase Auth

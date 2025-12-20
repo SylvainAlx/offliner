@@ -1,5 +1,4 @@
 import {
-  getGemRanking,
   getRanking,
   getUser,
   getUsersRanking,
@@ -66,9 +65,6 @@ export const useStats = () => {
       if (session && username) {
         const userdata = await getUser(session);
         setUser(userdata);
-
-        const gemData = await getGemRanking(null, username);
-        setGemRanking(gemData);
 
         const rankingData = await getUsersRanking();
         setUsersRanking(rankingData ?? null);
