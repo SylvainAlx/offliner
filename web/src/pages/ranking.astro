@@ -10,15 +10,17 @@ import {
   getUsersRanking,
   getWeeklyLeagueRanking,
 } from "src/api/users";
+import { getTopTeamsRanking } from "src/api/teams";
 import { formatDuration } from "shared/utils/formatDuration";
-import { Search, Globe, CalendarCheck } from "lucide-astro";
-import RankingScript from "src/scripts/rankingScript.astro";
-import GradientButton from "../components/GradientButton.astro";
-import SearchScript from "src/scripts/searchScript.astro";
+import RankingTable from "../components/RankingTable.tsx";
+import UserSearch from "../components/UserSearch.tsx";
+import TeamRankingTable from "../components/TeamRankingTable.tsx";
+import H2 from "src/components/h2.astro";
 
 // 📡 Récupération des données côté serveur
 const data = await getUsersRanking();
 const weeklyData = await getWeeklyLeagueRanking();
+const teamsData = await getTopTeamsRanking();
 const totalDuration = await getTotalDuration();
 const powerSavingEstimate = getPowerSavingEstimate(totalDuration);
 
@@ -37,16 +39,22 @@ const weeklyDataWithFormatted = (weeklyData || []).map((u) => ({
   // et on calcule l'affichage de la durée côté serveur (formatDuration est disponible)
   formatted_total_duration: formatDuration(u.total_duration || 0),
 }));
+
+const teamsDataWithFormatted = (teamsData || []).map((t) => ({
+  ...t,
+  formatted_total_duration: formatDuration(t.total_duration || 0),
+}));
 ---
 
 <Layout
   title={`${PROJECT.TITLE} | Classement`}
   description={PROJECT.DESCRIPTION}
 >
+  <H1 title="Classement des utilisateurs et des équipes" />
   <section
     class="flex flex-col items-center w-full max-w-5xl px-4 gap-4 text-xl"
   >
-    <H1 title="Classement des utilisateurs" />
+    <H2 title="Classement des utilisateurs" />
     <p>
       Les utilisateur de {PROJECT.TITLE} ont, en totalité, passé <span
         class="text-accent">{formatDuration(totalDuration, true)}</span
@@ -56,81 +64,20 @@ const weeklyDataWithFormatted = (weeklyData || []).map((u) => ({
     </p>
     <!-- UI (recherche) au-dessus du tableau -->
     <div class="w-full mt-6 flex flex-col items-center gap-6">
-      <!-- Bloc recherche -->
-      <fieldset
-        class="w-full md:w-1/2 border border-primary/20 rounded-2xl p-4 bg-secondary/10 backdrop-blur-sm"
-      >
-        <legend class="text-primary font-semibold px-2"
-          >Rechercher un utilisateur</legend
-        >
-        <div class="flex gap-2 items-center">
-          <div class="relative flex-1">
-            <Search
-              class="absolute left-3 top-1/2 -translate-y-1/2 text-accent w-5 h-5"
-            />
-            <input
-              id="usernameInput"
-              type="text"
-              class="input w-full bg-secondary/30 border border-primary/20 text-primary pl-10 pr-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent transition"
-              placeholder="Entrer un pseudo..."
-            />
-          </div>
-          <GradientButton
-            id="searchBtn"
-            variant="accent"
-            class="px-4 py-2 min-h-[32px] h-auto"
-            icon={Search}
-          >
-            Rechercher
-          </GradientButton>
-        </div>
-        <p id="errorMsg" class="text-danger text-sm mt-2 hidden"></p>
-      </fieldset>
+      <UserSearch client:load />
     </div>
 
-    <!-- On expose les données sérialisées de façon sûre -->
-    <script
-      id="initial-data"
-      type="application/json"
-      set:html={JSON.stringify(dataWithFormatted)}
+    <!-- Composant React pour le tableau et les onglets -->
+    <RankingTable
+      client:load
+      initialGlobalData={dataWithFormatted}
+      initialWeeklyData={weeklyDataWithFormatted}
     />
-    <script
-      id="weekly-data"
-      type="application/json"
-      set:html={JSON.stringify(weeklyDataWithFormatted)}
-    />
-
-    <!-- Boutons pour choisir entre classement global et hebdomadaire -->
-    <div class="w-full max-w-5xl mt-6 flex justify-center gap-4">
-      <GradientButton id="tab-global" variant="accent">
-        <Globe class="w-5 h-5" />
-        Top 100 mondial
-      </GradientButton>
-      <GradientButton id="tab-weekly" variant="accent">
-        <CalendarCheck class="w-5 h-5" />
-        Top 100 hebdomadaire (ligue)
-      </GradientButton>
-    </div>
-
-    <div class="overflow-x-auto w-full max-w-5xl mt-4 border border-primary/20">
-      <table class="table text-base bg-sub-card/50 table-auto">
-        <thead class="sticky top-0 bg-primary z-10 text-black">
-          <tr>
-            <th class="text-right">Rang</th>
-            <th>Pseudo</th>
-            <th>Équipe</th>
-            <th class="text-right whitespace-nowrap">Durée totale</th>
-            <th>Pays</th>
-            <th>Région</th>
-            <th>Département</th>
-          </tr>
-        </thead>
-        <!-- tbody vide: on le remplira côté client -->
-        <tbody id="rankingBody"></tbody>
-      </table>
-    </div>
   </section>
-
-  <RankingScript />
-  <SearchScript />
+  <section
+    class="flex flex-col items-center w-full max-w-5xl px-4 gap-4 text-xl mt-12"
+  >
+    <H2 title="Classement des équipes" />
+    <TeamRankingTable client:load data={teamsDataWithFormatted} />
+  </section>
 </Layout>

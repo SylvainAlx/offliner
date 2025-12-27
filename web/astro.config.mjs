@@ -4,6 +4,8 @@ import vercel from "@astrojs/vercel";
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
 
+import react from "@astrojs/react";
+
 // Compatibilité ESM pour __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -14,14 +16,18 @@ export default defineConfig({
     assetsInclude: ["../shared/fonts/*.ttf"],
     server: {
       fs: {
-        // autorise ton dossier partagé + le projet lui-même
-        allow: [
-          resolve(__dirname, "../shared/fonts"),
-          resolve(__dirname), // <-- très important, autorise ton projet
-        ],
+        allow: [resolve(__dirname, "../shared"), resolve(__dirname)],
       },
     },
+    ssr: {
+      noExternal: ["lucide-react"],
+    },
+    optimizeDeps: {
+      include: [],
+    },
   },
+
   output: "server",
   adapter: vercel(),
+  integrations: [react()],
 });

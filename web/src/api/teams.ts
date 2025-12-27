@@ -75,3 +75,33 @@ export async function getTeamRanking(teamId: string) {
   const rank = teamStats.findIndex((t) => t.id === teamId) + 1;
   return { rank, total: teamStats.length };
 }
+
+export async function getTopTeamsRanking() {
+  const { data: teams, error } = await supabase.from("teams").select(`
+      id,
+      name,
+      users!users_team_id_fkey (
+        total_duration
+      )
+    `);
+
+  if (error || !teams) {
+    console.error("Error fetching top teams ranking:", error);
+    return [];
+  }
+
+  const teamStats = teams
+    .map((t) => ({
+      id: t.id,
+      name: t.name,
+      member_count: (t.users as any[]).length,
+      total_duration: (t.users as any[]).reduce(
+        (acc, u) => acc + (u.total_duration || 0),
+        0,
+      ),
+    }))
+    .sort((a, b) => b.total_duration - a.total_duration)
+    .slice(0, 100);
+
+  return teamStats;
+}

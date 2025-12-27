@@ -43,7 +43,17 @@ const totalDuration = members.reduce(
               "{team.description}"
             </p>
           )}
-
+          {!team.is_private && team.invite_code ? (
+            <p class="text-center text-xl mb-8 max-w-2xl">
+              Cette équipe est publique, vous pouvez la rejoindre en utilisant
+              le code d'invitation :{" "}
+              <span class="font-bold text-accent">{team.invite_code}</span>
+            </p>
+          ) : (
+            <p class="text-center text-xl mb-8 max-w-2xl">
+              Cette équipe est privée, vous devez être invité pour y accéder.
+            </p>
+          )}
           <Devider label="Statistiques de l'équipe" />
           <div class="p-4 rounded-lg flex justify-center flex-wrap gap-4 w-full">
             <DataCard
@@ -61,9 +71,6 @@ const totalDuration = members.reduce(
                 data={ranking.rank}
                 dataSup={ranking.rank > 1 ? "ème" : "er"}
               />
-            )}
-            {!team.is_private && team.invite_code && (
-              <DataCard title="Code d'invitation" data={team.invite_code} />
             )}
           </div>
 

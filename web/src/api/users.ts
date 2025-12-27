@@ -68,7 +68,12 @@ export async function getUsersRanking() {
     return;
   }
 
-  return data;
+  // Supabase retourne teams comme un tableau [ { name: ... } ] à cause de la jointure
+  // On l'aplatit pour le composant
+  return (data || []).map((u: any) => ({
+    ...u,
+    teams: Array.isArray(u.teams) ? u.teams[0] : u.teams,
+  }));
 }
 
 export async function getTotalDuration(): Promise<number> {
@@ -144,6 +149,9 @@ export async function getWeeklyLeagueRanking() {
       if (existing) {
         existing.total_duration += measure.duration;
       } else {
+        // user.teams peut être un tableau ici aussi selon la version de Supabase/JS SDK
+        const teamInfo = Array.isArray(user.teams) ? user.teams[0] : user.teams;
+
         userMap.set(user.username, {
           username: user.username,
           total_duration: measure.duration,
@@ -151,7 +159,7 @@ export async function getWeeklyLeagueRanking() {
           region: user.region,
           subregion: user.subregion,
           team_id: user.team_id,
-          teams: user.teams,
+          teams: teamInfo,
         });
       }
     });
