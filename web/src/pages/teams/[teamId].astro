@@ -1,0 +1,136 @@
+---
+export const prerender = false; // 🚀 SSR activé
+
+import { formatDuration } from "shared/utils/formatDuration";
+import Layout from "../../layouts/Layout.astro";
+import H1 from "../../components/h1.astro";
+import { PROJECT } from "shared/config";
+import { getTeam, getTeamMembers, getTeamRanking } from "src/api/teams";
+import DataCard from "../../components/dataCard.astro";
+import Devider from "../../components/devider.astro";
+import { Trophy, Home } from "lucide-astro";
+import { getPowerSavingEstimate } from "shared/utils/powerSaving";
+import GradientButton from "../../components/GradientButton.astro";
+
+const { teamId } = Astro.params;
+
+if (!teamId) {
+  return Astro.redirect("/ranking");
+}
+
+const team = await getTeam(teamId);
+const members = await getTeamMembers(teamId);
+const ranking = await getTeamRanking(teamId);
+
+const totalDuration = members.reduce(
+  (acc, m) => acc + (m.total_duration || 0),
+  0,
+);
+---
+
+<Layout
+  title={`${PROJECT.TITLE} | Équipe ${team?.name || "Inconnue"}`}
+  description={PROJECT.DESCRIPTION}
+>
+  <section class="flex flex-col items-center w-full max-w-7xl px-4">
+    <H1 title={team ? `Équipe : ${team.name}` : "Équipe introuvable"} />
+
+    {
+      team ? (
+        <>
+          {team.description && (
+            <p class="text-xl text-center text-primary/80 mb-8 max-w-2xl italic">
+              "{team.description}"
+            </p>
+          )}
+
+          <Devider label="Statistiques de l'équipe" />
+          <div class="p-4 rounded-lg flex justify-center flex-wrap gap-4 w-full">
+            <DataCard
+              title="Temps total"
+              data={formatDuration(totalDuration)}
+            />
+            <DataCard title="Membres" data={members.length + " joueurs"} />
+            <DataCard
+              title="Économie d'énergie"
+              data={getPowerSavingEstimate(totalDuration)}
+            />
+            {ranking && (
+              <DataCard
+                title="Classement"
+                data={ranking.rank}
+                dataSup={ranking.rank > 1 ? "ème" : "er"}
+              />
+            )}
+            {!team.is_private && team.invite_code && (
+              <DataCard title="Code d'invitation" data={team.invite_code} />
+            )}
+          </div>
+
+          <Devider label="Membres de l'équipe" />
+          <div class="overflow-x-auto w-full max-w-5xl mt-4 border border-primary/20 bg-sub-card/50 rounded-xl overflow-hidden">
+            <table class="table text-base table-auto w-full">
+              <thead class="bg-primary text-black">
+                <tr>
+                  <th class="text-left px-4 py-2">Membre</th>
+                  <th class="text-right px-4 py-2">Durée totale</th>
+                  <th class="text-center px-4 py-2">Pays</th>
+                </tr>
+              </thead>
+              <tbody>
+                {members.map((member) => (
+                  <tr class="hover:bg-secondary/20 transition-colors border-b border-primary/10 last:border-0">
+                    <td class="px-4 py-3">
+                      <a
+                        href={`/users/${member.username}`}
+                        class="text-primary font-bold hover:underline flex items-center gap-2"
+                      >
+                        {member.username}
+                      </a>
+                    </td>
+                    <td class="text-right px-4 py-3 text-accent font-mono">
+                      {formatDuration(member.total_duration)}
+                    </td>
+                    <td class="text-center px-4 py-3">
+                      {member.country || "-"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : (
+        <div class="text-center py-12">
+          <p class="text-danger text-xl">
+            L'équipe avec l'ID "{teamId}" n'a pas pu être trouvée.
+          </p>
+          <GradientButton href="/ranking" variant="secondary" class="mt-4">
+            Retour au classement
+          </GradientButton>
+        </div>
+      )
+    }
+
+    <div
+      class="my-12 flex flex-col sm:flex-row items-center justify-center gap-3"
+    >
+      <GradientButton
+        href="/ranking"
+        variant="secondary"
+        class="hover:text-secondary/80"
+        icon={Trophy}
+      >
+        Classement mondial
+      </GradientButton>
+      <GradientButton
+        href="/"
+        variant="secondary"
+        class="hover:text-secondary/80"
+        icon={Home}
+      >
+        Accueil
+      </GradientButton>
+    </div>
+  </section>
+</Layout>

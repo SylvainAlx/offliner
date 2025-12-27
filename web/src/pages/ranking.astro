@@ -14,6 +14,7 @@ import { formatDuration } from "shared/utils/formatDuration";
 import { Search, Globe, CalendarCheck } from "lucide-astro";
 import RankingScript from "src/scripts/rankingScript.astro";
 import GradientButton from "../components/GradientButton.astro";
+import SearchScript from "src/scripts/searchScript.astro";
 
 // 📡 Récupération des données côté serveur
 const data = await getUsersRanking();
@@ -25,7 +26,6 @@ const dataWithFormatted = (data || []).map((u) => ({
   ...u,
   // on prépare aussi des valeurs numériques sûres pour le tri
   total_duration_num: u.total_duration || 0,
-  gem_balance_num: Number(u.gem_balance || 0),
   // et on calcule l'affichage de la durée côté serveur (formatDuration est disponible)
   formatted_total_duration: formatDuration(u.total_duration || 0),
 }));
@@ -34,17 +34,19 @@ const weeklyDataWithFormatted = (weeklyData || []).map((u) => ({
   ...u,
   // on prépare aussi des valeurs numériques sûres pour le tri
   total_duration_num: u.total_duration || 0,
-  gem_balance_num: Number(u.gem_balance || 0),
   // et on calcule l'affichage de la durée côté serveur (formatDuration est disponible)
   formatted_total_duration: formatDuration(u.total_duration || 0),
 }));
 ---
 
-<Layout title={`${PROJECT.TITLE} | Top 100`} description={PROJECT.DESCRIPTION}>
+<Layout
+  title={`${PROJECT.TITLE} | Classement`}
+  description={PROJECT.DESCRIPTION}
+>
   <section
     class="flex flex-col items-center w-full max-w-5xl px-4 gap-4 text-xl"
   >
-    <H1 title="Classement des 100 meilleurs utilisateurs" />
+    <H1 title="Classement des utilisateurs" />
     <p>
       Les utilisateur de {PROJECT.TITLE} ont, en totalité, passé <span
         class="text-accent">{formatDuration(totalDuration, true)}</span
@@ -116,6 +118,7 @@ const weeklyDataWithFormatted = (weeklyData || []).map((u) => ({
           <tr>
             <th class="text-right">Rang</th>
             <th>Pseudo</th>
+            <th>Équipe</th>
             <th class="text-right whitespace-nowrap">Durée totale</th>
             <th>Pays</th>
             <th>Région</th>
@@ -125,10 +128,9 @@ const weeklyDataWithFormatted = (weeklyData || []).map((u) => ({
         <!-- tbody vide: on le remplira côté client -->
         <tbody id="rankingBody"></tbody>
       </table>
-      <!-- tbody vide: on le remplira côté client -->
-      <tbody id="rankingBody"></tbody>
     </div>
   </section>
 
   <RankingScript />
+  <SearchScript />
 </Layout>

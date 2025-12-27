@@ -1,26 +1,41 @@
 import { Alert, Platform } from "react-native";
 import { Toast } from "toastify-react-native";
 import { ToastType } from "toastify-react-native/utils/interfaces";
-import * as Notifications from "expo-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "@/constants/Labels";
+import Constants from "expo-constants";
 
-try {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldPlaySound: false,
-      shouldShowBanner: true,
-      shouldShowList: true,
-      shouldSetBadge: false,
-    }),
-  });
-} catch (error) {
-  console.warn("Notifications handler setup failed:", error);
+// Check if we're running in Expo Go (which doesn't support remote notifications in SDK 53+)
+const isExpoGo = Constants.appOwnership === "expo";
+
+// Dynamically import notifications only when NOT in Expo Go
+let Notifications: any = null;
+if (!isExpoGo) {
+  // Load the module only in development builds
+  Notifications = require("expo-notifications");
+
+  try {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldPlaySound: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldSetBadge: false,
+      }),
+    });
+  } catch (error) {
+    console.warn("Notifications handler setup failed:", error);
+  }
 }
 
 let channelInitialized = false;
 async function ensureAndroidChannel() {
-  if (Platform.OS === "android" && !channelInitialized) {
+  if (
+    Platform.OS === "android" &&
+    !channelInitialized &&
+    !isExpoGo &&
+    Notifications
+  ) {
     try {
       await Notifications.setNotificationChannelAsync("default", {
         name: "default",
@@ -62,7 +77,15 @@ export async function showMessage(
     try {
       const pref = await AsyncStorage.getItem(STORAGE_KEYS.PREF_NOTIFICATIONS);
       const enabled = pref ? JSON.parse(pref) : false;
-      if (enabled) {
+
+      // In Expo Go or if notifications not enabled/loaded, use toasts
+      if (isExpoGo || !enabled || !Notifications) {
+        showToast();
+        return;
+      }
+
+      // Only use notifications in development builds when enabled
+      if (enabled && Notifications) {
         const { status } = await Notifications.getPermissionsAsync();
         if (status !== "granted") {
           const req = await Notifications.requestPermissionsAsync();
@@ -76,8 +99,6 @@ export async function showMessage(
           content: { title: titleSafe, body: textSafe },
           trigger: null,
         });
-      } else {
-        showToast();
       }
     } catch (error) {
       console.warn("Notification failed, falling back to toast:", error);

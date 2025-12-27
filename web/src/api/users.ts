@@ -7,7 +7,7 @@ export type User = {
   country: string | null;
   region: string | null;
   subregion: string | null;
-  gem_balance: number;
+  team_id: string | null;
   created_at: Date;
 };
 
@@ -33,7 +33,7 @@ export async function getRanking(
   // Construction de la requête
   let query = supabase
     .from("users")
-    .select("username, total_duration")
+    .select("username, total_duration, team_id")
     .not("total_duration", "is", null)
     .order("total_duration", { ascending: false });
 
@@ -56,7 +56,9 @@ export async function getRanking(
 export async function getUsersRanking() {
   const { data, error } = await supabase
     .from("users")
-    .select("username, total_duration, country, region, subregion, gem_balance")
+    .select(
+      "username, total_duration, country, region, subregion, team_id, teams!users_team_id_fkey(name)",
+    )
     .not("total_duration", "is", null)
     .order("total_duration", { ascending: false })
     .limit(100); // 👉 top 100
@@ -100,7 +102,8 @@ export async function getWeeklyLeagueRanking() {
           country,
           region,
           subregion,
-          gem_balance
+          team_id,
+          teams!users_team_id_fkey(name)
         )
       `,
       )
@@ -128,7 +131,8 @@ export async function getWeeklyLeagueRanking() {
         country: string | null;
         region: string | null;
         subregion: string | null;
-        gem_balance: number;
+        team_id: string | null;
+        teams: { name: string } | null;
       }
     >();
 
@@ -146,7 +150,8 @@ export async function getWeeklyLeagueRanking() {
           country: user.country,
           region: user.region,
           subregion: user.subregion,
-          gem_balance: user.gem_balance,
+          team_id: user.team_id,
+          teams: user.teams,
         });
       }
     });

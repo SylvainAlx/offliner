@@ -2,16 +2,16 @@
 export const prerender = false; // 🚀 SSR activé
 
 import { formatDuration } from "shared/utils/formatDuration";
-import Layout from "../layouts/Layout.astro";
-import H1 from "../components/h1.astro";
+import Layout from "../../layouts/Layout.astro";
+import H1 from "../../components/h1.astro";
 import { PROJECT } from "shared/config";
 import { getRanking, getUser } from "src/api/users";
-import DataCard from "src/components/dataCard.astro";
+import DataCard from "../../components/dataCard.astro";
 import { getLatestDeviceNameByUserId } from "src/api/devices";
-import Devider from "src/components/devider.astro";
+import Devider from "../../components/devider.astro";
 import { Trophy, Home } from "lucide-astro";
 import { getPowerSavingEstimate } from "shared/utils/powerSaving";
-import GradientButton from "../components/GradientButton.astro";
+import GradientButton from "../../components/GradientButton.astro";
 
 const { username } = Astro.params;
 
@@ -111,10 +111,7 @@ if (user) {
             title="Temps passé hors-ligne"
             data={formatDuration(user.total_duration)}
           />
-           <DataCard
-            title="Gemmes de temps"
-            data={user.gem_balance + " 💎"}
-          />
+
           <DataCard
             title="Économie d'énergie estimée"
             data={getPowerSavingEstimate(user.total_duration)}

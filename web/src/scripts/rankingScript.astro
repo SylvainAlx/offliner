@@ -29,7 +29,7 @@
   }
 
   // génère le HTML d'une ligne ; on utilise les valeurs préparées côté serveur
-  function rowHtml(user, displayIndex, showGems = true) {
+  function rowHtml(user, displayIndex) {
     const medal =
       displayIndex === 0
         ? "🥇"
@@ -48,8 +48,9 @@
       <tr class="hover:bg-secondary/20">
         <th class="text-right flex items-center gap-2">${medal} ${displayIndex + 1}</th>
         <td>
-          <a href="/${encodeURIComponent(user.username || "")}" class="text-primary font-bold hover:underline">${username}</a>
+          <a href="/users/${encodeURIComponent(user.username || "")}" class="text-primary font-bold hover:underline">${username}</a>
         </td>
+        <td>${user.team_id ? `<a href="/teams/${encodeURIComponent(user.team_id || "")}" class="text-primary font-bold hover:underline">${user.teams?.name}</a>` : "-"}</td>
         <td class="text-right text-accent">${formattedDuration}</td>
         <td>${country}</td>
         <td>${region}</td>
@@ -59,13 +60,13 @@
   }
 
   // render
-  function renderTable(users, showGems = true) {
+  function renderTable(users) {
     if (!tbody) return;
     if (!users || users.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" class="text-center">Aucun utilisateur trouvé.</td></tr>`;
       return;
     }
-    tbody.innerHTML = users.map((u, i) => rowHtml(u, i, showGems)).join("");
+    tbody.innerHTML = users.map((u, i) => rowHtml(u, i)).join("");
   }
 
   // tri initial (par total_duration_num décroissant)
@@ -76,7 +77,6 @@
   // fonction pour changer de tab
   function switchTab(tab) {
     currentTab = tab;
-    const gemHeader = document.getElementById("gemHeader");
 
     if (tab === "global") {
       currentData = initialData;
@@ -85,9 +85,7 @@
       tabWeekly.classList.remove("btn-active");
       tabWeekly.classList.add("btn-outline");
 
-      if (gemHeader) gemHeader.style.display = "";
-
-      renderTable(sortUsers(currentData, "total_duration_num"), true);
+      renderTable(sortUsers(currentData, "total_duration_num"));
     } else {
       currentData = weeklyData;
       tabWeekly.classList.add("btn-active");
@@ -95,15 +93,12 @@
       tabGlobal.classList.remove("btn-active");
       tabGlobal.classList.add("btn-outline");
 
-      if (gemHeader) gemHeader.style.display = "none";
-
-      // Toujours trier par durée pour la ligue
-      renderTable(sortUsers(currentData, "total_duration_num"), false);
+      renderTable(sortUsers(currentData, "total_duration_num"));
     }
   }
 
   // initial render
-  renderTable(sortUsers(currentData, "total_duration_num"), true);
+  renderTable(sortUsers(currentData, "total_duration_num"));
 
   // handlers pour les tabs
   if (tabGlobal) {
@@ -119,31 +114,4 @@
       switchTab("weekly");
     });
   }
-</script>
-<script>
-  import { getUser } from "src/api/users";
-
-  const input = document.getElementById("usernameInput") as HTMLInputElement;
-  const button = document.getElementById("searchBtn") as HTMLButtonElement;
-  const errorMsg = document.getElementById("errorMsg") as HTMLParagraphElement;
-
-  button.addEventListener("click", async () => {
-    const username = input.value.trim();
-    errorMsg.classList.add("hidden");
-    errorMsg.textContent = "";
-
-    if (!username) {
-      errorMsg.textContent = "Veuillez entrer un pseudo.";
-      errorMsg.classList.remove("hidden");
-      return;
-    }
-
-    const user = await getUser(username);
-    if (user) {
-      window.location.href = `/${user.username}`;
-    } else {
-      errorMsg.textContent = "Aucun utilisateur trouvé.";
-      errorMsg.classList.remove("hidden");
-    }
-  });
 </script>
