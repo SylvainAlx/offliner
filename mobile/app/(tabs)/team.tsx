@@ -14,7 +14,7 @@ import {
   View,
   TouchableOpacity,
 } from "react-native";
-import { COLORS } from "shared/theme";
+import { COLORS, SIZES } from "shared/theme";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 
 export default function TeamScreen() {
@@ -26,8 +26,11 @@ export default function TeamScreen() {
     joinTeam,
     leaveTeam,
     deleteTeam,
+    deleteTeamMember,
     transferOwnership,
     refreshTeam,
+    showDetails,
+    showTeams,
   } = useTeam();
   const { user } = useSession();
 
@@ -71,6 +74,15 @@ export default function TeamScreen() {
     }
   };
 
+  const handleDeleteTeamMember = async (memberId: string) => {
+    const confirmed = await confirmDialog(
+      "Voulez-vous vraiment supprimer ce membre de l'équipe ? Cette action est irréversible.",
+    );
+    if (confirmed) {
+      await deleteTeamMember(memberId);
+    }
+  };
+
   if (loading) {
     return (
       <View style={[globalStyles.container, { justifyContent: "center" }]}>
@@ -87,25 +99,36 @@ export default function TeamScreen() {
       </ModernButton>
       {team ? (
         <View style={globalStyles.card}>
-          <Text style={globalStyles.cardTitle}>{team.name}</Text>
+          <Text
+            style={{
+              fontSize: SIZES.text_xl,
+              fontWeight: "bold",
+              color: COLORS.primary,
+            }}
+          >
+            {team.name}
+          </Text>
           {team.description && (
             <Text style={globalStyles.contentText}>{team.description}</Text>
           )}
-          <View
-            style={{
-              paddingVertical: 10,
-              alignItems: "center",
-              width: "100%",
-              gap: 10,
-            }}
-          >
-            <DigitDisplay
-              color={COLORS.accent}
-              digit={team.invite_code || "N/A"}
-              label="Code d'invitation"
-              copyable
-            />
-          </View>
+          {!team.is_private ||
+            (team.owner_id === user?.id && (
+              <View
+                style={{
+                  paddingVertical: 10,
+                  alignItems: "center",
+                  width: "100%",
+                  gap: 10,
+                }}
+              >
+                <DigitDisplay
+                  color={COLORS.accent}
+                  digit={team.invite_code || "N/A"}
+                  label="Code d'invitation"
+                  copyable
+                />
+              </View>
+            ))}
           <View style={{ width: "100%", marginVertical: 10 }}>
             <Text
               style={[
@@ -115,8 +138,9 @@ export default function TeamScreen() {
             >
               Membres ({members.length})
             </Text>
-            {members.map((member) => (
+            {members.map((member, i) => (
               <View
+                key={i}
                 style={{
                   flexDirection: "row",
                   justifyContent: "space-between",
@@ -133,21 +157,33 @@ export default function TeamScreen() {
                 </Text>
 
                 {team.owner_id === user?.id && member.id !== user?.id && (
-                  <TouchableOpacity
-                    onPress={() =>
-                      handleTransfer(
-                        member.id,
-                        member.username || "cet utilisateur",
-                      )
-                    }
-                    style={{ padding: 5 }}
-                  >
-                    <IconSymbol
-                      name="giveOwnership"
-                      size={20}
-                      color={COLORS.warning}
-                    />
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: "row" }}>
+                    <TouchableOpacity
+                      onPress={() =>
+                        handleTransfer(
+                          member.id,
+                          member.username || "cet utilisateur",
+                        )
+                      }
+                      style={{ padding: 5 }}
+                    >
+                      <IconSymbol
+                        name="giveOwnership"
+                        size={20}
+                        color={COLORS.warning}
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => handleDeleteTeamMember(member.id)}
+                      style={{ padding: 5 }}
+                    >
+                      <IconSymbol
+                        name="delete"
+                        size={20}
+                        color={COLORS.danger}
+                      />
+                    </TouchableOpacity>
+                  </View>
                 )}
               </View>
             ))}
@@ -160,11 +196,18 @@ export default function TeamScreen() {
             <ModernButton
               variant="danger"
               onPress={handleDeleteTeam}
-              icon="logout"
+              icon="delete"
             >
               Supprimer l&apos;équipe
             </ModernButton>
-          )}{" "}
+          )}
+          <ModernButton
+            variant="secondary"
+            onPress={() => showDetails(team.id)}
+            icon="open-in-new"
+          >
+            Voir les détails de l&apos;équipe
+          </ModernButton>
         </View>
       ) : (
         <>
@@ -243,6 +286,13 @@ export default function TeamScreen() {
           </View>
         </>
       )}
+      <ModernButton
+        variant="secondary"
+        onPress={() => showTeams()}
+        icon="open-in-new"
+      >
+        Voir les équipes
+      </ModernButton>
     </ScrollView>
   );
 }

@@ -80,7 +80,7 @@ const RankingTable: React.FC<Props> = ({
               currentData.map((user, index) => (
                 <tr
                   key={user.username}
-                  className="hover:bg-secondary/20 border-b border-primary/10 last:border-0 transition-colors"
+                  className="hover:bg-secondary/20 border-b border-primary/10 last:border-0 transition-colors [&>td]:whitespace-nowrap"
                 >
                   <th className="text-right p-4 flex items-center justify-end gap-2">
                     <span className="text-lg">{getMedal(index)}</span>{" "}

@@ -78,6 +78,16 @@ export async function transferTeamOwnership(newOwnerId: string): Promise<void> {
   }
 }
 
+export async function deleteTeamMember(userId: string): Promise<void> {
+  const { error } = await supabase.rpc("delete_team_member", {
+    p_user_id: userId,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 export async function deleteTeam(): Promise<void> {
   const { error } = await supabase.rpc("delete_team");
 

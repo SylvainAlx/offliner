@@ -32,6 +32,7 @@ const MAPPING: IconMapping = {
   gearshape: { name: "settings", lib: "MaterialIcons" },
   team: { name: "people-group", lib: "FontAwesome6" },
   giveOwnership: { name: "angles-up", lib: "FontAwesome6" },
+  delete: { name: "delete", lib: "MaterialIcons" },
 };
 
 type IconSymbolName = keyof typeof MAPPING;

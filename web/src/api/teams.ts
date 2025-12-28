@@ -80,6 +80,8 @@ export async function getTopTeamsRanking() {
   const { data: teams, error } = await supabase.from("teams").select(`
       id,
       name,
+      is_private,
+      invite_code,
       users!users_team_id_fkey (
         total_duration
       )
@@ -95,6 +97,7 @@ export async function getTopTeamsRanking() {
       id: t.id,
       name: t.name,
       member_count: (t.users as any[]).length,
+      invite_code: !t.is_private ? t.invite_code : "équipe privée",
       total_duration: (t.users as any[]).reduce(
         (acc, u) => acc + (u.total_duration || 0),
         0,

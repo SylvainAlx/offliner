@@ -5,6 +5,7 @@ interface TeamRanking {
   id: string;
   name: string;
   member_count: number;
+  invite_code: string;
   total_duration: number;
   formatted_total_duration?: string;
 }
@@ -29,6 +30,7 @@ const TeamRankingTable: React.FC<Props> = ({ data }) => {
             <th className="text-right p-4">Rang</th>
             <th className="p-4">Équipe</th>
             <th className="text-right p-4">Membres</th>
+            <th className="text-right p-4">Code d&apos;invitation</th>
             <th className="text-right whitespace-nowrap p-4">
               Durée totale cumulée
             </th>
@@ -39,7 +41,7 @@ const TeamRankingTable: React.FC<Props> = ({ data }) => {
             data.map((team, index) => (
               <tr
                 key={team.id}
-                className="hover:bg-secondary/20 border-b border-primary/10 last:border-0 transition-colors"
+                className="hover:bg-secondary/20 border-b border-primary/10 last:border-0 transition-colors [&>td]:whitespace-nowrap"
               >
                 <th className="text-right p-4 flex items-center justify-end gap-2">
                   <span className="text-lg">{getMedal(index)}</span> {index + 1}
@@ -56,6 +58,9 @@ const TeamRankingTable: React.FC<Props> = ({ data }) => {
                   <div className="flex items-center justify-end gap-2">
                     {team.member_count} <Users className="w-4 h-4 opacity-70" />
                   </div>
+                </td>
+                <td className="text-right p-4 text-[#ffffa8] font-mono">
+                  {team.invite_code}
                 </td>
                 <td className="text-right p-4 text-[#ffffa8] font-mono">
                   {team.formatted_total_duration || "0s"}

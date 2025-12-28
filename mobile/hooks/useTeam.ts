@@ -1,6 +1,7 @@
 import {
   createTeam,
   deleteTeam,
+  deleteTeamMember,
   getTeamMembers,
   getUserTeam,
   joinTeamByInviteCode,
@@ -8,9 +9,11 @@ import {
   Team,
   transferTeamOwnership,
 } from "@/api/teams";
+import { config } from "@/config/env";
 import { useSession } from "@/contexts/SessionContext";
 import { showMessage } from "@/utils/formatNotification";
 import { useEffect, useState } from "react";
+import { Linking } from "react-native";
 
 export type TeamMember = {
   id: string;
@@ -125,6 +128,24 @@ export const useTeam = () => {
     }
   };
 
+  const handleDeleteTeamMember = async (userId: string) => {
+    try {
+      setLoading(true);
+      await deleteTeamMember(userId);
+      showMessage("Membre supprimé avec succès !", "success", "Succès");
+      await fetchTeamMembers();
+    } catch (e: any) {
+      showMessage(
+        e.message || "Erreur lors de la suppression",
+        "error",
+        "Erreur",
+      );
+      throw e;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteTeam = async () => {
     try {
       setLoading(true);
@@ -143,6 +164,18 @@ export const useTeam = () => {
     }
   };
 
+  const handleShowDetails = (teamId: string) => {
+    let link = config.websiteUrl;
+    link = link + "/teams/" + teamId;
+    Linking.openURL(link);
+  };
+
+  const handleShowTeams = () => {
+    let link = config.websiteUrl;
+    link = link + "/ranking#teams";
+    Linking.openURL(link);
+  };
+
   return {
     team,
     setTeam,
@@ -151,8 +184,11 @@ export const useTeam = () => {
     joinTeam: handleJoinTeam,
     leaveTeam: handleLeaveTeam,
     deleteTeam: handleDeleteTeam,
+    deleteTeamMember: handleDeleteTeamMember,
     transferOwnership: handleTransferOwnership,
     refreshTeam: fetchTeam,
     members,
+    showDetails: handleShowDetails,
+    showTeams: handleShowTeams,
   };
 };

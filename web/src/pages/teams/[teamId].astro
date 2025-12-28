@@ -86,7 +86,7 @@ const totalDuration = members.reduce(
               </thead>
               <tbody>
                 {members.map((member) => (
-                  <tr class="hover:bg-secondary/20 transition-colors border-b border-primary/10 last:border-0">
+                  <tr class="hover:bg-secondary/20 transition-colors border-b border-primary/10 last:border-0 [&>td]:whitespace-nowrap">
                     <td class="px-4 py-3">
                       <a
                         href={`/users/${member.username}`}
