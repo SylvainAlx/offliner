@@ -28,6 +28,7 @@ export default function TeamScreen() {
     deleteTeam,
     deleteTeamMember,
     transferOwnership,
+    updateTeam,
     refreshTeam,
     showDetails,
     showTeams,
@@ -38,6 +39,7 @@ export default function TeamScreen() {
   const [teamDescription, setTeamDescription] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [inviteCode, setInviteCode] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleTransfer = async (memberId: string, memberName: string) => {
     const confirmed = await confirmDialog(
@@ -83,6 +85,28 @@ export default function TeamScreen() {
     }
   };
 
+  const handleStartEditing = () => {
+    if (team) {
+      setTeamName(team.name);
+      setTeamDescription(team.description || "");
+      setIsPrivate(team.is_private);
+      setIsEditing(true);
+    }
+  };
+
+  const handleSaveUpdate = async () => {
+    const confirmed = await confirmDialog(
+      "Voulez-vous vraiment modifier l'équipe ?",
+    );
+    if (!confirmed) return;
+    await updateTeam({
+      name: teamName,
+      description: teamDescription,
+      isPrivate: isPrivate,
+    });
+    setIsEditing(false);
+  };
+
   if (loading) {
     return (
       <View style={[globalStyles.container, { justifyContent: "center" }]}>
@@ -99,36 +123,118 @@ export default function TeamScreen() {
       </ModernButton>
       {team ? (
         <View style={globalStyles.card}>
-          <Text
-            style={{
-              fontSize: SIZES.text_xl,
-              fontWeight: "bold",
-              color: COLORS.primary,
-            }}
-          >
-            {team.name}
-          </Text>
-          {team.description && (
-            <Text style={globalStyles.contentText}>{team.description}</Text>
-          )}
-          {!team.is_private ||
-            (team.owner_id === user?.id && (
+          {isEditing ? (
+            <View style={{ gap: 10, width: "100%" }}>
+              <Text style={globalStyles.cardTitle}>Modifier l'équipe</Text>
+              <TextInput
+                style={[globalStyles.input, { width: "100%" }]}
+                placeholder="Nom de l'équipe"
+                placeholderTextColor={COLORS.text}
+                value={teamName}
+                onChangeText={setTeamName}
+              />
+              <TextInput
+                style={[
+                  globalStyles.input,
+                  {
+                    width: "100%",
+                    height: 120,
+                    textAlignVertical: "top",
+                    paddingTop: 10,
+                  },
+                ]}
+                placeholder="Description"
+                placeholderTextColor={COLORS.text}
+                value={teamDescription}
+                onChangeText={setTeamDescription}
+                multiline
+                numberOfLines={4}
+              />
               <View
                 style={{
-                  paddingVertical: 10,
+                  flexDirection: "row",
                   alignItems: "center",
+                  justifyContent: "space-between",
                   width: "100%",
-                  gap: 10,
+                  marginVertical: 5,
                 }}
               >
-                <DigitDisplay
-                  color={COLORS.accent}
-                  digit={team.invite_code || "N/A"}
-                  label="Code d'invitation"
-                  copyable
+                <Text style={globalStyles.contentText}>Équipe privée</Text>
+                <Switch
+                  value={isPrivate}
+                  onValueChange={setIsPrivate}
+                  trackColor={{ false: COLORS.border, true: COLORS.primary }}
+                  thumbColor={"#fff"}
                 />
               </View>
-            ))}
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <ModernButton
+                    variant="secondary"
+                    onPress={() => setIsEditing(false)}
+                  >
+                    Annuler
+                  </ModernButton>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <ModernButton
+                    variant="primary"
+                    onPress={handleSaveUpdate}
+                    disabled={!teamName.trim()}
+                  >
+                    Enregistrer
+                  </ModernButton>
+                </View>
+              </View>
+            </View>
+          ) : (
+            <>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  width: "100%",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: SIZES.text_xl,
+                    fontWeight: "bold",
+                    color: COLORS.primary,
+                    flex: 1,
+                  }}
+                >
+                  {team.name}
+                </Text>
+                {team.owner_id === user?.id && (
+                  <TouchableOpacity onPress={handleStartEditing}>
+                    <IconSymbol name="edit" size={24} color={COLORS.primary} />
+                  </TouchableOpacity>
+                )}
+              </View>
+              {team.description && (
+                <Text style={globalStyles.contentText}>{team.description}</Text>
+              )}
+            </>
+          )}
+          {(!team.is_private || team.owner_id === user?.id) && (
+            <View
+              style={{
+                paddingVertical: 10,
+                alignItems: "center",
+                width: "100%",
+                gap: 10,
+              }}
+            >
+              <DigitDisplay
+                color={COLORS.accent}
+                digit={team.invite_code || "N/A"}
+                label="Code d'invitation"
+                copyable
+              />
+            </View>
+          )}
           <View style={{ width: "100%", marginVertical: 10 }}>
             <Text
               style={[
@@ -248,11 +354,21 @@ export default function TeamScreen() {
             />
 
             <TextInput
-              style={[globalStyles.input, { width: "100%" }]}
+              style={[
+                globalStyles.input,
+                {
+                  width: "100%",
+                  height: 100,
+                  textAlignVertical: "top",
+                  paddingTop: 10,
+                },
+              ]}
               placeholder="Description (optionnel)"
               placeholderTextColor={COLORS.text}
               value={teamDescription}
               onChangeText={setTeamDescription}
+              multiline
+              numberOfLines={3}
             />
 
             <View

@@ -50,6 +50,22 @@ export async function createTeam(
   return teamId;
 }
 
+export async function updateTeam(params: {
+  name?: string;
+  description?: string;
+  isPrivate?: boolean;
+}): Promise<void> {
+  const { error } = await supabase.rpc("update_team", {
+    p_name: params.name ?? null,
+    p_description: params.description ?? null,
+    p_is_private: params.isPrivate ?? null,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 export async function joinTeamByInviteCode(inviteCode: string): Promise<void> {
   const { error } = await supabase.rpc("join_team_by_invite_code", {
     p_invite_code: inviteCode,

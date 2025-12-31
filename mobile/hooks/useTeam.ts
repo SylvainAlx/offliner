@@ -8,6 +8,7 @@ import {
   leaveTeam,
   Team,
   transferTeamOwnership,
+  updateTeam,
 } from "@/api/teams";
 import { config } from "@/config/env";
 import { useSession } from "@/contexts/SessionContext";
@@ -80,6 +81,29 @@ export const useTeam = () => {
       await fetchTeam();
     } catch (e: any) {
       showMessage(e.message || "Erreur lors de la création", "error", "Erreur");
+      throw e;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateTeam = async (params: {
+    name?: string;
+    description?: string;
+    isPrivate?: boolean;
+  }) => {
+    try {
+      setLoading(true);
+      await updateTeam(params);
+      showMessage("Équipe mise à jour avec succès !", "success", "Succès");
+      await fetchTeam();
+    } catch (e: any) {
+      console.error(e);
+      showMessage(
+        e.message || "Erreur lors de la mise à jour",
+        "error",
+        "Erreur",
+      );
       throw e;
     } finally {
       setLoading(false);
@@ -181,6 +205,7 @@ export const useTeam = () => {
     setTeam,
     loading,
     createTeam: handleCreateTeam,
+    updateTeam: handleUpdateTeam,
     joinTeam: handleJoinTeam,
     leaveTeam: handleLeaveTeam,
     deleteTeam: handleDeleteTeam,

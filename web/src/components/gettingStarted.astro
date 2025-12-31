@@ -9,15 +9,15 @@ import H2 from "./h2.astro";
   <div class="max-w-4xl mx-auto">
     <H2 title="Comment ça marche ?" />
     <div class="mt-8">
-      <ul class="timeline timeline-vertical">
+      <ul class="timeline timeline-vertical lg:[&>li>p]:text-lg">
         <li>
           <div class="timeline-start">Étape 1</div>
           <div class="timeline-middle">
             <CircleCheck class="w-6 h-6 text-accent" />
           </div>
-          <div class="timeline-end timeline-box">
+          <p class="timeline-end timeline-box">
             Téléchargez et installez {PROJECT.TITLE} avec le lien ci-dessus
-          </div>
+          </p>
           <hr class="bg-accent" />
         </li>
         <li>
@@ -26,9 +26,7 @@ import H2 from "./h2.astro";
           <div class="timeline-middle">
             <CircleCheck class="w-6 h-6 text-accent" />
           </div>
-          <div class="timeline-end timeline-box">
-            Créez un compte (facultatif)
-          </div>
+          <p class="timeline-end timeline-box">Créez un compte (facultatif)</p>
           <hr class="bg-accent" />
         </li>
         <li>
@@ -37,9 +35,9 @@ import H2 from "./h2.astro";
           <div class="timeline-middle">
             <CircleCheck class="w-6 h-6 text-accent" />
           </div>
-          <div class="timeline-end timeline-box">
+          <p class="timeline-end timeline-box">
             Coupez le Wifi et les données mobiles !
-          </div>
+          </p>
           <hr class="bg-accent" />
         </li>
         <li>
@@ -48,9 +46,9 @@ import H2 from "./h2.astro";
           <div class="timeline-middle">
             <CircleCheck class="w-6 h-6 text-accent" />
           </div>
-          <div class="timeline-end timeline-box">
+          <p class="timeline-end timeline-box">
             Commulez le temps hors ligne pour atteindre les objectifs
-          </div>
+          </p>
           <hr class="bg-accent" />
         </li>
         <li>
@@ -59,9 +57,9 @@ import H2 from "./h2.astro";
           <div class="timeline-middle">
             <CircleCheck class="w-6 h-6 text-accent" />
           </div>
-          <div class="timeline-end timeline-box">
+          <p class="timeline-end timeline-box">
             Partagez votre performance avec la communauté
-          </div>
+          </p>
           <hr class="bg-accent" />
         </li>
         <li>
@@ -70,9 +68,9 @@ import H2 from "./h2.astro";
           <div class="timeline-middle">
             <CircleCheck class="w-6 h-6 text-accent" />
           </div>
-          <div class="timeline-end timeline-box">
+          <p class="timeline-end timeline-box">
             Minez des gemmes de temps pour montrer votre régularité
-          </div>
+          </p>
         </li>
       </ul>
     </div>
