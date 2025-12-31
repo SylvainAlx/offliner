@@ -5,55 +5,24 @@ import { showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
 import { Session, User } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useState } from "react";
-import * as Linking from "expo-linking";
-import { router } from "expo-router";
+import { OfflinerUser } from "@/types/user";
 
 type SessionContextType = {
   session: Session | null;
   user: User | null;
-  username: string | null;
-  setUsername: (value: string) => void;
-  country: string | null;
-  region: string | null;
-  subregion: string | null;
-  setCountry: (value: string) => void;
-  setRegion: (value: string) => void;
-  setSubregion: (value: string) => void;
+  appUser: OfflinerUser;
+  updateAppUser: (updates: Partial<OfflinerUser>) => void;
   deviceName: string | null;
-  totalSyncSeconds: number;
-  setTotalSyncSeconds: (value: number) => void;
-  weeklySyncSeconds: number;
-  setWeeklySyncSeconds: (value: number) => void;
-  dailySyncSeconds: number;
-  setDailySyncSeconds: (value: number) => void;
-  totalGem: number;
-  setTotalGem: (value: number) => void;
-  dailyGoalSeconds: number | null;
-  setDailyGoalSeconds: (value: number | null) => void;
 };
+
+const defaultUser = new OfflinerUser();
 
 const SessionContext = createContext<SessionContextType>({
   session: null,
   user: null,
-  username: null,
-  setUsername: () => {},
-  country: null,
-  region: null,
-  subregion: null,
-  setCountry: () => {},
-  setRegion: () => {},
-  setSubregion: () => {},
+  appUser: defaultUser,
+  updateAppUser: () => {},
   deviceName: null,
-  totalSyncSeconds: 0,
-  setTotalSyncSeconds: () => {},
-  weeklySyncSeconds: 0,
-  setWeeklySyncSeconds: () => {},
-  dailySyncSeconds: 0,
-  setDailySyncSeconds: () => {},
-  totalGem: 0,
-  setTotalGem: () => {},
-  dailyGoalSeconds: null,
-  setDailyGoalSeconds: () => {},
 });
 
 export const SessionProvider = ({
@@ -62,31 +31,30 @@ export const SessionProvider = ({
   children: React.ReactNode;
 }) => {
   const [session, setSession] = useState<Session | null>(null);
-
   const [deviceName, setDeviceName] = useState<string | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-  const [country, setCountry] = useState<string | null>(null);
-  const [region, setRegion] = useState<string | null>(null);
-  const [subregion, setSubregion] = useState<string | null>(null);
+  const [appUser, setAppUser] = useState<OfflinerUser>(defaultUser);
 
-  const [totalSyncSeconds, setTotalSyncSeconds] = useState<number>(0);
-  const [weeklySyncSeconds, setWeeklySyncSeconds] = useState<number>(0);
-  const [dailySyncSeconds, setDailySyncSeconds] = useState<number>(0);
-
-  const [totalGem, setTotalGem] = useState<number>(0);
-  const [dailyGoalSeconds, setDailyGoalSeconds] = useState<number | null>(null);
+  const updateAppUser = (updates: Partial<OfflinerUser>) => {
+    setAppUser((prev) => prev.update(updates));
+  };
 
   async function getProfile() {
     try {
-      if (!session) return;
+      if (!session) {
+        setAppUser(new OfflinerUser());
+        return;
+      }
       const data = await getUser(session);
       if (data) {
-        setUsername(data.username);
-        setCountry(data.country);
-        setRegion(data.region);
-        setSubregion(data.subregion);
-        setTotalGem(data.gem_balance);
-        setDailyGoalSeconds(data.daily_goal_seconds);
+        updateAppUser({
+          username: data.username,
+          country: data.country,
+          region: data.region,
+          subregion: data.subregion,
+          gemBalance: data.gem_balance,
+          dailyGoalSeconds: data.daily_goal_seconds,
+          team_id: data.team_id,
+        });
       }
       const device = await getAndUpdateLocalDevice(session);
       setDeviceName(device);
@@ -123,25 +91,9 @@ export const SessionProvider = ({
       value={{
         session,
         user: session?.user ?? null,
-        username,
-        setUsername,
-        country,
-        setCountry,
-        region,
-        setRegion,
-        subregion,
-        setSubregion,
+        appUser,
+        updateAppUser,
         deviceName,
-        totalSyncSeconds,
-        setTotalSyncSeconds,
-        weeklySyncSeconds,
-        setWeeklySyncSeconds,
-        dailySyncSeconds,
-        setDailySyncSeconds,
-        totalGem,
-        setTotalGem,
-        dailyGoalSeconds,
-        setDailyGoalSeconds,
       }}
     >
       {children}

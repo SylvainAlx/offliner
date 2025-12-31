@@ -16,13 +16,9 @@ export const useStats = () => {
     Linking.openURL(link);
   };
 
-  const { username, session, totalSyncSeconds } = useSession();
+  const { session, appUser } = useSession();
+  const { username, totalSyncSeconds } = appUser;
 
-  const [user, setUser] = useState<{
-    country: string | null;
-    region: string | null;
-    subregion: string | null;
-  } | null>(null);
   const [rankingWorld, setRankingWorld] = useState<{
     rank: number;
     total: number;
@@ -57,38 +53,34 @@ export const useStats = () => {
   useEffect(() => {
     const initialize = async () => {
       if (session && username) {
-        const userdata = await getUser(session);
-        setUser(userdata);
-
         const rankingData = await getUsersRanking();
         setUsersRanking(rankingData ?? null);
 
         const weeklyData = await getWeeklyLeagueRanking();
-
         setWeeklyLeagueRanking(weeklyData ?? null);
 
         const world = await getRanking(null, username);
         setRankingWorld(world);
 
-        if (userdata?.country) {
+        if (appUser.country) {
           const country = await getRanking(
-            { column: "country", value: userdata.country },
+            { column: "country", value: appUser.country },
             username,
           );
           setRankingCountry(country);
         }
 
-        if (userdata?.region) {
+        if (appUser.region) {
           const region = await getRanking(
-            { column: "region", value: userdata.region },
+            { column: "region", value: appUser.region },
             username,
           );
           setRankingRegion(region);
         }
 
-        if (userdata?.subregion) {
+        if (appUser.subregion) {
           const department = await getRanking(
-            { column: "subregion", value: userdata.subregion },
+            { column: "subregion", value: appUser.subregion },
             username,
           );
           setRankingDepartment(department);
@@ -97,10 +89,10 @@ export const useStats = () => {
     };
 
     initialize();
-  }, [session, username]);
+  }, [session, username, appUser.country, appUser.region, appUser.subregion]);
 
   return {
-    user,
+    user: appUser,
     username,
     rankingWorld,
     rankingCountry,

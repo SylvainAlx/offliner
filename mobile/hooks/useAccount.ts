@@ -15,19 +15,8 @@ import { useEffect, useState } from "react";
 
 export const useAccount = (session: Session) => {
   const [loading, setLoading] = useState(false);
-  const {
-    setTotalSyncSeconds,
-    setWeeklySyncSeconds,
-    setDailySyncSeconds,
-    username,
-    setUsername,
-    country,
-    setCountry,
-    region,
-    setRegion,
-    subregion,
-    setSubregion,
-  } = useSession();
+  const { appUser, updateAppUser } = useSession();
+  const { username, country, region, subregion } = appUser;
 
   const [countries, setCountries] = useState<Country[]>([]);
   const [regions, setRegions] = useState<Subdivision[]>([]);
@@ -62,9 +51,11 @@ export const useAccount = (session: Session) => {
   }, [country, region, regions]);
 
   const handleCountryChange = async (countryName: string) => {
-    setCountry(countryName);
-    setRegion("");
-    setSubregion("");
+    updateAppUser({
+      country: countryName,
+      region: "",
+      subregion: "",
+    });
     setRegions([]);
     setSubregions([]);
 
@@ -75,17 +66,17 @@ export const useAccount = (session: Session) => {
 
     const subdivisions = await getSubdivisions(country.geonameId);
     setRegions(subdivisions);
-    setRegion(subdivisions[0]?.name || "");
+    updateAppUser({ region: subdivisions[0]?.name || "" });
   };
 
   const handleRegionChange = async (regionName: string) => {
-    setRegion(regionName);
+    updateAppUser({ region: regionName });
     const region = regions.find((r) => r.name === regionName);
     if (!region) return;
 
     const subregionList = await getSubdivisions(region.geonameId);
     setSubregions(subregionList);
-    setSubregion(subregionList[0]?.name || "");
+    updateAppUser({ subregion: subregionList[0]?.name || "" });
   };
 
   async function updateProfile({ username }: { username: string }) {
@@ -95,16 +86,18 @@ export const useAccount = (session: Session) => {
       setLoading(true);
       await updateUser({
         session,
-        username: username.trim(), // 👈 nettoyage ici
+        username: username.trim(),
         country,
         region,
         subregion,
       });
       showMessage("Profil mis à jour avec succès.", "success");
-    } catch (error) {
-      if (error instanceof Error) {
-        showMessage(error.message, "error", "Erreur");
-      }
+    } catch (error: any) {
+      showMessage(
+        error?.message || "Une erreur est survenue.",
+        "error",
+        "Erreur",
+      );
     } finally {
       setLoading(false);
     }
@@ -113,26 +106,28 @@ export const useAccount = (session: Session) => {
   const handleLogout = async () => {
     const result = await logout();
     if (result) {
-      setUsername("");
-      setTotalSyncSeconds(0);
-      setWeeklySyncSeconds(0);
-      setDailySyncSeconds(0);
+      updateAppUser({
+        username: "",
+        totalSyncSeconds: 0,
+        weeklySyncSeconds: 0,
+        dailySyncSeconds: 0,
+      });
     }
   };
 
   const handleDeleteAccount = async () => {
     const confirmed = await deleteAccount();
-    if (confirmed) setTotalSyncSeconds(0);
+    if (confirmed) updateAppUser({ totalSyncSeconds: 0 });
   };
 
   return {
     loading,
     username,
-    setUsername,
+    setUsername: (val: string) => updateAppUser({ username: val }),
     country,
     region,
     subregion,
-    setSubregion,
+    setSubregion: (val: string) => updateAppUser({ subregion: val }),
     countries,
     regions,
     subregions,

@@ -21,7 +21,8 @@ export default function TimerCard({
   unsyncStats,
   sendPeriods,
 }: TimerCardProps) {
-  const { weeklySyncSeconds, dailySyncSeconds, session } = useSession();
+  const { appUser, session } = useSession();
+  const { weeklySyncSeconds, dailySyncSeconds } = appUser;
 
   const totalAll = totalSyncSeconds + unsyncStats.total;
   const totalWeek = weeklySyncSeconds + unsyncStats.weekly;

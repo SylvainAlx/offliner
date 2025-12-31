@@ -4,15 +4,12 @@ import { emptyStats } from "@/types/TypOffline";
 import { getReadableDeviceName } from "@/utils/deviceModelMap";
 import { showMessage } from "@/utils/formatNotification";
 import { Session } from "@supabase/supabase-js";
+import { OfflinerUser } from "@/types/user";
 
 interface SyncMeasuresParams {
   session: Session | null;
-  setTotalSyncSeconds: (value: number) => void;
-  totalSyncSeconds: number;
-  setWeeklySyncSeconds: (value: number) => void;
-  weeklySyncSeconds: number;
-  setDailySyncSeconds: (value: number) => void;
-  dailySyncSeconds: number;
+  appUser: OfflinerUser;
+  updateAppUser: (updates: Partial<OfflinerUser>) => void;
   setUnsyncStats: (stats: typeof emptyStats) => void;
 }
 
@@ -22,12 +19,8 @@ interface SyncMeasuresParams {
  */
 export const syncMeasures = async ({
   session,
-  setTotalSyncSeconds,
-  totalSyncSeconds,
-  setWeeklySyncSeconds,
-  weeklySyncSeconds,
-  setDailySyncSeconds,
-  dailySyncSeconds,
+  appUser,
+  updateAppUser,
   setUnsyncStats,
 }: SyncMeasuresParams): Promise<boolean> => {
   try {
@@ -60,9 +53,11 @@ export const syncMeasures = async ({
     if (globalSuccess) {
       showMessage("Synchronisation réussie 🎉", "success");
       setUnsyncStats(emptyStats);
-      setTotalSyncSeconds(totalSyncSeconds + totalTime);
-      setWeeklySyncSeconds(weeklySyncSeconds + totalTime);
-      setDailySyncSeconds(dailySyncSeconds + totalTime);
+      updateAppUser({
+        totalSyncSeconds: appUser.totalSyncSeconds + totalTime,
+        weeklySyncSeconds: appUser.weeklySyncSeconds + totalTime,
+        dailySyncSeconds: appUser.dailySyncSeconds + totalTime,
+      });
     }
     return globalSuccess;
   } catch (error) {

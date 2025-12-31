@@ -14,15 +14,8 @@ export const useHome = () => {
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const {
-    totalSyncSeconds,
-    session,
-    setTotalSyncSeconds,
-    weeklySyncSeconds,
-    setWeeklySyncSeconds,
-    dailySyncSeconds,
-    setDailySyncSeconds,
-  } = useSession();
+  const { session, appUser, updateAppUser } = useSession();
+  const { totalSyncSeconds } = appUser;
   const { isOnline, setUnsyncStats } = useOfflineProgress();
   const liveStats = useOfflineTimer();
   const [nextGoal, setNextGoal] = useState<(typeof GOALS)[0] | undefined>(
@@ -47,12 +40,8 @@ export const useHome = () => {
       setIsLoading(true);
       await syncMeasures({
         session,
-        setTotalSyncSeconds,
-        totalSyncSeconds,
-        setWeeklySyncSeconds,
-        weeklySyncSeconds,
-        setDailySyncSeconds,
-        dailySyncSeconds,
+        appUser,
+        updateAppUser,
         setUnsyncStats,
       });
     } catch (error) {

@@ -17,7 +17,8 @@ export default function Home() {
     unsyncStats,
     totalSyncSeconds,
   } = useHome();
-  const { dailyGoalSeconds, dailySyncSeconds } = useSession();
+  const { appUser } = useSession();
+  const { dailyGoalSeconds, dailySyncSeconds } = appUser;
 
   const currentDailySeconds = dailySyncSeconds + unsyncStats.daily;
 

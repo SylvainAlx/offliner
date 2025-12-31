@@ -12,8 +12,8 @@ export default function UseMining() {
   const [miningCapacity, setMiningCapacity] = useState<number | null>(null);
   const [lastMineSync, setLastMineSync] = useState<Date | null>(null);
   const [miningAvailable, setMiningAvailable] = useState<boolean>(false);
-  const { dailySyncSeconds, totalGem, setTotalGem, session, deviceName } =
-    useSession();
+  const { appUser, updateAppUser, session, deviceName } = useSession();
+  const { dailySyncSeconds, gemBalance: totalGem } = appUser;
   const { isOnline } = useOfflineProgress();
 
   useEffect(() => {
@@ -70,7 +70,7 @@ export default function UseMining() {
             JSON.stringify(new Date()),
           );
           setLastMineSync(new Date());
-          setTotalGem(totalGem + gemAmount);
+          updateAppUser({ gemBalance: totalGem + gemAmount });
         }
         const newPool = await getGemPool();
         setMiningCapacity(Number(newPool));

@@ -12,22 +12,21 @@ import { useEffect } from "react";
  * Doit être appelé une seule fois au niveau racine de l'application
  */
 export const useSyncData = (session: Session | null) => {
-  const { setTotalSyncSeconds, setWeeklySyncSeconds, setDailySyncSeconds } =
-    useSession();
+  const { updateAppUser } = useSession();
 
   useEffect(() => {
     const loadTotalSyncTime = async (session: Session) => {
       const totalSeconds = await getTotalDuration(session);
-      setTotalSyncSeconds(totalSeconds);
+      updateAppUser({ totalSyncSeconds: totalSeconds });
     };
     const loadWeeklySyncTime = async (session: Session) => {
       const totalSeconds = await getWeeklyDuration(session);
-      setWeeklySyncSeconds(totalSeconds);
+      updateAppUser({ weeklySyncSeconds: totalSeconds });
     };
 
     const loadDaylySyncTime = async (session: Session) => {
       const totalSeconds = await getDailyDuration(session);
-      setDailySyncSeconds(totalSeconds);
+      updateAppUser({ dailySyncSeconds: totalSeconds });
     };
 
     if (session != null) {

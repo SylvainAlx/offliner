@@ -36,11 +36,13 @@ export async function getUser(session: Session): Promise<UserProfile | null> {
       return UserSchema.parse(data);
     }
     return null;
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
-    if (error instanceof Error) {
-      showMessage(error.message, "error", "Erreur");
-    }
+    showMessage(
+      error?.message || "Une erreur est survenue.",
+      "error",
+      "Erreur",
+    );
     return null;
   }
 }
@@ -87,27 +89,22 @@ export async function updateUser({
   region: string | null;
   subregion: string | null;
 }) {
-  try {
-    if (!session?.user) throw new Error("Aucune session active.");
+  if (!session?.user) throw new Error("Aucune session active.");
 
-    const updates = {
-      id: session?.user.id,
+  const { error } = await supabase
+    .from("users")
+    .update({
       username,
       country,
       region,
       subregion,
-      updated_at: new Date(),
-    };
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", session.user.id);
 
-    const { error } = await supabase.from("users").upsert(updates);
-
-    if (error) {
-      throw error;
-    }
-  } catch (error) {
-    if (error instanceof Error) {
-      showMessage(error.message, "error", "Erreur");
-    }
+  if (error) {
+    console.error(error);
+    throw error;
   }
 }
 export async function getUsersRanking() {
@@ -247,10 +244,12 @@ export async function updateDailyGoal(
     if (error) {
       throw error;
     }
-  } catch (error) {
-    if (error instanceof Error) {
-      showMessage(error.message, "error", "Erreur");
-    }
+  } catch (error: any) {
+    showMessage(
+      error?.message || "Une erreur est survenue.",
+      "error",
+      "Erreur",
+    );
     throw error;
   }
 }

@@ -4,7 +4,8 @@ import { updateDailyGoal } from "@/api/users";
 import { showMessage } from "@/utils/formatNotification";
 
 export const useDailyGoal = () => {
-  const { session, dailyGoalSeconds, setDailyGoalSeconds } = useSession();
+  const { session, appUser, updateAppUser } = useSession();
+  const { dailyGoalSeconds } = appUser;
   const [hours, setHours] = useState("");
   const [minutes, setMinutes] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -38,7 +39,7 @@ export const useDailyGoal = () => {
     try {
       setIsSaving(true);
       await updateDailyGoal(session, totalSeconds);
-      setDailyGoalSeconds(totalSeconds);
+      updateAppUser({ dailyGoalSeconds: totalSeconds });
       showMessage(
         "Objectif quotidien enregistré avec succès",
         "success",
@@ -64,7 +65,7 @@ export const useDailyGoal = () => {
     try {
       setIsSaving(true);
       await updateDailyGoal(session, null);
-      setDailyGoalSeconds(null);
+      updateAppUser({ dailyGoalSeconds: null });
       setHours("");
       setMinutes("");
       showMessage("Objectif quotidien supprimé", "success", "Succès");

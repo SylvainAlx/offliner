@@ -9,7 +9,8 @@ import { useSession } from "@/contexts/SessionContext";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 
 export default function TabLayout() {
-  const { totalGem, session } = useSession();
+  const { appUser, session } = useSession();
+  const { gemBalance: totalGem } = appUser;
   const { isOnline } = useOfflineProgress();
 
   return (

@@ -8,7 +8,8 @@ import { FlatList, Text, View } from "react-native";
 import DailyGoalSettings from "@/components/DailyGoalSettings";
 
 export default function GoalsScreen() {
-  const { totalSyncSeconds } = useSession();
+  const { appUser } = useSession();
+  const { totalSyncSeconds } = appUser;
   const liveStats = useOfflineTimer();
 
   return (
