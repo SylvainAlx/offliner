@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Text, View, Keyboard, TouchableWithoutFeedback } from "react-native";
 import { TextInput } from "react-native-paper";
 import { COLORS } from "shared/theme";

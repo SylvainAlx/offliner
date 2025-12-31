@@ -2,8 +2,6 @@ import { indexStyles } from "@/styles/custom.styles";
 import { globalStyles } from "@/styles/global.styles";
 import { View, Text } from "react-native";
 import * as IntentLauncher from "expo-intent-launcher";
-import { Button } from "react-native-paper";
-import { COLORS } from "shared/theme";
 import DigitDisplay from "./DigitDisplay";
 import useAnimatedColor from "@/hooks/useAnimatedColor";
 import ModernButton from "./ui/ModernButton";

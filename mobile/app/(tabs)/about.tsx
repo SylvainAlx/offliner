@@ -2,7 +2,6 @@ import { globalStyles } from "@/styles/global.styles";
 import { router } from "expo-router";
 import { View, Text, Linking } from "react-native";
 import { OWNER, PROJECT } from "shared/config";
-import { COLORS } from "shared/theme";
 import ModernButton from "@/components/ui/ModernButton";
 
 export default function AboutScreen() {

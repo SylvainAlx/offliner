@@ -1,4 +1,3 @@
-import React from "react";
 import { Linking, StyleSheet, View } from "react-native";
 import { Button, Text } from "react-native-paper";
 import { DONATION } from "shared/config";

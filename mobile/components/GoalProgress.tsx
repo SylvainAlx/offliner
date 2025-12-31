@@ -5,8 +5,6 @@ import { Goal } from "shared/goals";
 import { formatDuration } from "shared/utils/formatDuration";
 import DigitDisplay from "./DigitDisplay";
 import useAnimatedColor from "@/hooks/useAnimatedColor";
-import { showMessage } from "@/utils/formatNotification";
-import { useState } from "react";
 
 type Props = {
   goal: Goal;

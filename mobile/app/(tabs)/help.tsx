@@ -3,7 +3,6 @@ import { globalStyles } from "@/styles/global.styles";
 import { Link, router } from "expo-router";
 import { Text, Linking, Pressable, ScrollView } from "react-native";
 import { PROJECT } from "shared/config";
-import { COLORS } from "shared/theme";
 import { ENERGY_CONSUMPTION } from "shared/utils/powerSaving";
 import ModernButton from "@/components/ui/ModernButton";
 

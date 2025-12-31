@@ -4,7 +4,6 @@ import { globalStyles } from "@/styles/global.styles";
 import { ActivityIndicator, Text, View } from "react-native";
 import { COLORS } from "shared/theme";
 import { Link, router } from "expo-router";
-import { Button } from "react-native-paper";
 import DigitDisplay from "./DigitDisplay";
 import {
   countGemAmountFromSeconds,

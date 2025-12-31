@@ -3,7 +3,6 @@ import { UnsyncStats } from "@/types/TypOffline";
 import { Session } from "@supabase/supabase-js";
 import { router } from "expo-router";
 import { View, Text } from "react-native";
-import { COLORS } from "shared/theme";
 import Timer from "./Timer";
 import { indexStyles } from "@/styles/custom.styles";
 import ModernButton from "./ui/ModernButton";
