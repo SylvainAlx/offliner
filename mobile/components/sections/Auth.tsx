@@ -4,7 +4,7 @@ import { TextInput } from "react-native-paper";
 import { COLORS } from "shared/theme";
 import { useAuth } from "@/hooks/useAuth";
 import { globalStyles } from "@/styles/global.styles";
-import ModernButton from "./ui/ModernButton";
+import ModernButton from "../ui/ModernButton";
 
 export default function Auth() {
   const {

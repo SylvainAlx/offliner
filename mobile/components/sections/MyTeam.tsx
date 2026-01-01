@@ -2,7 +2,7 @@ import { globalStyles } from "@/styles/global.styles";
 import { View, Text, TouchableOpacity } from "react-native";
 import EditTeam from "./EditTeam";
 import TeamMembers from "./TeamMembers";
-import DigitDisplay from "../DigitDisplay";
+import DigitDisplay from "../ui/DigitDisplay";
 import { COLORS, SIZES } from "shared/theme";
 import ModernButton from "../ui/ModernButton";
 import { Team } from "@/types/team";

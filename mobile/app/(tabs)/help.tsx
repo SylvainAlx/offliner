@@ -46,14 +46,13 @@ export default function HelpScreen() {
       <Text style={globalStyles.contentText}>
         Le minage de gemmes de temps vous permet de gagner des gemmes en
         fonction de la durée de vos sessions hors ligne afin de valoriser votre
-        régularité. Les regles sont les suivantes : 4 heures passées hors ligne
-        puis synchronisées = 1 gemme disponible au minage. Tous les joueurs se
-        partagent une mine commune. La capacité de la mine descend au fur et à
-        mesure des récoltes quotidiennes. Elle augmentera lorsqu&apos;un
-        utilisateur souscrira à un abonnement premium. Sa durée
-        d&apos;engagement en minutes sera alors convertie en gemmes et ajoutée à
-        la mine. Pour le moment seul un administrateur peut ajouter manuellement
-        des gemmes à la mine.
+        régularité. Par la suite les gemmes pourront être dépensées dans
+        diverses fonctionnalités de l'application. Les règles sont les suivantes
+        : 4 heures passées hors ligne puis synchronisées = 1 gemme disponible au
+        minage. Tous les joueurs se partagent une mine commune. La capacité de
+        la mine descend au fur et à mesure des récoltes quotidiennes. Pour le
+        moment seul un administrateur peut ajouter manuellement des gemmes à la
+        mine.
       </Text>
       <Text style={globalStyles.cardTitle}>Énergie économisée</Text>
       <Text style={globalStyles.contentText}>

@@ -1,6 +1,6 @@
 import { globalStyles } from "@/styles/global.styles";
 import { View, Text } from "react-native";
-import GoalProgress from "./GoalProgress";
+import GoalProgress from "../GoalProgress";
 import { Link } from "expo-router";
 import { Goal } from "shared/goals";
 import { COLORS } from "shared/theme";

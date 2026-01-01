@@ -4,12 +4,12 @@ import { globalStyles } from "@/styles/global.styles";
 import { ActivityIndicator, Text, View } from "react-native";
 import { COLORS } from "shared/theme";
 import { Link, router } from "expo-router";
-import DigitDisplay from "./DigitDisplay";
+import DigitDisplay from "../ui/DigitDisplay";
 import {
   countGemAmountFromSeconds,
   getPercentBeforeNextGem,
 } from "shared/utils/formatDuration";
-import ModernButton from "./ui/ModernButton";
+import ModernButton from "../ui/ModernButton";
 
 export default function MiningCard() {
   const {

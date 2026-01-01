@@ -1,4 +1,4 @@
-import { AppHeaderTitle } from "@/components/AppHeaderTitle";
+import { AppHeaderTitle } from "@/components/layouts/AppHeaderTitle";
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { COLORS, SIZES } from "shared/theme";
 import { Drawer } from "expo-router/drawer";
@@ -161,6 +161,25 @@ export default function TabLayout() {
           title: "Compte",
           drawerIcon: ({ color }) => (
             <IconSymbol name="person.crop.circle" color={color} size={22} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="store"
+        listeners={{
+          drawerItemPress: (e) => {
+            if (!isOnline || !session) e.preventDefault();
+          },
+        }}
+        options={{
+          title: "Magasin",
+          drawerItemStyle: !isOnline || !session ? { opacity: 0.5 } : undefined,
+          drawerIcon: ({ color }) => (
+            <IconSymbol
+              name="cart"
+              color={!isOnline || !session ? COLORS.card : color}
+              size={22}
+            />
           ),
         }}
       />

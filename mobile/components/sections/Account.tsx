@@ -5,8 +5,8 @@ import { ScrollView, Text, View } from "react-native";
 import { TextInput } from "react-native-paper";
 import { Session } from "@supabase/supabase-js";
 import { useAccount } from "@/hooks/useAccount";
-import PickerInput from "./PickerInput";
-import ModernButton from "./ui/ModernButton";
+import ModernButton from "../ui/ModernButton";
+import PickerInput from "../ui/PickerInput";
 
 export default function Account({ session }: { session: Session }) {
   const {

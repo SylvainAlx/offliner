@@ -1,7 +1,7 @@
 import { View, Text, TextInput } from "react-native";
 import { globalStyles } from "@/styles/global.styles";
 import { COLORS, SIZES } from "shared/theme";
-import ModernButton from "./ui/ModernButton";
+import ModernButton from "../ui/ModernButton";
 import { formatDuration } from "shared/utils/formatDuration";
 import { useDailyGoal } from "@/hooks/useDailyGoal";
 

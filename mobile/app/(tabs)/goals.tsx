@@ -5,7 +5,7 @@ import { useOfflineTimer } from "@/hooks/useOfflineTimer";
 import { useSession } from "@/contexts/SessionContext";
 import { globalStyles } from "@/styles/global.styles";
 import { FlatList, Text, View } from "react-native";
-import DailyGoalSettings from "@/components/DailyGoalSettings";
+import DailyGoalSettings from "@/components/sections/DailyGoalSettings";
 
 export default function GoalsScreen() {
   const { appUser } = useSession();

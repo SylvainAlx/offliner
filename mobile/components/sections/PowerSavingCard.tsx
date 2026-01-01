@@ -1,10 +1,10 @@
 import { globalStyles } from "@/styles/global.styles";
 import { View, Text } from "react-native";
-import DigitDisplay from "./DigitDisplay";
+import DigitDisplay from "../ui/DigitDisplay";
 import { getPowerSavingEstimate } from "shared/utils/powerSaving";
 import useAnimatedColor from "@/hooks/useAnimatedColor";
 import { Link } from "expo-router";
-import { IconSymbol } from "./ui/IconSymbol";
+import { IconSymbol } from "../ui/IconSymbol";
 import { COLORS } from "shared/theme";
 
 interface PowerSavingCardProps {

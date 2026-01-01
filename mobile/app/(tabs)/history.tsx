@@ -5,7 +5,7 @@ import { globalStyles } from "@/styles/global.styles";
 import { SIZES, COLORS } from "shared/theme";
 import { router } from "expo-router";
 import { useSession } from "@/contexts/SessionContext";
-import DigitDisplay from "@/components/DigitDisplay";
+import DigitDisplay from "@/components/ui/DigitDisplay";
 import ModernButton from "@/components/ui/ModernButton";
 
 export default function HistoryScreen() {

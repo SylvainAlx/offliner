@@ -2,10 +2,11 @@ import { Team, TeamMember } from "@/types/team";
 import { useTeam } from "@/hooks/useTeam";
 import { globalStyles } from "@/styles/global.styles";
 import { confirmDialog } from "@/utils/formatNotification";
-import { View, Text, TouchableOpacity } from "react-native";
-import { COLORS } from "shared/theme";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { COLORS, SIZES } from "shared/theme";
 import { IconSymbol } from "../ui/IconSymbol";
 import { OfflinerUser } from "@/types/user";
+import UserList from "../UserList";
 
 interface TeamMembersProps {
   team: Team;
@@ -41,25 +42,25 @@ export default function TeamMembers({ team, members, user }: TeamMembersProps) {
       >
         Membres ({members.length})
       </Text>
-      {members.map((member, i) => (
-        <View
-          key={i}
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingVertical: 8,
-            borderBottomWidth: 1,
-            borderBottomColor: COLORS.border,
-          }}
-        >
-          <Text style={globalStyles.contentText}>
+
+      <UserList<TeamMember>
+        data={members}
+        isCurrentUser={(member: TeamMember) => member.id === user?.id}
+        renderUsername={(member: TeamMember) => (
+          <Text
+            style={[
+              styles.usernameText,
+              member.id === user?.id && styles.currentUserText,
+            ]}
+          >
             {member.username || "Utilisateur sans nom"}
             {member.id === team.owner_id && " (Propriétaire)"}
             {member.id === user?.id && " (Vous)"}
           </Text>
-
-          {team.owner_id === user?.id && member.id !== user?.id && (
+        )}
+        renderRight={(member: TeamMember) =>
+          team.owner_id === user?.id &&
+          member.id !== user?.id && (
             <View style={{ flexDirection: "row" }}>
               <TouchableOpacity
                 onPress={() =>
@@ -83,9 +84,21 @@ export default function TeamMembers({ team, members, user }: TeamMembersProps) {
                 <IconSymbol name="delete" size={20} color={COLORS.danger} />
               </TouchableOpacity>
             </View>
-          )}
-        </View>
-      ))}
+          )
+        }
+      />
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  usernameText: {
+    fontSize: SIZES.text_md,
+    color: COLORS.text,
+    fontFamily: "Montserrat",
+  },
+  currentUserText: {
+    color: COLORS.primary,
+    fontWeight: "bold",
+  },
+});

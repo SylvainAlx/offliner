@@ -34,6 +34,7 @@ const MAPPING: IconMapping = {
   giveOwnership: { name: "angles-up", lib: "FontAwesome6" },
   delete: { name: "delete", lib: "MaterialIcons" },
   edit: { name: "edit", lib: "FontAwesome6" },
+  cart: { name: "cart-shopping", lib: "FontAwesome6" },
 };
 
 type IconSymbolName = keyof typeof MAPPING;

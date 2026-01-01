@@ -2,9 +2,9 @@ import { indexStyles } from "@/styles/custom.styles";
 import { globalStyles } from "@/styles/global.styles";
 import { View, Text } from "react-native";
 import * as IntentLauncher from "expo-intent-launcher";
-import DigitDisplay from "./DigitDisplay";
+import DigitDisplay from "../ui/DigitDisplay";
 import useAnimatedColor from "@/hooks/useAnimatedColor";
-import ModernButton from "./ui/ModernButton";
+import ModernButton from "../ui/ModernButton";
 
 interface HeaderCardProps {
   isOnline: boolean;

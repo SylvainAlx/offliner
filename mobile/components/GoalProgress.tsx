@@ -3,7 +3,7 @@ import { globalStyles } from "@/styles/global.styles";
 import { Text, View } from "react-native";
 import { Goal } from "shared/goals";
 import { formatDuration } from "shared/utils/formatDuration";
-import DigitDisplay from "./DigitDisplay";
+import DigitDisplay from "./ui/DigitDisplay";
 import useAnimatedColor from "@/hooks/useAnimatedColor";
 
 type Props = {

@@ -1,11 +1,11 @@
-import TimerCard from "@/components/TimerCard";
+import TimerCard from "@/components/sections/TimerCard";
 import { useHome } from "@/hooks/useHome";
 import { globalStyles } from "@/styles/global.styles";
 import { ScrollView } from "react-native";
-import GoalCard from "@/components/GoalCard";
-import PowerSavingCard from "@/components/PowerSavingCard";
-import HeaderCard from "@/components/HeaderCard";
-import DailyGoalCard from "@/components/DailyGoalCard";
+import GoalCard from "@/components/sections/GoalCard";
+import PowerSavingCard from "@/components/sections/PowerSavingCard";
+import HeaderCard from "@/components/sections/HeaderCard";
+import DailyGoalCard from "@/components/sections/DailyGoalCard";
 import { useSession } from "@/contexts/SessionContext";
 
 export default function Home() {

@@ -1,10 +1,10 @@
 import { useSession } from "@/contexts/SessionContext";
 import { globalStyles } from "@/styles/global.styles";
 import { Text, View } from "react-native";
-import Timer from "./Timer";
 import { UnsyncStats } from "@/types/TypOffline";
 import { router } from "expo-router";
-import ModernButton from "./ui/ModernButton";
+import ModernButton from "../ui/ModernButton";
+import Timer from "../ui/Timer";
 
 interface TimerCardProps {
   isOnline: boolean;

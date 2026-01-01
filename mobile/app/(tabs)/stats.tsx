@@ -2,7 +2,7 @@ import { globalStyles } from "@/styles/global.styles";
 import { ScrollView, View, Text, ActivityIndicator } from "react-native";
 import { COLORS } from "shared/theme";
 import { useStats } from "@/hooks/useStats";
-import DigitDisplay from "@/components/DigitDisplay";
+import DigitDisplay from "@/components/ui/DigitDisplay";
 import RankingList from "@/components/RankingList";
 import ModernButton from "@/components/ui/ModernButton";
 
