@@ -59,7 +59,7 @@ export default function SettingsScreen() {
           onPress={async () => await resetOfflinePeriods()}
           icon="delete-forever"
         >
-          Supprimer les périodes locales
+          Supprimer les mesures locales
         </ModernButton>
       </View>
 

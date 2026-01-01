@@ -5,16 +5,16 @@ import TeamMembers from "./TeamMembers";
 import DigitDisplay from "../DigitDisplay";
 import { COLORS, SIZES } from "shared/theme";
 import ModernButton from "../ui/ModernButton";
-import { Team } from "@/api/teams";
-import { User } from "@supabase/supabase-js";
+import { Team } from "@/types/team";
 import { useState } from "react";
 import { IconSymbol } from "../ui/IconSymbol";
 import { useTeam } from "@/hooks/useTeam";
 import { confirmDialog } from "@/utils/formatNotification";
+import { OfflinerUser } from "@/types/user";
 
 interface MyTeamProps {
   team: Team;
-  user: User | null;
+  user: OfflinerUser | null;
 }
 
 export default function MyTeam({ team, user }: MyTeamProps) {
@@ -22,7 +22,7 @@ export default function MyTeam({ team, user }: MyTeamProps) {
   const [isEditing, setIsEditing] = useState(false);
 
   const handeLeave = async () => {
-    if (team?.owner_id === user?.id) {
+    if (user?.isTeamOwner) {
       if (members.length > 1) {
         await confirmDialog(
           "Vous ne pouvez pas quitter l'équipe car vous en êtes le propriétaire. Veuillez transférer la propriété avant de quitter.",
@@ -71,7 +71,7 @@ export default function MyTeam({ team, user }: MyTeamProps) {
             >
               {team.name}
             </Text>
-            {team.owner_id === user?.id && (
+            {user?.isTeamOwner && (
               <TouchableOpacity onPress={() => setIsEditing(true)}>
                 <IconSymbol name="edit" size={24} color={COLORS.primary} />
               </TouchableOpacity>
@@ -82,7 +82,7 @@ export default function MyTeam({ team, user }: MyTeamProps) {
           )}
         </>
       )}
-      {(!team.is_private || team.owner_id === user?.id) && (
+      {(!team.is_private || user?.isTeamOwner) && (
         <View
           style={{
             paddingVertical: 10,
@@ -100,13 +100,13 @@ export default function MyTeam({ team, user }: MyTeamProps) {
         </View>
       )}
       <TeamMembers team={team} members={members} user={user} />
-      {user?.id !== team.owner_id ? (
-        <ModernButton variant="danger" onPress={handeLeave} icon="logout">
-          Quitter l&apos;équipe
-        </ModernButton>
-      ) : (
+      {user?.isTeamOwner ? (
         <ModernButton variant="danger" onPress={handleDeleteTeam} icon="delete">
           Supprimer l&apos;équipe
+        </ModernButton>
+      ) : (
+        <ModernButton variant="danger" onPress={handeLeave} icon="logout">
+          Quitter l&apos;équipe
         </ModernButton>
       )}
       <ModernButton

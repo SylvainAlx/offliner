@@ -16,7 +16,7 @@ import { useEffect, useState } from "react";
 export const useAccount = (session: Session) => {
   const [loading, setLoading] = useState(false);
   const { appUser, updateAppUser } = useSession();
-  const { username, country, region, subregion } = appUser;
+  const { username, country, region, subregion, deviceName } = appUser;
 
   const [countries, setCountries] = useState<Country[]>([]);
   const [regions, setRegions] = useState<Subdivision[]>([]);
@@ -123,6 +123,7 @@ export const useAccount = (session: Session) => {
   return {
     loading,
     username,
+    deviceName,
     setUsername: (val: string) => updateAppUser({ username: val }),
     country,
     region,

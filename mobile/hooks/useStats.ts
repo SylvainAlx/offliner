@@ -89,11 +89,10 @@ export const useStats = () => {
     };
 
     initialize();
-  }, [session, username, appUser.country, appUser.region, appUser.subregion]);
+  }, [session, appUser.country, appUser.region, appUser.subregion]);
 
   return {
     user: appUser,
-    username,
     rankingWorld,
     rankingCountry,
     rankingRegion,

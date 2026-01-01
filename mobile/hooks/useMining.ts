@@ -12,7 +12,7 @@ export default function UseMining() {
   const [miningCapacity, setMiningCapacity] = useState<number | null>(null);
   const [lastMineSync, setLastMineSync] = useState<Date | null>(null);
   const [miningAvailable, setMiningAvailable] = useState<boolean>(false);
-  const { appUser, updateAppUser, session, deviceName } = useSession();
+  const { appUser, updateAppUser, session } = useSession();
   const { dailySyncSeconds, gemBalance: totalGem } = appUser;
   const { isOnline } = useOfflineProgress();
 
@@ -52,11 +52,11 @@ export default function UseMining() {
       `Attention, un seul minage par jour possible ! Confirmes-tu le minage de ${gemAmount} gemme(s) de temps ?`,
     );
     if (!confirmed) return;
-    if (session && deviceName) {
+    if (session && appUser.deviceName) {
       const result = await InsertTransaction({
         session,
         amount: countGemAmountFromSeconds(dailySyncSeconds),
-        deviceName,
+        deviceName: appUser.deviceName,
         type: "mining",
         direction: "out",
         target: "pool",

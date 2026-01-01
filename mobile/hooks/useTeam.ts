@@ -6,21 +6,15 @@ import {
   getUserTeam,
   joinTeamByInviteCode,
   leaveTeam,
-  Team,
   transferTeamOwnership,
   updateTeam,
 } from "@/api/teams";
 import { config } from "@/config/env";
 import { useSession } from "@/contexts/SessionContext";
+import { Team, TeamMember } from "@/types/team";
 import { showMessage } from "@/utils/formatNotification";
 import { useEffect, useState } from "react";
 import { Linking } from "react-native";
-
-export type TeamMember = {
-  id: string;
-  username: string | null;
-  country: string | null;
-};
 
 export const useTeam = () => {
   const [team, setTeam] = useState<Team | null>(null);

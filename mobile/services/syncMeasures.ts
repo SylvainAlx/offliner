@@ -27,7 +27,7 @@ export const syncMeasures = async ({
     if (!session)
       throw new Error("Aucune session active pour la synchronisation.");
 
-    const modelName = await getReadableDeviceName();
+    const modelName = appUser.deviceName;
     if (!modelName) throw new Error("L'appareil n'a pas de nom de modèle.");
 
     let globalSuccess = true;

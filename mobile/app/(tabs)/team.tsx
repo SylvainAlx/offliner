@@ -10,7 +10,7 @@ import MyTeam from "@/components/sections/MyTeam";
 
 export default function TeamScreen() {
   const { team, loading, refreshTeam, showTeams } = useTeam();
-  const { user } = useSession();
+  const { appUser } = useSession();
 
   if (loading) {
     return (
@@ -27,7 +27,7 @@ export default function TeamScreen() {
         Actualiser
       </ModernButton>
       {team ? (
-        <MyTeam team={team} user={user} />
+        <MyTeam team={team} user={appUser} />
       ) : (
         <>
           <JoinTeam />

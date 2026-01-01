@@ -12,6 +12,7 @@ export default function Account({ session }: { session: Session }) {
   const {
     loading,
     username,
+    deviceName,
     setUsername,
     country,
     region,
@@ -34,7 +35,7 @@ export default function Account({ session }: { session: Session }) {
         <View
           style={[
             globalStyles.verticallySpaced,
-            { display: "flex", flexDirection: "column", gap: "10" },
+            { display: "flex", flexDirection: "column", gap: "4" },
           ]}
         >
           <TextInput
@@ -51,52 +52,59 @@ export default function Account({ session }: { session: Session }) {
             style={globalStyles.input}
             textColor={COLORS.text}
           />
+          <TextInput
+            label="Appareil"
+            value={deviceName || ""}
+            style={globalStyles.input}
+            textColor={COLORS.card}
+            disabled
+          />
+
+          <PickerInput
+            enabled={true}
+            value={country}
+            handleChange={handleCountryChange}
+            label="Pays"
+            selectLabel="Sélectionner un pays"
+            itemList={countries.map((country) => (
+              <Picker.Item
+                key={country.geonameId}
+                label={country.countryName}
+                value={country.countryName}
+              />
+            ))}
+          />
+          <PickerInput
+            enabled={regions.length > 0 || country !== null}
+            value={region}
+            handleChange={handleRegionChange}
+            label="Région"
+            selectLabel="Sélectionner une région"
+            itemList={regions.map((region) => (
+              <Picker.Item
+                key={region.geonameId}
+                label={region.name}
+                value={region.name}
+              />
+            ))}
+          />
+          <PickerInput
+            enabled={subregions.length > 0}
+            value={subregion}
+            handleChange={setSubregion}
+            label="Département"
+            selectLabel="Sélectionner un département"
+            itemList={subregions.map((sub) => (
+              <Picker.Item
+                key={sub.geonameId}
+                label={sub.name}
+                value={sub.name}
+              />
+            ))}
+          />
         </View>
 
-        <PickerInput
-          enabled={true}
-          value={country}
-          handleChange={handleCountryChange}
-          label="Pays"
-          selectLabel="Sélectionner un pays"
-          itemList={countries.map((country) => (
-            <Picker.Item
-              key={country.geonameId}
-              label={country.countryName}
-              value={country.countryName}
-            />
-          ))}
-        />
-        <PickerInput
-          enabled={regions.length > 0 || country !== null}
-          value={region}
-          handleChange={handleRegionChange}
-          label="Région"
-          selectLabel="Sélectionner une région"
-          itemList={regions.map((region) => (
-            <Picker.Item
-              key={region.geonameId}
-              label={region.name}
-              value={region.name}
-            />
-          ))}
-        />
-        <PickerInput
-          enabled={subregions.length > 0}
-          value={subregion}
-          handleChange={setSubregion}
-          label="Département"
-          selectLabel="Sélectionner un département"
-          itemList={subregions.map((sub) => (
-            <Picker.Item
-              key={sub.geonameId}
-              label={sub.name}
-              value={sub.name}
-            />
-          ))}
-        />
-
-        <View style={globalStyles.buttonContainer}>
+        <View>
           <ModernButton
             variant="secondary"
             onPress={() => updateProfile({ username: username ?? "" })}

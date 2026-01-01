@@ -5,7 +5,7 @@ import { View, Switch, Text, TextInput } from "react-native";
 import { COLORS } from "shared/theme";
 import ModernButton from "../ui/ModernButton";
 import { useState } from "react";
-import { Team } from "@/api/teams";
+import { Team } from "@/types/team";
 
 interface EditTeamProps {
   team: Team;

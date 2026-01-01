@@ -1,16 +1,16 @@
-import { Team } from "@/api/teams";
-import { TeamMember, useTeam } from "@/hooks/useTeam";
+import { Team, TeamMember } from "@/types/team";
+import { useTeam } from "@/hooks/useTeam";
 import { globalStyles } from "@/styles/global.styles";
 import { confirmDialog } from "@/utils/formatNotification";
-import { User } from "@supabase/supabase-js";
 import { View, Text, TouchableOpacity } from "react-native";
 import { COLORS } from "shared/theme";
 import { IconSymbol } from "../ui/IconSymbol";
+import { OfflinerUser } from "@/types/user";
 
 interface TeamMembersProps {
   team: Team;
   members: TeamMember[];
-  user: User | null;
+  user: OfflinerUser | null;
 }
 
 export default function TeamMembers({ team, members, user }: TeamMembersProps) {

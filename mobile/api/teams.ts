@@ -1,35 +1,29 @@
 import { supabase } from "@/utils/supabase";
+import { Team } from "@/types/team";
 
-export interface Team {
-  id: string;
-  name: string;
-  description: string | null;
-  owner_id: string;
-  invite_code: string | null;
-  is_private: boolean;
-  created_at: string;
-}
-
-export async function getTeams() {
+export async function getTeams(): Promise<Team[]> {
   const { data, error } = await supabase.from("teams").select("*");
   if (error) throw error;
-  return data;
+  return (data || []).map((t: any) => Object.assign(new Team(), t));
 }
 
-export async function getUserTeam(userId: string) {
+export async function getUserTeam(userId: string): Promise<Team | null> {
   const { data, error } = await supabase
     .from("users")
     .select("team_id")
     .eq("id", userId)
     .single();
-  if (error) throw error;
+
+  if (error || !data.team_id) return null;
+
   const { data: team, error: teamError } = await supabase
     .from("teams")
     .select("*")
     .eq("id", data.team_id)
     .single();
+
   if (teamError) throw teamError;
-  return team as Team;
+  return Object.assign(new Team(), team);
 }
 
 export async function createTeam(

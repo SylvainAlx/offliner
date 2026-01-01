@@ -10,7 +10,6 @@ import { getLastOpenPeriod } from "@/services/offlineStorage";
 
 export const useHome = () => {
   const [since, setSince] = useState<Date | null>(null);
-  const [deviceName, setDeviceName] = useState<string>("");
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -22,11 +21,6 @@ export const useHome = () => {
     undefined,
   );
   const [isLoading, setIsLoading] = useState(false);
-
-  const getDeviceName = async () => {
-    const name = await getReadableDeviceName();
-    setDeviceName(name);
-  };
 
   const sendPeriods = async () => {
     if (!session) return;
@@ -54,7 +48,6 @@ export const useHome = () => {
   };
 
   useEffect(() => {
-    getDeviceName();
     const loadStartTime = async () => {
       const startTime = await getLastOpenPeriod(); // Assume this function fetches the start time from storage
       if (startTime) {
@@ -89,6 +82,6 @@ export const useHome = () => {
     session,
     unsyncStats: liveStats,
     totalSyncSeconds,
-    deviceName,
+    deviceName: appUser.deviceName,
   };
 };

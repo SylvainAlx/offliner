@@ -9,7 +9,6 @@ import ModernButton from "@/components/ui/ModernButton";
 export default function StatsScreen() {
   const {
     user,
-    username,
     rankingWorld,
     rankingCountry,
     rankingRegion,
@@ -34,7 +33,7 @@ export default function StatsScreen() {
       contentContainerStyle={globalStyles.container}
       showsVerticalScrollIndicator
     >
-      <Text style={globalStyles.title}>Classement de {username}</Text>
+      <Text style={globalStyles.title}>Classement de {user?.username}</Text>
       <View style={globalStyles.card}>
         <Text style={globalStyles.cardTitle}>Classement général</Text>
         {rankingWorld ? (
@@ -77,7 +76,7 @@ export default function StatsScreen() {
         {usersRanking ? (
           <RankingList
             users={usersRanking}
-            currentUsername={username ?? undefined}
+            currentUsername={user?.username ?? undefined}
           />
         ) : (
           <ActivityIndicator />
@@ -86,7 +85,7 @@ export default function StatsScreen() {
         {weeklyLeagueRanking ? (
           <RankingList
             users={weeklyLeagueRanking}
-            currentUsername={username ?? undefined}
+            currentUsername={user?.username ?? undefined}
           />
         ) : (
           <ActivityIndicator />

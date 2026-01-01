@@ -1,28 +1,24 @@
-// contexts/SessionContext.tsx
 import { getUser } from "@/api/users";
 import { getAndUpdateLocalDevice } from "@/services/devices";
+import { getTeamMembers, getUserTeam } from "@/api/teams";
 import { showMessage } from "@/utils/formatNotification";
 import { supabase } from "@/utils/supabase";
-import { Session, User } from "@supabase/supabase-js";
+import { Session } from "@supabase/supabase-js";
 import { createContext, useContext, useEffect, useState } from "react";
 import { OfflinerUser } from "@/types/user";
 
 type SessionContextType = {
   session: Session | null;
-  user: User | null;
   appUser: OfflinerUser;
   updateAppUser: (updates: Partial<OfflinerUser>) => void;
-  deviceName: string | null;
 };
 
 const defaultUser = new OfflinerUser();
 
 const SessionContext = createContext<SessionContextType>({
   session: null,
-  user: null,
   appUser: defaultUser,
   updateAppUser: () => {},
-  deviceName: null,
 });
 
 export const SessionProvider = ({
@@ -31,7 +27,6 @@ export const SessionProvider = ({
   children: React.ReactNode;
 }) => {
   const [session, setSession] = useState<Session | null>(null);
-  const [deviceName, setDeviceName] = useState<string | null>(null);
   const [appUser, setAppUser] = useState<OfflinerUser>(defaultUser);
 
   const updateAppUser = (updates: Partial<OfflinerUser>) => {
@@ -46,7 +41,17 @@ export const SessionProvider = ({
       }
       const data = await getUser(session);
       if (data) {
+        let team = null;
+        if (data.team_id) {
+          team = await getUserTeam(session.user.id);
+          if (team) {
+            const members = await getTeamMembers(team.id);
+            team.members = members as any;
+          }
+        }
+
         updateAppUser({
+          id: session.user.id,
           username: data.username,
           country: data.country,
           region: data.region,
@@ -54,10 +59,11 @@ export const SessionProvider = ({
           gemBalance: data.gem_balance,
           dailyGoalSeconds: data.daily_goal_seconds,
           team_id: data.team_id,
+          team: team,
         });
       }
       const device = await getAndUpdateLocalDevice(session);
-      setDeviceName(device);
+      updateAppUser({ deviceName: device });
     } catch (error) {
       if (error instanceof Error) {
         showMessage(error.message, "error", "Erreur");
@@ -90,10 +96,8 @@ export const SessionProvider = ({
     <SessionContext.Provider
       value={{
         session,
-        user: session?.user ?? null,
         appUser,
         updateAppUser,
-        deviceName,
       }}
     >
       {children}

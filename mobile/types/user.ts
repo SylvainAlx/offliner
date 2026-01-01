@@ -1,5 +1,8 @@
+import { Team } from "./team";
+
 export class OfflinerUser {
   constructor(
+    public id: string = "",
     public username: string | null = null,
     public country: string | null = null,
     public region: string | null = null,
@@ -10,6 +13,8 @@ export class OfflinerUser {
     public weeklySyncSeconds: number = 0,
     public dailySyncSeconds: number = 0,
     public team_id: string | null = null,
+    public team: Team | null = null,
+    public deviceName: string | null = null,
   ) {}
 
   /**
@@ -29,5 +34,9 @@ export class OfflinerUser {
    */
   hasCompleteProfile(): boolean {
     return !!(this.username && this.country && this.region);
+  }
+
+  get isTeamOwner(): boolean {
+    return this.id === this.team?.owner_id;
   }
 }
