@@ -1,11 +1,12 @@
-import GoalProgress from "@/components/GoalProgress";
+import { FlatList, Text, View } from "react-native";
 import { GOALS } from "shared/goals";
 import { SIZES } from "shared/theme";
-import { useOfflineTimer } from "@/hooks/useOfflineTimer";
-import { useSession } from "@/contexts/SessionContext";
-import { globalStyles } from "@/styles/global.styles";
-import { FlatList, Text, View } from "react-native";
+
+import GoalProgress from "@/components/GoalProgress";
 import DailyGoalSettings from "@/components/sections/DailyGoalSettings";
+import { useSession } from "@/contexts/SessionContext";
+import { useOfflineTimer } from "@/hooks/useOfflineTimer";
+import { globalStyles } from "@/styles/global.styles";
 
 export default function GoalsScreen() {
   const { appUser } = useSession();

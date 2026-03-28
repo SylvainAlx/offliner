@@ -1,8 +1,9 @@
-import { View, Text, Animated, TouchableOpacity } from "react-native";
-import * as Clipboard from "expo-clipboard";
 import { MaterialIcons } from "@expo/vector-icons";
-import { showMessage } from "@/utils/formatNotification";
+import * as Clipboard from "expo-clipboard";
+import { Animated, Text, TouchableOpacity,View } from "react-native";
 import { COLORS, SIZES } from "shared/theme";
+
+import { showMessage } from "@/utils/formatNotification";
 
 interface DigitDisplayProps {
   digit: string;

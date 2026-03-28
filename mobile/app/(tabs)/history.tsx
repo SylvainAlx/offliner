@@ -1,12 +1,13 @@
-import { SectionList, Text, View } from "react-native";
-import { useHistory } from "@/hooks/useHistory";
-import { formatDuration } from "shared/utils/formatDuration";
-import { globalStyles } from "@/styles/global.styles";
-import { SIZES, COLORS } from "shared/theme";
 import { router } from "expo-router";
-import { useSession } from "@/contexts/SessionContext";
+import { SectionList, Text, View } from "react-native";
+import { COLORS,SIZES } from "shared/theme";
+import { formatDuration } from "shared/utils/formatDuration";
+
 import DigitDisplay from "@/components/ui/DigitDisplay";
 import ModernButton from "@/components/ui/ModernButton";
+import { useSession } from "@/contexts/SessionContext";
+import { useHistory } from "@/hooks/useHistory";
+import { globalStyles } from "@/styles/global.styles";
 
 export default function HistoryScreen() {
   const { session } = useSession();

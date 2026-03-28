@@ -1,8 +1,10 @@
+import { router } from "expo-router";
+import { Text, View } from "react-native";
+
 import { useSession } from "@/contexts/SessionContext";
 import { globalStyles } from "@/styles/global.styles";
-import { Text, View } from "react-native";
 import { UnsyncStats } from "@/types/TypOffline";
-import { router } from "expo-router";
+
 import ModernButton from "../ui/ModernButton";
 import Timer from "../ui/Timer";
 

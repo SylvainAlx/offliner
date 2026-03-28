@@ -1,10 +1,12 @@
-import { globalStyles } from "@/styles/global.styles";
-import { View, Text } from "react-native";
+import { Link } from "expo-router";
+import { Text,View } from "react-native";
 import { COLORS, SIZES } from "shared/theme";
 import { formatDuration } from "shared/utils/formatDuration";
-import DigitDisplay from "../ui/DigitDisplay";
-import { Link } from "expo-router";
+
 import useAnimatedColor from "@/hooks/useAnimatedColor";
+import { globalStyles } from "@/styles/global.styles";
+
+import DigitDisplay from "../ui/DigitDisplay";
 
 interface DailyGoalCardProps {
   goalSeconds: number;

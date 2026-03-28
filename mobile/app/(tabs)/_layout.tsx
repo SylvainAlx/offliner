@@ -1,12 +1,12 @@
+import { DrawerToggleButton } from "@react-navigation/drawer";
+import { Drawer } from "expo-router/drawer";
+import { Text,View } from "react-native";
+import { COLORS, SIZES } from "shared/theme";
+
 import { AppHeaderTitle } from "@/components/layouts/AppHeaderTitle";
 import { IconSymbol } from "@/components/ui/IconSymbol";
-import { COLORS, SIZES } from "shared/theme";
-import { Drawer } from "expo-router/drawer";
-import { DrawerToggleButton } from "@react-navigation/drawer";
-
-import { View, Text } from "react-native";
-import { useSession } from "@/contexts/SessionContext";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
+import { useSession } from "@/contexts/SessionContext";
 
 export default function TabLayout() {
   const { appUser, session } = useSession();

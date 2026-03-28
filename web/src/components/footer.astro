@@ -11,6 +11,12 @@ import { OWNER } from "shared/config";
     <a class="link link-hover" href="/legal">Mentions légales</a>
   </nav>
   <aside>
+    <div class="flex items-center gap-2 mb-2 justify-center">
+      <span class="badge badge-warning badge-sm">Beta Version</span>
+      <span class="text-xs text-base-content/50 italic font-light">
+        Sujet à des évolutions et instabilités.
+      </span>
+    </div>
     <p>
       <a href={OWNER.WEBSITE} target="_blank">{OWNER.NAME}</a> - Tous droits réservés
       - {new Date().getFullYear()}

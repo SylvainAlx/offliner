@@ -1,10 +1,12 @@
-import { COLORS } from "shared/theme";
-import { globalStyles } from "@/styles/global.styles";
 import { Picker } from "@react-native-picker/picker";
+import { Session } from "@supabase/supabase-js";
 import { ScrollView, Text, View } from "react-native";
 import { TextInput } from "react-native-paper";
-import { Session } from "@supabase/supabase-js";
+import { COLORS } from "shared/theme";
+
 import { useAccount } from "@/hooks/useAccount";
+import { globalStyles } from "@/styles/global.styles";
+
 import ModernButton from "../ui/ModernButton";
 import PickerInput from "../ui/PickerInput";
 

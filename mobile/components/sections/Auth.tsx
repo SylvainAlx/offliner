@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Text, View, Keyboard, TouchableWithoutFeedback } from "react-native";
+import { Keyboard, Text, TouchableWithoutFeedback,View } from "react-native";
 import { TextInput } from "react-native-paper";
 import { COLORS } from "shared/theme";
+
 import { useAuth } from "@/hooks/useAuth";
 import { globalStyles } from "@/styles/global.styles";
+
 import ModernButton from "../ui/ModernButton";
 
 export default function Auth() {

@@ -1,10 +1,12 @@
-import { COLORS, SIZES } from "shared/theme";
-import { globalStyles } from "@/styles/global.styles";
 import { Text, View } from "react-native";
 import { Goal } from "shared/goals";
+import { COLORS, SIZES } from "shared/theme";
 import { formatDuration } from "shared/utils/formatDuration";
-import DigitDisplay from "./ui/DigitDisplay";
+
 import useAnimatedColor from "@/hooks/useAnimatedColor";
+import { globalStyles } from "@/styles/global.styles";
+
+import DigitDisplay from "./ui/DigitDisplay";
 
 type Props = {
   goal: Goal;

@@ -1,20 +1,21 @@
+import { Stack } from "expo-router";
+import { useEffect,useState } from "react";
+import {
+  ActivityIndicator,
+  Linking,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
+import { PROJECT } from "shared/config";
+import { COLORS, SIZES } from "shared/theme";
+import ToastManager from "toastify-react-native";
+
+import { checkMobileVersion } from "@/api/config";
 import { OfflineProgressProvider } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
 import { useSyncData } from "@/hooks/useSyncData";
-import { Stack } from "expo-router";
-import { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  Pressable,
-  Linking,
-} from "react-native";
-import { checkMobileVersion } from "@/api/config";
-import { PROJECT } from "shared/config";
 import { globalStyles } from "@/styles/global.styles";
-import { COLORS, SIZES } from "shared/theme";
-import ToastManager from "toastify-react-native";
 
 export default function AppWithSession() {
   const { session } = useSession();

@@ -1,6 +1,8 @@
 import { formatDuration } from "shared/utils/formatDuration";
-import DigitDisplay from "./DigitDisplay";
+
 import useAnimatedColor from "@/hooks/useAnimatedColor";
+
+import DigitDisplay from "./DigitDisplay";
 
 interface TimerProps {
   label: string;

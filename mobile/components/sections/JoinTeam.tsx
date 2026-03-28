@@ -1,9 +1,11 @@
-import { globalStyles } from "@/styles/global.styles";
-import { View, Text, TextInput } from "react-native";
-import { COLORS } from "shared/theme";
-import ModernButton from "../ui/ModernButton";
-import { useTeam } from "@/hooks/useTeam";
 import { useState } from "react";
+import { Text, TextInput,View } from "react-native";
+import { COLORS } from "shared/theme";
+
+import { useTeam } from "@/hooks/useTeam";
+import { globalStyles } from "@/styles/global.styles";
+
+import ModernButton from "../ui/ModernButton";
 
 export default function JoinTeam() {
   const [inviteCode, setInviteCode] = useState("");

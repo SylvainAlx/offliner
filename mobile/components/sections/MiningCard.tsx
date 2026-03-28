@@ -1,14 +1,16 @@
-import { IconSymbol } from "@/components/ui/IconSymbol";
-import UseMining from "@/hooks/useMining";
-import { globalStyles } from "@/styles/global.styles";
+import { Link, router } from "expo-router";
 import { ActivityIndicator, Text, View } from "react-native";
 import { COLORS } from "shared/theme";
-import { Link, router } from "expo-router";
-import DigitDisplay from "../ui/DigitDisplay";
 import {
   countGemAmountFromSeconds,
   getPercentBeforeNextGem,
 } from "shared/utils/formatDuration";
+
+import { IconSymbol } from "@/components/ui/IconSymbol";
+import UseMining from "@/hooks/useMining";
+import { globalStyles } from "@/styles/global.styles";
+
+import DigitDisplay from "../ui/DigitDisplay";
 import ModernButton from "../ui/ModernButton";
 
 export default function MiningCard() {

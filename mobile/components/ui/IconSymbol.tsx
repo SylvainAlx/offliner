@@ -1,10 +1,9 @@
-import { StyleProp, TextStyle, OpaqueColorValue } from "react-native";
-import { SymbolWeight } from "expo-symbols";
-
-// --- Import des packs d'icônes disponibles ---
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome6";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+// --- Import des packs d'icônes disponibles ---
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { SymbolWeight } from "expo-symbols";
+import { OpaqueColorValue,StyleProp, TextStyle } from "react-native";
 
 type IconLibrary = "MaterialIcons" | "FontAwesome6" | "MaterialCommunityIcons";
 

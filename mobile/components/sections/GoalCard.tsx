@@ -1,9 +1,11 @@
-import { globalStyles } from "@/styles/global.styles";
-import { View, Text } from "react-native";
-import GoalProgress from "../GoalProgress";
 import { Link } from "expo-router";
+import { Text,View } from "react-native";
 import { Goal } from "shared/goals";
 import { COLORS } from "shared/theme";
+
+import { globalStyles } from "@/styles/global.styles";
+
+import GoalProgress from "../GoalProgress";
 
 interface GoalCardProps {
   nextGoal: Goal;

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, DimensionValue } from "react-native";
+import { DimensionValue,StyleSheet, Text, View } from "react-native";
 import { COLORS, SIZES } from "shared/theme";
 
 export interface UserListItem {

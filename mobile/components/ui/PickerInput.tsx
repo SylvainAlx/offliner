@@ -1,8 +1,9 @@
-import { accountStyles } from "@/styles/custom.styles";
-import { globalStyles } from "@/styles/global.styles";
 import { Picker } from "@react-native-picker/picker";
 import { ReactNode } from "react";
-import { View, Text } from "react-native";
+import { Text,View } from "react-native";
+
+import { accountStyles } from "@/styles/custom.styles";
+import { globalStyles } from "@/styles/global.styles";
 
 interface PickerInputProps {
   value: string | null;

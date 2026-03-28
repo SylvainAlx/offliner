@@ -1,8 +1,9 @@
-import { globalStyles } from "@/styles/global.styles";
 import { router } from "expo-router";
-import { Text, ScrollView, Linking } from "react-native";
+import { Linking,ScrollView, Text } from "react-native";
+import { OWNER,PROJECT } from "shared/config";
+
 import ModernButton from "@/components/ui/ModernButton";
-import { PROJECT, OWNER } from "shared/config";
+import { globalStyles } from "@/styles/global.styles";
 
 export default function LegalsScreen() {
   return (

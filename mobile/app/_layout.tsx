@@ -1,10 +1,12 @@
-import { SessionProvider } from "@/contexts/SessionContext";
-import { useFonts } from "expo-font";
-import { StatusBar, View, Text } from "react-native";
-import AppWithSession from "./AppWithSession";
 import * as Device from "expo-device";
+import { useFonts } from "expo-font";
+import { StatusBar, Text,View } from "react-native";
 import { PROJECT } from "shared/config";
+
+import { SessionProvider } from "@/contexts/SessionContext";
 import { globalStyles } from "@/styles/global.styles";
+
+import AppWithSession from "./AppWithSession";
 
 export default function RootLayout() {
   const [loaded] = useFonts({

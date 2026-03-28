@@ -1,7 +1,8 @@
 import React from "react";
-import { Text, StyleSheet } from "react-native";
+import { StyleSheet,Text } from "react-native";
 import { COLORS, SIZES } from "shared/theme";
 import { formatDuration } from "shared/utils/formatDuration";
+
 import UserList, { UserListItem } from "./UserList";
 
 interface RankingUser extends UserListItem {

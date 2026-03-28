@@ -1,16 +1,18 @@
+import { useState } from "react";
+import { Text, TouchableOpacity,View } from "react-native";
+import { COLORS, SIZES } from "shared/theme";
+
+import { useTeam } from "@/hooks/useTeam";
 import { globalStyles } from "@/styles/global.styles";
-import { View, Text, TouchableOpacity } from "react-native";
+import { Team } from "@/types/team";
+import { OfflinerUser } from "@/types/user";
+import { confirmDialog } from "@/utils/formatNotification";
+
+import DigitDisplay from "../ui/DigitDisplay";
+import { IconSymbol } from "../ui/IconSymbol";
+import ModernButton from "../ui/ModernButton";
 import EditTeam from "./EditTeam";
 import TeamMembers from "./TeamMembers";
-import DigitDisplay from "../ui/DigitDisplay";
-import { COLORS, SIZES } from "shared/theme";
-import ModernButton from "../ui/ModernButton";
-import { Team } from "@/types/team";
-import { useState } from "react";
-import { IconSymbol } from "../ui/IconSymbol";
-import { useTeam } from "@/hooks/useTeam";
-import { confirmDialog } from "@/utils/formatNotification";
-import { OfflinerUser } from "@/types/user";
 
 interface MyTeamProps {
   team: Team;

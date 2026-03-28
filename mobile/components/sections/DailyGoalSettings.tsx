@@ -1,9 +1,11 @@
-import { View, Text, TextInput } from "react-native";
-import { globalStyles } from "@/styles/global.styles";
-import { COLORS, SIZES } from "shared/theme";
-import ModernButton from "../ui/ModernButton";
-import { formatDuration } from "shared/utils/formatDuration";
-import { useDailyGoal } from "@/hooks/useDailyGoal";
+import { Text, TextInput, View } from 'react-native';
+import { COLORS, SIZES } from 'shared/theme';
+import { formatDuration } from 'shared/utils/formatDuration';
+
+import { useDailyGoal } from '@/hooks/useDailyGoal';
+import { globalStyles } from '@/styles/global.styles';
+
+import ModernButton from '../ui/ModernButton';
 
 export default function DailyGoalSettings() {
   const {
@@ -19,7 +21,7 @@ export default function DailyGoalSettings() {
   } = useDailyGoal();
 
   return (
-    <View style={{ width: "100%", gap: SIZES.margin }}>
+    <View style={{ width: '100%', gap: SIZES.margin }}>
       {dailyGoalSeconds !== null && (
         <View
           style={{
@@ -36,15 +38,13 @@ export default function DailyGoalSettings() {
 
       <View
         style={{
-          flexDirection: "row",
+          flexDirection: 'row',
           gap: SIZES.margin,
-          alignItems: "center",
+          alignItems: 'center',
         }}
       >
         <View style={{ flex: 1 }}>
-          <Text style={[globalStyles.contentText, { marginBottom: 4 }]}>
-            Heures
-          </Text>
+          <Text style={[globalStyles.contentText, { marginBottom: 4 }]}>Heures</Text>
           <TextInput
             style={{
               backgroundColor: COLORS.subCard,
@@ -57,14 +57,12 @@ export default function DailyGoalSettings() {
             onChangeText={setHours}
             keyboardType="numeric"
             placeholder="0"
-            placeholderTextColor={COLORS.text + "80"}
+            placeholderTextColor={COLORS.text + '80'}
           />
         </View>
 
         <View style={{ flex: 1 }}>
-          <Text style={[globalStyles.contentText, { marginBottom: 4 }]}>
-            Minutes
-          </Text>
+          <Text style={[globalStyles.contentText, { marginBottom: 4 }]}>Minutes</Text>
           <TextInput
             style={{
               backgroundColor: COLORS.subCard,
@@ -77,7 +75,7 @@ export default function DailyGoalSettings() {
             onChangeText={setMinutes}
             keyboardType="numeric"
             placeholder="0"
-            placeholderTextColor={COLORS.text + "80"}
+            placeholderTextColor={COLORS.text + '80'}
           />
         </View>
       </View>
@@ -88,7 +86,7 @@ export default function DailyGoalSettings() {
         disabled={isSaving || !session}
         icon="check"
       >
-        Enregistrer l'objectif
+        Enregistrer l&apos;objectif
       </ModernButton>
 
       {dailyGoalSeconds !== null && (
@@ -98,7 +96,7 @@ export default function DailyGoalSettings() {
           disabled={isSaving || !session}
           icon="delete"
         >
-          Supprimer l'objectif
+          Supprimer l&apos;objectif
         </ModernButton>
       )}
     </View>

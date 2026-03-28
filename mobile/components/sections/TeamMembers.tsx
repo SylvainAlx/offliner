@@ -1,11 +1,13 @@
-import { Team, TeamMember } from "@/types/team";
+import { StyleSheet,Text, TouchableOpacity, View } from "react-native";
+import { COLORS, SIZES } from "shared/theme";
+
 import { useTeam } from "@/hooks/useTeam";
 import { globalStyles } from "@/styles/global.styles";
-import { confirmDialog } from "@/utils/formatNotification";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { COLORS, SIZES } from "shared/theme";
-import { IconSymbol } from "../ui/IconSymbol";
+import { Team, TeamMember } from "@/types/team";
 import { OfflinerUser } from "@/types/user";
+import { confirmDialog } from "@/utils/formatNotification";
+
+import { IconSymbol } from "../ui/IconSymbol";
 import UserList from "../UserList";
 
 interface TeamMembersProps {

@@ -1,8 +1,8 @@
-import { Linking, StyleSheet, View } from "react-native";
-import { Button, Text } from "react-native-paper";
-import { DONATION } from "shared/config";
-import { COLORS, SIZES } from "shared/theme";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Linking, StyleSheet, View } from 'react-native';
+import { Button, Text } from 'react-native-paper';
+import { DONATION } from 'shared/config';
+import { COLORS, SIZES } from 'shared/theme';
 
 export const PayPalButton = () => {
   const handlePress = async () => {
@@ -18,8 +18,7 @@ export const PayPalButton = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.description}>
-        Si vous aimez l'application, vous pouvez soutenir son développement avec
-        un don.
+        Si vous aimez l&apos;application, vous pouvez soutenir son développement avec un don.
       </Text>
       <Button
         mode="contained"
@@ -42,17 +41,17 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.card,
     borderRadius: SIZES.radius,
     marginVertical: SIZES.margin,
-    alignItems: "center",
+    alignItems: 'center',
   },
   description: {
     color: COLORS.text,
     marginBottom: SIZES.margin,
-    textAlign: "center",
+    textAlign: 'center',
     fontSize: 14,
   },
   button: {
-    backgroundColor: "#0070BA", // PayPal Blue
-    width: "100%",
+    backgroundColor: '#0070BA', // PayPal Blue
+    width: '100%',
   },
   buttonContent: {
     paddingVertical: 4,

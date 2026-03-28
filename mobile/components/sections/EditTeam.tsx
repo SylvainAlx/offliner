@@ -1,11 +1,13 @@
-import { useTeam } from "@/hooks/useTeam";
-import { globalStyles } from "@/styles/global.styles";
-import { confirmDialog } from "@/utils/formatNotification";
-import { View, Switch, Text, TextInput } from "react-native";
-import { COLORS } from "shared/theme";
-import ModernButton from "../ui/ModernButton";
-import { useState } from "react";
-import { Team } from "@/types/team";
+import { useState } from 'react';
+import { Switch, Text, TextInput, View } from 'react-native';
+import { COLORS } from 'shared/theme';
+
+import { useTeam } from '@/hooks/useTeam';
+import { globalStyles } from '@/styles/global.styles';
+import { Team } from '@/types/team';
+import { confirmDialog } from '@/utils/formatNotification';
+
+import ModernButton from '../ui/ModernButton';
 
 interface EditTeamProps {
   team: Team;
@@ -16,15 +18,11 @@ export default function EditTeam({ team, setIsEditing }: EditTeamProps) {
   const { updateTeam } = useTeam();
 
   const [teamName, setTeamName] = useState(team.name);
-  const [teamDescription, setTeamDescription] = useState(
-    team.description || "",
-  );
+  const [teamDescription, setTeamDescription] = useState(team.description || '');
   const [isPrivate, setIsPrivate] = useState(team.is_private);
 
   const handleSaveUpdate = async () => {
-    const confirmed = await confirmDialog(
-      "Voulez-vous vraiment modifier l'équipe ?",
-    );
+    const confirmed = await confirmDialog("Voulez-vous vraiment modifier l'équipe ?");
     if (!confirmed) return;
     await updateTeam({
       name: teamName,
@@ -35,15 +33,13 @@ export default function EditTeam({ team, setIsEditing }: EditTeamProps) {
   };
 
   const isModified =
-    teamName !== team.name ||
-    teamDescription !== team.description ||
-    isPrivate !== team.is_private;
+    teamName !== team.name || teamDescription !== team.description || isPrivate !== team.is_private;
 
   return (
-    <View style={{ gap: 10, width: "100%" }}>
-      <Text style={globalStyles.cardTitle}>Modifier l'équipe</Text>
+    <View style={{ gap: 10, width: '100%' }}>
+      <Text style={globalStyles.cardTitle}>Modifier l&apos;équipe</Text>
       <TextInput
-        style={[globalStyles.input, { width: "100%" }]}
+        style={[globalStyles.input, { width: '100%' }]}
         placeholder="Nom de l'équipe"
         placeholderTextColor={COLORS.text}
         value={teamName}
@@ -53,9 +49,9 @@ export default function EditTeam({ team, setIsEditing }: EditTeamProps) {
         style={[
           globalStyles.input,
           {
-            width: "100%",
+            width: '100%',
             height: 120,
-            textAlignVertical: "top",
+            textAlignVertical: 'top',
             paddingTop: 10,
           },
         ]}
@@ -68,10 +64,10 @@ export default function EditTeam({ team, setIsEditing }: EditTeamProps) {
       />
       <View
         style={{
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          width: "100%",
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          width: '100%',
           marginVertical: 5,
         }}
       >
@@ -80,21 +76,17 @@ export default function EditTeam({ team, setIsEditing }: EditTeamProps) {
           value={isPrivate}
           onValueChange={setIsPrivate}
           trackColor={{ false: COLORS.border, true: COLORS.primary }}
-          thumbColor={"#fff"}
+          thumbColor={'#fff'}
         />
       </View>
-      <View style={{ flexDirection: "row", gap: 10 }}>
+      <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={{ flex: 1 }}>
           <ModernButton variant="secondary" onPress={() => setIsEditing(false)}>
             Annuler
           </ModernButton>
         </View>
         <View style={{ flex: 1 }}>
-          <ModernButton
-            variant="primary"
-            onPress={handleSaveUpdate}
-            disabled={!isModified}
-          >
+          <ModernButton variant="primary" onPress={handleSaveUpdate} disabled={!isModified}>
             Enregistrer
           </ModernButton>
         </View>

@@ -1,10 +1,11 @@
 // app/(tabs)/account.tsx
+import { View } from "react-native";
+import { COLORS } from "shared/theme";
+
 import Account from "@/components/sections/Account";
 import Auth from "@/components/sections/Auth";
 import { useOfflineProgress } from "@/contexts/OfflineProgressContext";
 import { useSession } from "@/contexts/SessionContext";
-import { View } from "react-native";
-import { COLORS } from "shared/theme";
 
 export default function ProfileScreen() {
   const { session } = useSession();

@@ -1,13 +1,14 @@
-import { ScrollView, View, Text } from "react-native";
-import { Switch } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { globalStyles } from "@/styles/global.styles";
-import { COLORS, SIZES } from "shared/theme";
-import { STORAGE_KEYS } from "@/constants/Labels";
 import { useEffect, useState } from "react";
+import { ScrollView, Text,View } from "react-native";
+import { Switch } from "react-native-paper";
+import { COLORS, SIZES } from "shared/theme";
+
 import { PayPalButton } from "@/components/PayPalButton";
 import ModernButton from "@/components/ui/ModernButton";
+import { STORAGE_KEYS } from "@/constants/Labels";
 import { resetOfflinePeriods } from "@/services/offlineStorage";
+import { globalStyles } from "@/styles/global.styles";
 
 export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);

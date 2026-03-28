@@ -1,14 +1,14 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useRef } from "react";
 import {
-  Pressable,
-  Text,
   ActivityIndicator,
   Animated,
-  ViewStyle,
+  Pressable,
   StyleSheet,
+  Text,
+  ViewStyle,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { COLORS, SIZES } from "shared/theme";
 
 interface ModernButtonProps {

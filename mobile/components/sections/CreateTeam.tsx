@@ -1,9 +1,11 @@
-import { globalStyles } from "@/styles/global.styles";
-import { View, Text, TextInput, Switch } from "react-native";
-import { COLORS } from "shared/theme";
-import ModernButton from "../ui/ModernButton";
 import { useState } from "react";
+import { Switch,Text, TextInput, View } from "react-native";
+import { COLORS } from "shared/theme";
+
 import { useTeam } from "@/hooks/useTeam";
+import { globalStyles } from "@/styles/global.styles";
+
+import ModernButton from "../ui/ModernButton";
 
 export default function CreateTeam() {
   const [teamName, setTeamName] = useState("");

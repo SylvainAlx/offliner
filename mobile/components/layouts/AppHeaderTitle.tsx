@@ -1,7 +1,8 @@
-import { headerStyles } from "@/styles/custom.styles";
 import { Link } from "expo-router";
-import { Text, View, Image } from "react-native";
+import { Image,Text, View } from "react-native";
 import { PROJECT } from "shared/config";
+
+import { headerStyles } from "@/styles/custom.styles";
 
 export function AppHeaderTitle() {
   return (

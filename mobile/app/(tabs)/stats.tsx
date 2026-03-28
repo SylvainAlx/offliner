@@ -1,10 +1,11 @@
-import { globalStyles } from "@/styles/global.styles";
-import { ScrollView, View, Text, ActivityIndicator } from "react-native";
+import { ActivityIndicator,ScrollView, Text, View } from "react-native";
 import { COLORS } from "shared/theme";
-import { useStats } from "@/hooks/useStats";
-import DigitDisplay from "@/components/ui/DigitDisplay";
+
 import RankingList from "@/components/RankingList";
+import DigitDisplay from "@/components/ui/DigitDisplay";
 import ModernButton from "@/components/ui/ModernButton";
+import { useStats } from "@/hooks/useStats";
+import { globalStyles } from "@/styles/global.styles";
 
 export default function StatsScreen() {
   const {

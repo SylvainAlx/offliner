@@ -1,8 +1,9 @@
-import { View, Text } from "react-native";
-import { globalStyles } from "@/styles/global.styles";
+import { router } from "expo-router";
+import { Text,View } from "react-native";
+
 import MiningCard from "@/components/sections/MiningCard";
 import ModernButton from "@/components/ui/ModernButton";
-import { router } from "expo-router";
+import { globalStyles } from "@/styles/global.styles";
 
 export default function MiningScreen() {
   return (
