@@ -1,6 +1,6 @@
 import { names, animals, uniqueNamesGenerator } from "unique-names-generator";
 import {
-  COMPANION_EVOLUTION_COSTS,
+  COMPANION_STAGE_AGE_MS,
   COMPANION_STAGE_HARVEST_BONUS,
 } from "../utils/constants";
 
@@ -24,9 +24,10 @@ export class Companion {
   id: string;
   name: string;
   birthdate: number;
+  birthOfflineMs: number;
   stage: CompanionStage;
 
-  constructor() {
+  constructor(birthOfflineMs = 0) {
     const firstName: string = uniqueNamesGenerator({
       dictionaries: [names],
     });
@@ -38,6 +39,7 @@ export class Companion {
     this.id = crypto.randomUUID();
     this.name = `${firstName} ${lastName}`;
     this.birthdate = Date.now();
+    this.birthOfflineMs = Math.max(0, birthOfflineMs);
     this.stage = "child";
   }
 
@@ -56,21 +58,34 @@ export class Companion {
     return COMPANION_STAGES[currentIndex + 1];
   }
 
-  get evolutionCost(): number {
-    const nextStage = this.nextStage;
-    if (!nextStage || nextStage === "child") return 0;
-    return COMPANION_EVOLUTION_COSTS[nextStage];
+  getAgeOfflineMs(currentOfflineMs: number): number {
+    return Math.max(0, currentOfflineMs - this.birthOfflineMs);
   }
 
-  canEvolve(): boolean {
-    return this.nextStage !== undefined;
+  getRemainingOfflineMs(currentOfflineMs: number): number | null {
+    const nextStage = this.nextStage;
+    if (!nextStage) return null;
+
+    return Math.max(
+      0,
+      COMPANION_STAGE_AGE_MS[nextStage] -
+        this.getAgeOfflineMs(currentOfflineMs),
+    );
   }
 
-  evolve(): boolean {
-    const nextStage = this.nextStage;
-    if (!nextStage) return false;
+  updateStage(currentOfflineMs: number): boolean {
+    const age = this.getAgeOfflineMs(currentOfflineMs);
+    const targetStage = [...COMPANION_STAGES]
+      .reverse()
+      .find((stage) => age >= COMPANION_STAGE_AGE_MS[stage]);
 
-    this.stage = nextStage;
+    if (!targetStage) return false;
+
+    const currentIndex = COMPANION_STAGES.indexOf(this.stage);
+    const targetIndex = COMPANION_STAGES.indexOf(targetStage);
+    if (targetIndex <= currentIndex) return false;
+
+    this.stage = targetStage;
     return true;
   }
 }

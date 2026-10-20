@@ -1,14 +1,18 @@
 import { Companion, COMPANION_STAGES, type CompanionStage } from "./companion";
 import { House } from "./house";
+import { TownHall } from "./townHall";
 import {
   COMPANIONS_PER_HOUSE,
   COMPANION_INVOCATION_COST,
   COMPANION_INVOCATION_OFFLINE_MS,
+  COMPANION_STAGE_AGE_MS,
   HOUSE_CONSTRUCTION_COST,
   HOUSE_CONSTRUCTION_OFFLINE_MS,
+  TOWN_HALL_CONSTRUCTION_COST,
+  TOWN_HALL_CONSTRUCTION_OFFLINE_MS,
 } from "../utils/constants";
 
-export type VillageElementType = "companion" | "house";
+export type VillageElementType = "companion" | "house" | "townHall";
 
 export interface PendingElement {
   id: string;
@@ -21,28 +25,48 @@ export interface PendingElement {
 }
 
 export class Village {
+  name: string;
   companions: Companion[];
   houses: House[];
+  townHall: TownHall | null;
   pendingElements: PendingElement[];
 
   constructor() {
+    this.name = "Village sans nom";
     this.companions = [];
     this.houses = [];
+    this.townHall = null;
     this.pendingElements = [];
   }
 
-  loadVillage(village: unknown): void {
+  loadVillage(village: unknown, currentOfflineMs = 0): void {
     if (typeof village !== "object" || village === null) return;
 
     const record = village as {
+      name?: unknown;
       companions?: unknown;
       houses?: unknown;
+      townHall?: unknown;
       pendingElements?: unknown;
       pendingCompanions?: unknown;
     };
 
+    if (typeof record.name === "string" && record.name.trim()) {
+      this.name = record.name.trim();
+    }
+
+    this.townHall = isStoredTownHall(record.townHall)
+      ? (() => {
+          const townHall = new TownHall();
+          Object.assign(townHall, record.townHall);
+          return townHall;
+        })()
+      : null;
+
     this.companions = Array.isArray(record.companions)
-      ? record.companions.map(loadCompanion)
+      ? record.companions.map((companionData) =>
+          loadCompanion(companionData, currentOfflineMs),
+        )
       : [];
 
     this.houses = Array.isArray(record.houses)
@@ -111,6 +135,33 @@ export class Village {
     this.houses.push(house);
   }
 
+  addTownHall(): boolean {
+    if (this.townHall !== null) return false;
+    this.townHall = new TownHall();
+    return true;
+  }
+
+  canBuildTownHall(): boolean {
+    return (
+      this.townHall === null &&
+      !this.pendingElements.some((pending) => pending.type === "townHall")
+    );
+  }
+
+  rename(name: string): boolean {
+    if (!this.townHall || !name.trim()) return false;
+    this.name = name.trim();
+    return true;
+  }
+
+  renameCompanion(companionId: string, name: string): boolean {
+    if (!this.townHall || !name.trim()) return false;
+    const companion = this.getCompanion(companionId);
+    if (!companion) return false;
+    companion.name = name.trim();
+    return true;
+  }
+
   releaseCompanion(companionId: string): boolean {
     const previousLength = this.companions.length;
     this.companions = this.companions.filter(
@@ -121,6 +172,22 @@ export class Village {
 
   getCompanion(companionId: string): Companion | undefined {
     return this.companions.find((companion) => companion.id === companionId);
+  }
+
+  updateCompanionStages(currentOfflineMs: number): number {
+    return this.companions.reduce(
+      (updated, companion) =>
+        updated + (companion.updateStage(currentOfflineMs) ? 1 : 0),
+      0,
+    );
+  }
+
+  shiftCompanionBirthTimes(offlineMs: number): void {
+    if (offlineMs <= 0) return;
+
+    this.companions.forEach((companion) => {
+      companion.birthOfflineMs -= offlineMs;
+    });
   }
 
   addPendingElement(
@@ -189,7 +256,8 @@ export class Village {
     );
     completed.forEach((pending) => {
       if (pending.type === "house") this.addHouse(new House());
-      else this.addCompanion(new Companion());
+      else if (pending.type === "townHall") this.addTownHall();
+      else this.addCompanion(new Companion(currentOfflineMs));
     });
     return completed.length;
   }
@@ -235,13 +303,27 @@ export class Village {
   }
 }
 
-function loadCompanion(companionData: unknown): Companion {
-  const companion = new Companion();
+function loadCompanion(
+  companionData: unknown,
+  currentOfflineMs: number,
+): Companion {
+  const companion = new Companion(currentOfflineMs);
   if (typeof companionData === "object" && companionData !== null) {
     Object.assign(companion, companionData);
   }
 
   if (!isCompanionStage(companion.stage)) companion.stage = "child";
+  if (
+    typeof companion.birthOfflineMs !== "number" ||
+    !Number.isFinite(companion.birthOfflineMs)
+  ) {
+    // Legacy saves only know the current stage. Preserve it and start the
+    // automatic ageing from that stage's threshold.
+    companion.birthOfflineMs = Math.max(
+      0,
+      currentOfflineMs - COMPANION_STAGE_AGE_MS[companion.stage],
+    );
+  }
   return companion;
 }
 
@@ -253,9 +335,9 @@ function isCompanionStage(value: unknown): value is CompanionStage {
 }
 
 function getConstructionTime(type: VillageElementType): number {
-  return type === "house"
-    ? HOUSE_CONSTRUCTION_OFFLINE_MS
-    : COMPANION_INVOCATION_OFFLINE_MS;
+  if (type === "house") return HOUSE_CONSTRUCTION_OFFLINE_MS;
+  if (type === "townHall") return TOWN_HALL_CONSTRUCTION_OFFLINE_MS;
+  return COMPANION_INVOCATION_OFFLINE_MS;
 }
 
 function normalizePendingElement(
@@ -269,7 +351,9 @@ function normalizePendingElement(
       pending.storedOffliniumCost ??
       (pending.type === "house"
         ? HOUSE_CONSTRUCTION_COST
-        : COMPANION_INVOCATION_COST),
+        : pending.type === "townHall"
+          ? TOWN_HALL_CONSTRUCTION_COST
+          : COMPANION_INVOCATION_COST),
     openPeriodOffliniumCost: pending.openPeriodOffliniumCost ?? 0,
   };
 }
@@ -291,11 +375,21 @@ function isStoredHouse(value: unknown): value is Pick<House, "id" | "builtAt"> {
   return typeof record.id === "string" && typeof record.builtAt === "number";
 }
 
+function isStoredTownHall(
+  value: unknown,
+): value is Pick<TownHall, "id" | "builtAt"> {
+  if (typeof value !== "object" || value === null) return false;
+  const record = value as Record<string, unknown>;
+  return typeof record.id === "string" && typeof record.builtAt === "number";
+}
+
 function isPendingElement(value: unknown): value is PendingElement {
   if (typeof value !== "object" || value === null) return false;
   const record = value as Record<string, unknown>;
   return (
-    (record.type === "companion" || record.type === "house") &&
+    (record.type === "companion" ||
+      record.type === "house" ||
+      record.type === "townHall") &&
     typeof record.id === "string" &&
     typeof record.startedAt === "number" &&
     typeof record.offlineMsAtStart === "number" &&

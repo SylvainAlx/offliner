@@ -27,9 +27,17 @@ export default function Header({
         >
           <span aria-hidden="true">☰</span>
         </button>
-        <h1 className="text-[2rem] max-md:text-[1.7rem] font-extrabold m-0 max-md:mr-auto">
-          Offliner
-        </h1>
+        <div className="flex items-center gap-2 max-md:mr-auto">
+          <img
+            className="hidden lg:block size-10 object-contain"
+            src="/logo.png"
+            alt=""
+            aria-hidden="true"
+          />
+          <h1 className="text-[2rem] max-md:text-[1.7rem] font-extrabold m-0">
+            Offliner
+          </h1>
+        </div>
         <div className="flex items-center gap-2 max-md:gap-1.5">
           <PopulationBadge />
           <OffliniumBadge />

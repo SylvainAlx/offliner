@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { Companion } from "../models/companion";
 import { useOnlineStatus } from "../stores/onlineStatusStore";
 import { useUser } from "../stores/userStore";
@@ -6,21 +6,26 @@ import { useUser } from "../stores/userStore";
 export function useCompanionTile(companion: Companion) {
   const [isSpriteOpen, setIsSpriteOpen] = useState(false);
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
-  const [isEvolutionModalOpen, setIsEvolutionModalOpen] = useState(false);
-  const user = useUser((state) => state.user);
-  const evolveCompanion = useUser((state) => state.evolveCompanion);
+  const [companionName, setCompanionName] = useState(companion.name);
+  const [isNameSaved, setIsNameSaved] = useState(false);
+  const canRenameCompanion = useUser(
+    (state) => state.user.village.townHall !== null,
+  );
+  const renameCompanion = useUser((state) => state.renameCompanion);
   const releaseCompanionAndGetOfflinium = useUser(
     (state) => state.releaseCompanionAndGetOfflinium,
   );
   const { totalOfflineMs } = useOnlineStatus();
-  const evolutionCost = companion.evolutionCost;
-  const canEvolve =
-    companion.canEvolve() &&
-    user.getAvailableOfflinium(totalOfflineMs) >= evolutionCost;
 
-  function handleEvolution() {
-    evolveCompanion(companion.id, totalOfflineMs);
-    setIsEvolutionModalOpen(false);
+  function handleRename(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const trimmedName = companionName.trim();
+    if (!trimmedName) return;
+
+    if (renameCompanion(companion.id, trimmedName)) {
+      setCompanionName(trimmedName);
+      setIsNameSaved(true);
+    }
   }
 
   useEffect(() => {
@@ -39,11 +44,13 @@ export function useCompanionTile(companion: Companion) {
     setIsSpriteOpen,
     isReleaseModalOpen,
     setIsReleaseModalOpen,
-    isEvolutionModalOpen,
-    setIsEvolutionModalOpen,
-    evolutionCost,
-    canEvolve,
-    handleEvolution,
+    remainingOfflineMs: companion.getRemainingOfflineMs(totalOfflineMs),
+    canRenameCompanion,
+    companionName,
+    setCompanionName,
+    isNameSaved,
+    setIsNameSaved,
+    handleRename,
     releaseCompanionAndGetOfflinium,
   };
 }

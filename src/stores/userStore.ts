@@ -3,6 +3,7 @@ import { User } from "../models/user";
 import {
   COMPANION_INVOCATION_COST,
   HOUSE_CONSTRUCTION_COST,
+  TOWN_HALL_CONSTRUCTION_COST,
 } from "../utils/constants";
 import { userRepository } from "../services/userRepository";
 
@@ -16,8 +17,11 @@ export interface UserStore {
   resetPeriods: () => void;
   saveUser: () => Promise<void>;
   buildHouse: (offlineMs: number) => boolean;
+  buildTownHall: (offlineMs: number) => boolean;
   invokeCompanion: (offlineMs: number) => boolean;
-  evolveCompanion: (companionId: string, offlineMs: number) => boolean;
+  updateCompanionStages: (offlineMs: number) => boolean;
+  renameVillage: (name: string) => boolean;
+  renameCompanion: (companionId: string, name: string) => boolean;
   releaseCompanionAndGetOfflinium: (companionId: string) => boolean;
   cancelCompanionInvocation: (companionId: string, offlineMs: number) => boolean;
   completeCompanionInvocations: (offlineMs: number) => void;
@@ -85,6 +89,17 @@ export const useUser = create<UserStore>((set, get) => ({
     return true;
   },
 
+  buildTownHall: (offlineMs) => {
+    const next = get().user.clone();
+    if (!next.buildTownHall(offlineMs, TOWN_HALL_CONSTRUCTION_COST)) {
+      return false;
+    }
+
+    set({ user: next });
+    void persist(next);
+    return true;
+  },
+
   invokeCompanion: (offlineMs) => {
     const next = get().user.clone();
     if (!next.village.canInvokeCompanion()) return false;
@@ -103,9 +118,27 @@ export const useUser = create<UserStore>((set, get) => ({
     return true;
   },
 
-  evolveCompanion: (companionId, offlineMs) => {
+  updateCompanionStages: (offlineMs) => {
     const next = get().user.clone();
-    if (!next.evolveCompanion(companionId, offlineMs)) return false;
+    if (next.updateCompanionStages(offlineMs) === 0) return false;
+
+    set({ user: next });
+    void persist(next);
+    return true;
+  },
+
+  renameVillage: (name) => {
+    const next = get().user.clone();
+    if (!next.renameVillage(name)) return false;
+
+    set({ user: next });
+    void persist(next);
+    return true;
+  },
+
+  renameCompanion: (companionId, name) => {
+    const next = get().user.clone();
+    if (!next.renameCompanion(companionId, name)) return false;
 
     set({ user: next });
     void persist(next);
@@ -171,6 +204,7 @@ export const useUser = create<UserStore>((set, get) => ({
     next.periodList.clearPeriods();
     next.offlinium = 0;
     next.offliniumSpentDuringOpenPeriod = 0;
+    next.village.shiftCompanionBirthTimes(elapsedOfflineMs);
     next.village.pendingElements = next.village.pendingElements.map(
       (pending) => ({
         ...pending,

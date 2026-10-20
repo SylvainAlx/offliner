@@ -1,9 +1,7 @@
 import type { Companion } from "../models/companion";
-import {
-  COMPANION_STAGE_LABELS,
-  type CompanionStage,
-} from "../models/companion";
+import type { CompanionStage } from "../models/companion";
 import { OFFLINIUM_DELIVERY_INTERVAL } from "../utils/constants";
+import { formatDuration } from "../utils/format";
 import { createPortal } from "react-dom";
 import Button from "./ui/Button";
 import ConfirmModal from "./ui/ConfirmModal";
@@ -31,16 +29,15 @@ export default function CompanionTile({ companion }: CompanionProps) {
     setIsSpriteOpen,
     isReleaseModalOpen,
     setIsReleaseModalOpen,
-    isEvolutionModalOpen,
-    setIsEvolutionModalOpen,
-    evolutionCost,
-    canEvolve,
-    handleEvolution,
+    remainingOfflineMs,
+    canRenameCompanion,
+    companionName,
+    setCompanionName,
+    isNameSaved,
+    setIsNameSaved,
+    handleRename,
     releaseCompanionAndGetOfflinium,
   } = useCompanionTile(companion);
-  const nextStageLabel = companion.nextStage
-    ? COMPANION_STAGE_LABELS[companion.nextStage].toLowerCase()
-    : "suivant";
 
   return (
     <>
@@ -74,21 +71,46 @@ export default function CompanionTile({ companion }: CompanionProps) {
             toutes les {OFFLINIUM_DELIVERY_INTERVAL / 1000} s hors ligne
           </span>
         </div>
-        <div className="flex flex-wrap gap-1.5 [&>button]:min-h-8! [&>button]:rounded-lg! [&>button]:px-2! [&>button]:py-1! [&>button]:text-[0.72rem]!">
-          {companion.canEvolve() && (
+        <div className="text-[0.68rem] text-(--gray-600)">
+          {remainingOfflineMs === null
+            ? "Stade final atteint"
+            : `Prochaine évolution dans ${formatDuration(remainingOfflineMs)} hors ligne`}
+        </div>
+        {canRenameCompanion && (
+          <form
+            className="col-span-2 flex flex-col gap-1.5 sm:flex-row"
+            onSubmit={handleRename}
+          >
+            <label className="sr-only" htmlFor={`companion-name-${companion.id}`}>
+              Nom de {companion.name}
+            </label>
+            <input
+              id={`companion-name-${companion.id}`}
+              className="min-h-8 min-w-0 flex-1 rounded-lg border border-white/80 bg-white/70 px-2 py-1 font-inherit text-[0.72rem] text-(--gray-900) outline-offset-1 focus:outline-2 focus:outline-(--card-accent)"
+              type="text"
+              value={companionName}
+              maxLength={40}
+              onChange={(event) => {
+                setCompanionName(event.target.value);
+                setIsNameSaved(false);
+              }}
+              required
+            />
             <Button
-              onClick={() => setIsEvolutionModalOpen(true)}
-              color="var(--green-dark)"
-              disabled={!canEvolve}
-              ariaLabel={
-                canEvolve
-                  ? `Faire évoluer ${companion.name}`
-                  : `${companion.name} est sage ou manque d'Offlinium`
-              }
+              type="submit"
+              onClick={() => {}}
+              className="min-h-8! px-2! py-1! text-[0.72rem]!"
             >
-              Évoluer
+              Renommer
             </Button>
-          )}
+          </form>
+        )}
+        {isNameSaved && (
+          <span className="col-span-2 text-[0.68rem] text-(--green-dark)">
+            Nom enregistré.
+          </span>
+        )}
+        <div className="flex flex-wrap gap-1.5 [&>button]:min-h-8! [&>button]:rounded-lg! [&>button]:px-2! [&>button]:py-1! [&>button]:text-[0.72rem]!">
           <Button
             onClick={() => setIsReleaseModalOpen(true)}
             color="var(--red-primary)"
@@ -108,15 +130,6 @@ export default function CompanionTile({ companion }: CompanionProps) {
           releaseCompanionAndGetOfflinium(companion.id);
           setIsReleaseModalOpen(false);
         }}
-      />
-
-      <ConfirmModal
-        isOpen={isEvolutionModalOpen}
-        title={`Faire évoluer ${companion.name} ?`}
-        message={`Passer au stade ${nextStageLabel} coûte ${evolutionCost.toLocaleString("fr-FR")} Offlinium.`}
-        confirmLabel="Faire évoluer"
-        onCancel={() => setIsEvolutionModalOpen(false)}
-        onConfirm={handleEvolution}
       />
 
       {isSpriteOpen &&

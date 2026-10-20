@@ -43,8 +43,11 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
   refreshFromUser: () => {
     const now = Date.now();
     const user = useUser.getState().user;
+    const totalOfflineMs = user.periodList.computeTotalMs(now);
+    useUser.getState().updateCompanionStages(totalOfflineMs);
+    const updatedUser = useUser.getState().user;
     set({
-      totalOfflineMs: user.periodList.computeTotalMs(now),
+      totalOfflineMs: updatedUser.periodList.computeTotalMs(now),
       lastChecked: new Date(now),
     });
   },
@@ -79,8 +82,11 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
       tick = window.setInterval(() => {
         const now = Date.now();
         const user = useUser.getState().user;
+        const totalOfflineMs = user.periodList.computeTotalMs(now);
+        useUser.getState().updateCompanionStages(totalOfflineMs);
+        const updatedUser = useUser.getState().user;
         set({
-          totalOfflineMs: user.periodList.computeTotalMs(now),
+          totalOfflineMs: updatedUser.periodList.computeTotalMs(now),
           lastChecked: new Date(now),
         });
       }, 1000);
@@ -94,6 +100,10 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
       pendingOfflineStart = null;
       useUser.getState().openPeriodIfNeeded(start);
 
+      const totalOfflineMs = useUser
+        .getState()
+        .user.periodList.computeTotalMs(now);
+      useUser.getState().updateCompanionStages(totalOfflineMs);
       const user = useUser.getState().user;
       set({
         isOnline: false,
@@ -146,6 +156,10 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
       const now = Date.now();
       cancelCountdown();
       useUser.getState().closeAnyOpenPeriod(now);
+      const totalOfflineMs = useUser
+        .getState()
+        .user.periodList.computeTotalMs(now);
+      useUser.getState().updateCompanionStages(totalOfflineMs);
       const user = useUser.getState().user;
       set({
         isOnline: true,
@@ -182,9 +196,12 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
       const now = Date.now();
       const online = navigator.onLine;
       const user = useUser.getState().syncWithStorage(online, now);
+      const totalOfflineMs = user.periodList.computeTotalMs(now);
+      useUser.getState().updateCompanionStages(totalOfflineMs);
+      const updatedUser = useUser.getState().user;
       set({
         isOnline: online,
-        totalOfflineMs: user.periodList.computeTotalMs(now),
+        totalOfflineMs: updatedUser.periodList.computeTotalMs(now),
         lastChecked: new Date(now),
       });
 
@@ -202,6 +219,10 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
       if (user.periodList.getOpenPeriod() !== null) {
         useUser.getState().closeAnyOpenPeriod(now);
       }
+      const totalOfflineMs = useUser
+        .getState()
+        .user.periodList.computeTotalMs(now);
+      useUser.getState().updateCompanionStages(totalOfflineMs);
       set({
         totalOfflineMs: useUser
           .getState()

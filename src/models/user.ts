@@ -6,6 +6,7 @@ import { PeriodList } from "./periodList";
 import { Companion } from "./companion";
 import { Village } from "./village";
 import { House } from "./house";
+import { TownHall } from "./townHall";
 
 export interface OffliniumSpend {
   stored: number;
@@ -57,7 +58,10 @@ export class User {
         this.periodList.loadPeriods(record.periodList);
       }
       if (record.village !== undefined && record.village !== null) {
-        this.village.loadVillage(record.village);
+        this.village.loadVillage(
+          record.village,
+          this.periodList.computeTotalMs(Date.now()),
+        );
       }
     } catch (e) {
       console.error("Error loading user data:", e);
@@ -85,6 +89,10 @@ export class User {
       Object.assign(clonedHouse, house);
       return clonedHouse;
     });
+    copy.village.name = this.village.name;
+    copy.village.townHall = this.village.townHall
+      ? Object.assign(new TownHall(), this.village.townHall)
+      : null;
     copy.village.pendingElements = this.village.pendingElements.map(
       (pending) => ({ ...pending }),
     );
@@ -188,14 +196,29 @@ export class User {
     return true;
   }
 
-  evolveCompanion(companionId: string, totalOfflineMs: number): boolean {
-    const companion = this.village.getCompanion(companionId);
-    if (!companion || !companion.canEvolve()) return false;
+  updateCompanionStages(totalOfflineMs: number): number {
+    return this.village.updateCompanionStages(totalOfflineMs);
+  }
 
-    const spend = this.spendOfflinium(companion.evolutionCost, totalOfflineMs);
+  buildTownHall(offlineMs: number, cost: number): boolean {
+    if (!this.village.canBuildTownHall()) return false;
+    const spend = this.spendOfflinium(cost, offlineMs);
     if (!spend) return false;
+    this.village.addPendingElement(
+      "townHall",
+      offlineMs,
+      spend.stored,
+      spend.openPeriod,
+    );
+    return true;
+  }
 
-    return companion.evolve();
+  renameVillage(name: string): boolean {
+    return this.village.rename(name);
+  }
+
+  renameCompanion(companionId: string, name: string): boolean {
+    return this.village.renameCompanion(companionId, name);
   }
 
   cancelCompanionInvocation(

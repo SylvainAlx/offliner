@@ -4,6 +4,7 @@ import { useUser } from "../stores/userStore";
 import {
   COMPANION_INVOCATION_COST,
   HOUSE_CONSTRUCTION_COST,
+  TOWN_HALL_CONSTRUCTION_COST,
 } from "../utils/constants";
 import type { PendingElement } from "../models/village";
 import { formatCountdown } from "../utils/format";
@@ -11,6 +12,7 @@ import { formatCountdown } from "../utils/format";
 export function useVillageConstructions() {
   const user = useUser((state) => state.user);
   const buildHouse = useUser((state) => state.buildHouse);
+  const buildTownHall = useUser((state) => state.buildTownHall);
   const invokeCompanion = useUser((state) => state.invokeCompanion);
 
   const completePendingElements = useUser(
@@ -26,12 +28,18 @@ export function useVillageConstructions() {
   const pendingCompanions = pendingElements.filter(
     (pending) => pending.type === "companion",
   );
+  const pendingTownHalls = pendingElements.filter(
+    (pending) => pending.type === "townHall",
+  );
 
   useEffect(() => {
     completePendingElements(totalOfflineMs);
   }, [completePendingElements, totalOfflineMs]);
 
   const canBuildHouse = liveOfflinium >= HOUSE_CONSTRUCTION_COST;
+  const canBuildTownHall =
+    user.village.canBuildTownHall() &&
+    liveOfflinium >= TOWN_HALL_CONSTRUCTION_COST;
   const hasCompanionSlot = user.village.canInvokeCompanion();
   const canInvoke =
     hasCompanionSlot && liveOfflinium >= COMPANION_INVOCATION_COST;
@@ -61,7 +69,9 @@ export function useVillageConstructions() {
                 ? "En attente hors ligne"
                 : pending.type === "house"
                   ? "Construction"
-                  : "Invocation"
+                  : pending.type === "townHall"
+                    ? "Construction de l'hôtel de ville"
+                    : "Invocation"
               : `En file · position ${queueIndex + 1}`}
           </span>
           <strong className="font-[var(--mono)] text-[0.7rem] text-(--accent)">
@@ -83,17 +93,21 @@ export function useVillageConstructions() {
 
   return {
     houses,
+    townHall: user.village.townHall,
     companions,
     companionCapacity,
     canBuildHouse,
     buildHouse,
+    buildTownHall,
     canInvoke,
     invokeCompanion,
     pendingElements,
     pendingHouses,
     renderProgress,
     pendingCompanions,
+    pendingTownHalls,
     totalOfflineMs,
+    canBuildTownHall,
     liveOfflinium,
     hasCompanionSlot,
   };
