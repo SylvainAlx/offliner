@@ -30,6 +30,12 @@ export default function CompanionTile({ companion }: CompanionProps) {
     isReleaseModalOpen,
     setIsReleaseModalOpen,
     remainingOfflineMs,
+    canRenameCompanion,
+    companionName,
+    setCompanionName,
+    isNameSaved,
+    setIsNameSaved,
+    handleRename,
     releaseCompanionAndGetOfflinium,
   } = useCompanionTile(companion);
 
@@ -70,6 +76,40 @@ export default function CompanionTile({ companion }: CompanionProps) {
             ? "Stade final atteint"
             : `Prochaine évolution dans ${formatDuration(remainingOfflineMs)} hors ligne`}
         </div>
+        {canRenameCompanion && (
+          <form
+            className="col-span-2 flex flex-col gap-1.5 sm:flex-row"
+            onSubmit={handleRename}
+          >
+            <label className="sr-only" htmlFor={`companion-name-${companion.id}`}>
+              Nom de {companion.name}
+            </label>
+            <input
+              id={`companion-name-${companion.id}`}
+              className="min-h-8 min-w-0 flex-1 rounded-lg border border-white/80 bg-white/70 px-2 py-1 font-inherit text-[0.72rem] text-(--gray-900) outline-offset-1 focus:outline-2 focus:outline-(--card-accent)"
+              type="text"
+              value={companionName}
+              maxLength={40}
+              onChange={(event) => {
+                setCompanionName(event.target.value);
+                setIsNameSaved(false);
+              }}
+              required
+            />
+            <Button
+              type="submit"
+              onClick={() => {}}
+              className="min-h-8! px-2! py-1! text-[0.72rem]!"
+            >
+              Renommer
+            </Button>
+          </form>
+        )}
+        {isNameSaved && (
+          <span className="col-span-2 text-[0.68rem] text-(--green-dark)">
+            Nom enregistré.
+          </span>
+        )}
         <div className="flex flex-wrap gap-1.5 [&>button]:min-h-8! [&>button]:rounded-lg! [&>button]:px-2! [&>button]:py-1! [&>button]:text-[0.72rem]!">
           <Button
             onClick={() => setIsReleaseModalOpen(true)}

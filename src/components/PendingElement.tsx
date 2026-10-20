@@ -14,7 +14,7 @@ export default function PendingElement({
   return (
     <div className="flex items-center justify-between gap-2.5 rounded-[10px] border border-(--gray-100) bg-(--gray-50) px-2.5 py-2 text-[0.7rem] text-(--gray-600)">
       <span>
-        {pending.type === "house" ? "Maison" : "Compagnon"} ·{" "}
+        {pending.type === "house" ? "Maison" : pending.type === "townHall" ? "Hôtel de ville" : "Compagnon"} ·{" "}
         {index === 0 ? "en cours" : `en file ${index + 1}`}
       </span>
       <button

@@ -6,6 +6,7 @@ import { PeriodList } from "./periodList";
 import { Companion } from "./companion";
 import { Village } from "./village";
 import { House } from "./house";
+import { TownHall } from "./townHall";
 
 export interface OffliniumSpend {
   stored: number;
@@ -88,6 +89,10 @@ export class User {
       Object.assign(clonedHouse, house);
       return clonedHouse;
     });
+    copy.village.name = this.village.name;
+    copy.village.townHall = this.village.townHall
+      ? Object.assign(new TownHall(), this.village.townHall)
+      : null;
     copy.village.pendingElements = this.village.pendingElements.map(
       (pending) => ({ ...pending }),
     );
@@ -193,6 +198,27 @@ export class User {
 
   updateCompanionStages(totalOfflineMs: number): number {
     return this.village.updateCompanionStages(totalOfflineMs);
+  }
+
+  buildTownHall(offlineMs: number, cost: number): boolean {
+    if (!this.village.canBuildTownHall()) return false;
+    const spend = this.spendOfflinium(cost, offlineMs);
+    if (!spend) return false;
+    this.village.addPendingElement(
+      "townHall",
+      offlineMs,
+      spend.stored,
+      spend.openPeriod,
+    );
+    return true;
+  }
+
+  renameVillage(name: string): boolean {
+    return this.village.rename(name);
+  }
+
+  renameCompanion(companionId: string, name: string): boolean {
+    return this.village.renameCompanion(companionId, name);
   }
 
   cancelCompanionInvocation(

@@ -2,6 +2,7 @@ import {
   COMPANIONS_PER_HOUSE,
   COMPANION_STAGE_AGE_MS,
   HOUSE_CONSTRUCTION_COST,
+  TOWN_HALL_CONSTRUCTION_COST,
   OFFLINIUM_DELIVERY_INTERVAL,
 } from "../utils/constants";
 import Card from "./ui/Card";
@@ -29,6 +30,11 @@ export default function Help() {
         permettent d&apos;accueillir chacune {COMPANIONS_PER_HOUSE} compagnons.
         Votre capacité maximale augmente lorsque la construction est terminée,
         et le compteur du bouton indique le nombre de maisons construites.
+      </p>
+      <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
+        L’hôtel de ville coûte {TOWN_HALL_CONSTRUCTION_COST} ⬡ et ne peut être
+        construit qu’une seule fois. Il débloque le nom du village et le
+        renommage des compagnons.
       </p>
       <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
         Chaque compagnon commence enfant et évolue automatiquement selon son

@@ -2,6 +2,7 @@ import { useVillageConstructions } from "../hooks/useVIllageConstructions";
 import {
   COMPANION_INVOCATION_COST,
   HOUSE_CONSTRUCTION_COST,
+  TOWN_HALL_CONSTRUCTION_COST,
 } from "../utils/constants";
 import PendingElement from "./PendingElement";
 import VillageSection from "./VillageSection";
@@ -10,26 +11,55 @@ import { CraftTile } from "./CraftTile";
 export default function VillageConstructions() {
   const {
     houses,
+    townHall,
     companions,
     companionCapacity,
     canBuildHouse,
     buildHouse,
+    canBuildTownHall,
+    buildTownHall,
     canInvoke,
     invokeCompanion,
     pendingElements,
     pendingHouses,
+    pendingTownHalls,
     renderProgress,
     pendingCompanions,
     totalOfflineMs,
     liveOfflinium,
     hasCompanionSlot,
   } = useVillageConstructions();
+
   return (
     <VillageSection
       title="À construire / invoquer"
       subtitle="Chaque élément avance pendant vos périodes hors ligne."
     >
       <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+        <CraftTile
+          elementName="Hôtel de ville"
+          icon="🏛️"
+          description="Débloque le nom du village et le renommage des compagnons."
+          count={townHall ? 1 : 0}
+          countLabel={townHall ? "Construit" : "Pas encore construit"}
+          canBuild={canBuildTownHall}
+          onClick={() => buildTownHall(totalOfflineMs)}
+          cost={TOWN_HALL_CONSTRUCTION_COST}
+          pendingElements={pendingTownHalls}
+          renderProgress={renderProgress}
+          liveOfflinium={liveOfflinium}
+          craftTime="5 min"
+          actionLabel="Construire"
+        >
+          {townHall
+            ? "Déjà construit"
+            : pendingTownHalls.length > 0
+              ? "Construction en cours"
+              : canBuildTownHall
+                ? "Construire"
+                : `Il vous manque ${TOWN_HALL_CONSTRUCTION_COST - liveOfflinium} ⬡`}
+        </CraftTile>
+
         <CraftTile
           elementName="Maison"
           icon="🏠"
@@ -49,6 +79,7 @@ export default function VillageConstructions() {
             ? "Construire"
             : `Il vous manque ${HOUSE_CONSTRUCTION_COST - liveOfflinium} ⬡`}
         </CraftTile>
+
         <CraftTile
           elementName="Compagnon"
           icon="🐾"
