@@ -65,7 +65,7 @@ export default function VillageConstructions() {
           icon="🏠"
           description="Augmente la capacité de population de 4."
           count={houses.length}
-          countLabel={`${houses.length} maison${houses.length > 1 ? "s" : ""} construite${houses.length > 1 ? "s" : ""}`}
+          countLabel={`maison${houses.length > 1 ? "s" : ""} construite${houses.length > 1 ? "s" : ""}`}
           canBuild={canBuildHouse}
           onClick={() => buildHouse(totalOfflineMs)}
           cost={HOUSE_CONSTRUCTION_COST}
@@ -85,7 +85,7 @@ export default function VillageConstructions() {
           icon="🐾"
           description="Ajoute un compagnon qui peut évoluer."
           count={companions.length}
-          countLabel={`${companions.length} compagnon${companions.length > 1 ? "s" : ""} sur ${companionCapacity} places`}
+          countLabel={`compagnon${companions.length > 1 ? "s" : ""} sur ${companionCapacity} places`}
           canBuild={canInvoke}
           onClick={() => invokeCompanion(totalOfflineMs)}
           cost={COMPANION_INVOCATION_COST}

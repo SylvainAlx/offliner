@@ -47,9 +47,6 @@ export function CraftTile({
             {icon}
           </span>
           <div className="min-w-0">
-            <span className="block text-[0.62rem] font-extrabold uppercase tracking-[0.08em] text-(--accent)">
-              Action
-            </span>
             <strong className="block truncate text-base">{elementName}</strong>
             <span className="mt-0.5 block text-[0.74rem] leading-[1.35] text-(--gray-600)">
               {description}
@@ -71,7 +68,7 @@ export function CraftTile({
           className="font-(--mono) text-[0.7rem] text-(--gray-700)"
           aria-label={countLabel}
         >
-          {count} · {countLabel}
+          {count} {countLabel}
         </span>
       </div>
 
