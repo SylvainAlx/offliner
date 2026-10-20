@@ -25,6 +25,14 @@ function formatDay(ts: number): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+function formatMonth(ts: number): string {
+  const value = new Intl.DateTimeFormat("fr-FR", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date(ts));
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 function formatDuration(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
@@ -48,4 +56,4 @@ export const formatCountdown = (milliseconds: number): string => {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
 
-export { formatDate, formatDateTime, formatDay, formatDuration };
+export { formatDate, formatDateTime, formatDay, formatMonth, formatDuration };
