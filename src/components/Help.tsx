@@ -1,6 +1,6 @@
 import {
   COMPANIONS_PER_HOUSE,
-  COMPANION_EVOLUTION_COSTS,
+  COMPANION_STAGE_AGE_MS,
   HOUSE_CONSTRUCTION_COST,
   OFFLINIUM_DELIVERY_INTERVAL,
 } from "../utils/constants";
@@ -31,10 +31,11 @@ export default function Help() {
         et le compteur du bouton indique le nombre de maisons construites.
       </p>
       <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
-        Chaque compagnon commence enfant. Vous pouvez le faire évoluer en
-        adolescent ({COMPANION_EVOLUTION_COSTS.adolescent} ⬡), adulte (
-        {COMPANION_EVOLUTION_COSTS.adult} ⬡), puis sage (
-        {COMPANION_EVOLUTION_COSTS.sage} ⬡).
+        Chaque compagnon commence enfant et évolue automatiquement selon son
+        temps de vie hors ligne : adolescent après{" "}
+        {COMPANION_STAGE_AGE_MS.adolescent / 3600000} h, adulte après{" "}
+        {COMPANION_STAGE_AGE_MS.adult / 3600000} h, puis sage après{" "}
+        {COMPANION_STAGE_AGE_MS.sage / 3600000} h.
       </p>
       <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
         Les compagnons évolués accélèrent la récolte : un adolescent ajoute +1

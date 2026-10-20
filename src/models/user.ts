@@ -57,7 +57,10 @@ export class User {
         this.periodList.loadPeriods(record.periodList);
       }
       if (record.village !== undefined && record.village !== null) {
-        this.village.loadVillage(record.village);
+        this.village.loadVillage(
+          record.village,
+          this.periodList.computeTotalMs(Date.now()),
+        );
       }
     } catch (e) {
       console.error("Error loading user data:", e);
@@ -188,14 +191,8 @@ export class User {
     return true;
   }
 
-  evolveCompanion(companionId: string, totalOfflineMs: number): boolean {
-    const companion = this.village.getCompanion(companionId);
-    if (!companion || !companion.canEvolve()) return false;
-
-    const spend = this.spendOfflinium(companion.evolutionCost, totalOfflineMs);
-    if (!spend) return false;
-
-    return companion.evolve();
+  updateCompanionStages(totalOfflineMs: number): number {
+    return this.village.updateCompanionStages(totalOfflineMs);
   }
 
   cancelCompanionInvocation(

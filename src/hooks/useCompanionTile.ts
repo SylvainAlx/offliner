@@ -6,22 +6,10 @@ import { useUser } from "../stores/userStore";
 export function useCompanionTile(companion: Companion) {
   const [isSpriteOpen, setIsSpriteOpen] = useState(false);
   const [isReleaseModalOpen, setIsReleaseModalOpen] = useState(false);
-  const [isEvolutionModalOpen, setIsEvolutionModalOpen] = useState(false);
-  const user = useUser((state) => state.user);
-  const evolveCompanion = useUser((state) => state.evolveCompanion);
   const releaseCompanionAndGetOfflinium = useUser(
     (state) => state.releaseCompanionAndGetOfflinium,
   );
   const { totalOfflineMs } = useOnlineStatus();
-  const evolutionCost = companion.evolutionCost;
-  const canEvolve =
-    companion.canEvolve() &&
-    user.getAvailableOfflinium(totalOfflineMs) >= evolutionCost;
-
-  function handleEvolution() {
-    evolveCompanion(companion.id, totalOfflineMs);
-    setIsEvolutionModalOpen(false);
-  }
 
   useEffect(() => {
     if (!isSpriteOpen) return;
@@ -39,11 +27,7 @@ export function useCompanionTile(companion: Companion) {
     setIsSpriteOpen,
     isReleaseModalOpen,
     setIsReleaseModalOpen,
-    isEvolutionModalOpen,
-    setIsEvolutionModalOpen,
-    evolutionCost,
-    canEvolve,
-    handleEvolution,
+    remainingOfflineMs: companion.getRemainingOfflineMs(totalOfflineMs),
     releaseCompanionAndGetOfflinium,
   };
 }

@@ -17,7 +17,7 @@ export interface UserStore {
   saveUser: () => Promise<void>;
   buildHouse: (offlineMs: number) => boolean;
   invokeCompanion: (offlineMs: number) => boolean;
-  evolveCompanion: (companionId: string, offlineMs: number) => boolean;
+  updateCompanionStages: (offlineMs: number) => boolean;
   releaseCompanionAndGetOfflinium: (companionId: string) => boolean;
   cancelCompanionInvocation: (companionId: string, offlineMs: number) => boolean;
   completeCompanionInvocations: (offlineMs: number) => void;
@@ -103,9 +103,9 @@ export const useUser = create<UserStore>((set, get) => ({
     return true;
   },
 
-  evolveCompanion: (companionId, offlineMs) => {
+  updateCompanionStages: (offlineMs) => {
     const next = get().user.clone();
-    if (!next.evolveCompanion(companionId, offlineMs)) return false;
+    if (next.updateCompanionStages(offlineMs) === 0) return false;
 
     set({ user: next });
     void persist(next);
@@ -171,6 +171,7 @@ export const useUser = create<UserStore>((set, get) => ({
     next.periodList.clearPeriods();
     next.offlinium = 0;
     next.offliniumSpentDuringOpenPeriod = 0;
+    next.village.shiftCompanionBirthTimes(elapsedOfflineMs);
     next.village.pendingElements = next.village.pendingElements.map(
       (pending) => ({
         ...pending,

@@ -4,6 +4,7 @@ import {
   COMPANIONS_PER_HOUSE,
   COMPANION_INVOCATION_COST,
   COMPANION_INVOCATION_OFFLINE_MS,
+  COMPANION_STAGE_AGE_MS,
   HOUSE_CONSTRUCTION_COST,
   HOUSE_CONSTRUCTION_OFFLINE_MS,
 } from "../utils/constants";
@@ -31,7 +32,7 @@ export class Village {
     this.pendingElements = [];
   }
 
-  loadVillage(village: unknown): void {
+  loadVillage(village: unknown, currentOfflineMs = 0): void {
     if (typeof village !== "object" || village === null) return;
 
     const record = village as {
@@ -42,7 +43,9 @@ export class Village {
     };
 
     this.companions = Array.isArray(record.companions)
-      ? record.companions.map(loadCompanion)
+      ? record.companions.map((companionData) =>
+          loadCompanion(companionData, currentOfflineMs),
+        )
       : [];
 
     this.houses = Array.isArray(record.houses)
@@ -123,6 +126,22 @@ export class Village {
     return this.companions.find((companion) => companion.id === companionId);
   }
 
+  updateCompanionStages(currentOfflineMs: number): number {
+    return this.companions.reduce(
+      (updated, companion) =>
+        updated + (companion.updateStage(currentOfflineMs) ? 1 : 0),
+      0,
+    );
+  }
+
+  shiftCompanionBirthTimes(offlineMs: number): void {
+    if (offlineMs <= 0) return;
+
+    this.companions.forEach((companion) => {
+      companion.birthOfflineMs -= offlineMs;
+    });
+  }
+
   addPendingElement(
     type: VillageElementType,
     offlineMs: number,
@@ -189,7 +208,7 @@ export class Village {
     );
     completed.forEach((pending) => {
       if (pending.type === "house") this.addHouse(new House());
-      else this.addCompanion(new Companion());
+      else this.addCompanion(new Companion(currentOfflineMs));
     });
     return completed.length;
   }
@@ -235,13 +254,27 @@ export class Village {
   }
 }
 
-function loadCompanion(companionData: unknown): Companion {
-  const companion = new Companion();
+function loadCompanion(
+  companionData: unknown,
+  currentOfflineMs: number,
+): Companion {
+  const companion = new Companion(currentOfflineMs);
   if (typeof companionData === "object" && companionData !== null) {
     Object.assign(companion, companionData);
   }
 
   if (!isCompanionStage(companion.stage)) companion.stage = "child";
+  if (
+    typeof companion.birthOfflineMs !== "number" ||
+    !Number.isFinite(companion.birthOfflineMs)
+  ) {
+    // Legacy saves only know the current stage. Preserve it and start the
+    // automatic ageing from that stage's threshold.
+    companion.birthOfflineMs = Math.max(
+      0,
+      currentOfflineMs - COMPANION_STAGE_AGE_MS[companion.stage],
+    );
+  }
   return companion;
 }
 
