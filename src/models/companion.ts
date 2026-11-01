@@ -9,6 +9,7 @@ export const COMPANION_STAGES = [
   "adolescent",
   "adult",
   "sage",
+  "dead",
 ] as const;
 
 export type CompanionStage = (typeof COMPANION_STAGES)[number];
@@ -18,6 +19,7 @@ export const COMPANION_STAGE_LABELS: Record<CompanionStage, string> = {
   adolescent: "Adolescent",
   adult: "Adulte",
   sage: "Sage",
+  dead: "Mort",
 };
 
 export class Companion {

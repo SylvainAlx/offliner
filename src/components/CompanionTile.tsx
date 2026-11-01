@@ -17,6 +17,7 @@ const STAGE_CLASSES: Record<CompanionStage, string> = {
   adult:
     "[--card-edge:#8b5cf6] [--card-surface:#f5f3ff] [--card-accent:#6d28d9]",
   sage: "[--card-edge:#d97706] [--card-surface:#fffbeb] [--card-accent:#b45309]",
+  dead: "[--card-edge:#6b7280] [--card-surface:#f3f4f6] [--card-accent:#4b5563]",
 };
 
 interface CompanionProps {
@@ -72,9 +73,11 @@ export default function CompanionTile({ companion }: CompanionProps) {
           </span>
         </div>
         <div className="text-[0.68rem] text-(--gray-600)">
-          {remainingOfflineMs === null
-            ? "Stade final atteint"
-            : `Prochaine évolution dans ${formatDuration(remainingOfflineMs)} hors ligne`}
+          {companion.stage === "dead"
+            ? "Ce compagnon repose désormais dans votre village"
+            : remainingOfflineMs === null
+              ? "Stade final atteint"
+              : `Prochaine évolution dans ${formatDuration(remainingOfflineMs)} hors ligne`}
         </div>
         {canRenameCompanion && (
           <form

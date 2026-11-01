@@ -41,7 +41,8 @@ export default function Help() {
         temps de vie hors ligne : adolescent après{" "}
         {COMPANION_STAGE_AGE_MS.adolescent / 3600000} h, adulte après{" "}
         {COMPANION_STAGE_AGE_MS.adult / 3600000} h, puis sage après{" "}
-        {COMPANION_STAGE_AGE_MS.sage / 3600000} h.
+        {COMPANION_STAGE_AGE_MS.sage / 3600000} h. Il meurt après{" "}
+        {COMPANION_STAGE_AGE_MS.dead / 3600000} h hors ligne cumulées.
       </p>
       <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
         Les compagnons évolués accélèrent la récolte : un adolescent ajoute +1
