@@ -32,7 +32,7 @@ village.
 - génération d’une particule d’Offlinium toutes les 10 secondes hors ligne ;
 - construction de maisons et gestion d’une file d’attente de constructions ;
 - invocation, aperçu, interaction et libération de compagnons ;
-- évolution des compagnons, de l’enfance jusqu’au stade de sage, contre de l’Offlinium ;
+- évolution des compagnons, de l’enfance jusqu’au stade de sage, puis mort après leur durée de vie hors ligne ;
 - profil local avec historique des périodes hors ligne ;
 - sauvegarde, export et import des données au format JSON ;
 - fonctionnement hors ligne avec installation possible sur l’écran d’accueil ;
