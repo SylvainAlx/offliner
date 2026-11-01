@@ -9,6 +9,7 @@ import Tracking from "./components/Tracking";
 import Status from "./components/Status";
 import Village from "./components/Village";
 import DataBackup from "./components/DataBackup";
+import Achievements from "./components/Achievements";
 import Sidebar, { type AppSection } from "./components/layouts/Sidebar";
 
 function AppContent() {
@@ -41,6 +42,8 @@ function AppContent() {
             <DataBackup />
           </>
         );
+      case "achievements":
+        return <Achievements />;
     }
   };
 

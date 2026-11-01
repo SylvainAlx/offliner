@@ -1,6 +1,6 @@
 import { useSideBar } from "../../hooks/useSideBar";
 
-export type AppSection = "account" | "village" | "help";
+export type AppSection = "account" | "village" | "achievements" | "help";
 
 const menuItems: Array<{
   id: AppSection;
@@ -19,6 +19,12 @@ const menuItems: Array<{
     label: "Compte",
     description: "Profil, statut et suivi",
     icon: "👤​",
+  },
+  {
+    id: "achievements",
+    label: "Succès",
+    description: "Vos étapes et records",
+    icon: "🏆",
   },
   {
     id: "help",
