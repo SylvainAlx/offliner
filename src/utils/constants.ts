@@ -1,4 +1,4 @@
-export const OFFLINER_VERSION = 0.1;
+export const OFFLINER_VERSION = 0.2;
 
 export const OFFLINIUM_DELIVERY_INTERVAL = 10 * 1000;
 export const OFFLINE_CONFIRMATION_DELAY_MS = 5 * 1000;
