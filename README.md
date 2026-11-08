@@ -77,6 +77,39 @@ L’application est ensuite accessible à l’adresse indiquée par Vite, en gé
 | `pnpm build`   | Vérifie les types TypeScript et génère la version de production dans `dist/`. |
 | `pnpm preview` | Sert localement la version générée dans `dist/`.                              |
 | `pnpm lint`    | Analyse le code avec Oxlint.                                                  |
+| `pnpm test`    | Lance une fois la suite de tests Vitest.                                      |
+| `pnpm test:watch` | Relance les tests à chaque modification.                                   |
+| `pnpm check`   | Enchaîne lint, tests et build : à lancer avant de pousser.                    |
+
+## Tests
+
+Les tests utilisent [Vitest](https://vitest.dev/) et s’exécutent dans Node,
+dans le fuseau horaire `Europe/Paris` (fixé par `vitest.config.ts`) afin que les
+changements de jour et d’heure d’été soient vérifiés de façon reproductible.
+
+Tous les tests sont rassemblés dans `tests/`, qui reprend l’organisation de
+`src/` :
+
+- `tests/models/` : logique de jeu (périodes hors ligne et plafond du temps non
+  observé, Offlinium, file de constructions, compagnons, succès, validation des
+  sauvegardes) ;
+- `tests/stores/` : store utilisateur (ordre des écritures, import,
+  réinitialisation) ;
+- `tests/pwa/` : service worker (`public/sw.js`) exécuté dans un environnement
+  simulé, et plugin de build `vite-plugins/offlinerServiceWorker.ts` ;
+- `tests/deployment/` : configuration Vercel (`vercel.json`) ;
+- `tests/helpers/` : utilitaires partagés par les tests.
+
+Leurs types sont vérifiés par `tsconfig.test.json` lors de `pnpm build`.
+
+## Déploiement
+
+L’application est déployée sur Vercel. `vercel.json` remplace la commande de
+build du projet par `pnpm test && pnpm build` : un test en échec bloque donc la
+mise en ligne. Ce fichier définit aussi les en-têtes HTTP de sécurité
+(Content-Security-Policy, `nosniff`, interdiction d’intégration dans une iframe)
+et la mise en cache : fichiers de `assets/` conservés indéfiniment (leur nom
+change à chaque build), `sw.js` jamais mis en cache.
 
 Avant de publier une version, il est recommandé d’exécuter :
 

@@ -11,6 +11,13 @@ import {
   TOWN_HALL_CONSTRUCTION_COST,
   TOWN_HALL_CONSTRUCTION_OFFLINE_MS,
 } from "../utils/constants";
+import {
+  isFiniteNumber,
+  isNonNegativeNumber,
+  isRecord,
+  sanitizeId,
+  sanitizeName,
+} from "../utils/sanitize";
 
 export type VillageElementType = "companion" | "house" | "townHall";
 
@@ -40,41 +47,23 @@ export class Village {
   }
 
   loadVillage(village: unknown, currentOfflineMs = 0): void {
-    if (typeof village !== "object" || village === null) return;
+    if (!isRecord(village)) return;
+    const record = village;
 
-    const record = village as {
-      name?: unknown;
-      companions?: unknown;
-      houses?: unknown;
-      townHall?: unknown;
-      pendingElements?: unknown;
-      pendingCompanions?: unknown;
-    };
+    this.name = sanitizeName(record.name) ?? this.name;
 
-    if (typeof record.name === "string" && record.name.trim()) {
-      this.name = record.name.trim();
-    }
-
-    this.townHall = isStoredTownHall(record.townHall)
-      ? (() => {
-          const townHall = new TownHall();
-          Object.assign(townHall, record.townHall);
-          return townHall;
-        })()
-      : null;
+    this.townHall = loadBuilding(record.townHall, () => new TownHall());
 
     this.companions = Array.isArray(record.companions)
-      ? record.companions.map((companionData) =>
-          loadCompanion(companionData, currentOfflineMs),
-        )
+      ? record.companions
+          .filter(isRecord)
+          .map((companionData) => loadCompanion(companionData, currentOfflineMs))
       : [];
 
     this.houses = Array.isArray(record.houses)
-      ? record.houses.filter(isStoredHouse).map((houseData) => {
-          const house = new House();
-          Object.assign(house, houseData);
-          return house;
-        })
+      ? record.houses
+          .map((houseData) => loadBuilding(houseData, () => new House()))
+          .filter((house): house is House => house !== null)
       : [];
 
     const storedPendingElements = Array.isArray(record.pendingElements)
@@ -149,16 +138,18 @@ export class Village {
   }
 
   rename(name: string): boolean {
-    if (!this.townHall || !name.trim()) return false;
-    this.name = name.trim();
+    const sanitized = sanitizeName(name);
+    if (!this.townHall || !sanitized) return false;
+    this.name = sanitized;
     return true;
   }
 
   renameCompanion(companionId: string, name: string): boolean {
-    if (!this.townHall || !name.trim()) return false;
+    const sanitized = sanitizeName(name);
+    if (!this.townHall || !sanitized) return false;
     const companion = this.getCompanion(companionId);
     if (!companion) return false;
-    companion.name = name.trim();
+    companion.name = sanitized;
     return true;
   }
 
@@ -172,6 +163,20 @@ export class Village {
 
   getCompanion(companionId: string): Companion | undefined {
     return this.companions.find((companion) => companion.id === companionId);
+  }
+
+  hasPendingStageUpdates(currentOfflineMs: number): boolean {
+    return this.companions.some(
+      (companion) => companion.getPendingStage(currentOfflineMs) !== undefined,
+    );
+  }
+
+  hasCompletedPendingElements(currentOfflineMs: number): boolean {
+    return this.pendingElements.some(
+      (pending) =>
+        currentOfflineMs - pending.offlineMsAtStart >=
+        pending.constructionOfflineMs,
+    );
   }
 
   updateCompanionStages(currentOfflineMs: number): number {
@@ -303,20 +308,26 @@ export class Village {
   }
 }
 
+// Imported data is never assigned wholesale onto class instances: only known,
+// validated fields are copied, so keys such as "__proto__" cannot alter the
+// object or inject values of an unexpected type.
 function loadCompanion(
-  companionData: unknown,
+  companionData: Record<string, unknown>,
   currentOfflineMs: number,
 ): Companion {
   const companion = new Companion(currentOfflineMs);
-  if (typeof companionData === "object" && companionData !== null) {
-    Object.assign(companion, companionData);
+  companion.id = sanitizeId(companionData.id) ?? companion.id;
+  companion.name = sanitizeName(companionData.name) ?? companion.name;
+  if (isFiniteNumber(companionData.birthdate)) {
+    companion.birthdate = companionData.birthdate;
   }
+  companion.stage = isCompanionStage(companionData.stage)
+    ? companionData.stage
+    : "child";
 
-  if (!isCompanionStage(companion.stage)) companion.stage = "child";
-  if (
-    typeof companion.birthOfflineMs !== "number" ||
-    !Number.isFinite(companion.birthOfflineMs)
-  ) {
+  if (isFiniteNumber(companionData.birthOfflineMs)) {
+    companion.birthOfflineMs = companionData.birthOfflineMs;
+  } else {
     // Legacy saves only know the current stage. Preserve it and start the
     // automatic ageing from that stage's threshold.
     companion.birthOfflineMs = Math.max(
@@ -325,6 +336,20 @@ function loadCompanion(
     );
   }
   return companion;
+}
+
+function loadBuilding<T extends House | TownHall>(
+  value: unknown,
+  create: () => T,
+): T | null {
+  if (!isRecord(value)) return null;
+  const id = sanitizeId(value.id);
+  if (id === null || !isFiniteNumber(value.builtAt)) return null;
+
+  const building = create();
+  building.id = id;
+  building.builtAt = value.builtAt;
+  return building;
 }
 
 function isCompanionStage(value: unknown): value is CompanionStage {
@@ -343,18 +368,25 @@ function getConstructionTime(type: VillageElementType): number {
 function normalizePendingElement(
   pending: PendingElement,
 ): PendingElement {
+  const defaultCost =
+    pending.type === "house"
+      ? HOUSE_CONSTRUCTION_COST
+      : pending.type === "townHall"
+        ? TOWN_HALL_CONSTRUCTION_COST
+        : COMPANION_INVOCATION_COST;
+
   return {
-    ...pending,
-    constructionOfflineMs:
-      pending.constructionOfflineMs ?? getConstructionTime(pending.type),
-    storedOffliniumCost:
-      pending.storedOffliniumCost ??
-      (pending.type === "house"
-        ? HOUSE_CONSTRUCTION_COST
-        : pending.type === "townHall"
-          ? TOWN_HALL_CONSTRUCTION_COST
-          : COMPANION_INVOCATION_COST),
-    openPeriodOffliniumCost: pending.openPeriodOffliniumCost ?? 0,
+    id: pending.id,
+    type: pending.type,
+    startedAt: pending.startedAt,
+    offlineMsAtStart: pending.offlineMsAtStart,
+    constructionOfflineMs: getConstructionTime(pending.type),
+    storedOffliniumCost: isNonNegativeNumber(pending.storedOffliniumCost)
+      ? pending.storedOffliniumCost
+      : defaultCost,
+    openPeriodOffliniumCost: isNonNegativeNumber(pending.openPeriodOffliniumCost)
+      ? pending.openPeriodOffliniumCost
+      : 0,
   };
 }
 
@@ -369,51 +401,34 @@ function normalizeQueue(pendingElements: PendingElement[]): PendingElement[] {
   }));
 }
 
-function isStoredHouse(value: unknown): value is Pick<House, "id" | "builtAt"> {
-  if (typeof value !== "object" || value === null) return false;
-  const record = value as Record<string, unknown>;
-  return typeof record.id === "string" && typeof record.builtAt === "number";
-}
-
-function isStoredTownHall(
-  value: unknown,
-): value is Pick<TownHall, "id" | "builtAt"> {
-  if (typeof value !== "object" || value === null) return false;
-  const record = value as Record<string, unknown>;
-  return typeof record.id === "string" && typeof record.builtAt === "number";
+function isOptionalNumber(value: unknown): boolean {
+  return value === undefined || isFiniteNumber(value);
 }
 
 function isPendingElement(value: unknown): value is PendingElement {
-  if (typeof value !== "object" || value === null) return false;
-  const record = value as Record<string, unknown>;
+  if (!isRecord(value)) return false;
   return (
-    (record.type === "companion" ||
-      record.type === "house" ||
-      record.type === "townHall") &&
-    typeof record.id === "string" &&
-    typeof record.startedAt === "number" &&
-    typeof record.offlineMsAtStart === "number" &&
-    (record.constructionOfflineMs === undefined ||
-      typeof record.constructionOfflineMs === "number") &&
-    (record.storedOffliniumCost === undefined ||
-      typeof record.storedOffliniumCost === "number") &&
-    (record.openPeriodOffliniumCost === undefined ||
-      typeof record.openPeriodOffliniumCost === "number")
+    (value.type === "companion" ||
+      value.type === "house" ||
+      value.type === "townHall") &&
+    sanitizeId(value.id) !== null &&
+    isFiniteNumber(value.startedAt) &&
+    isFiniteNumber(value.offlineMsAtStart) &&
+    isOptionalNumber(value.constructionOfflineMs) &&
+    isOptionalNumber(value.storedOffliniumCost) &&
+    isOptionalNumber(value.openPeriodOffliniumCost)
   );
 }
 
 function isLegacyPendingCompanion(
   value: unknown,
 ): value is Omit<PendingElement, "type" | "constructionOfflineMs"> {
-  if (typeof value !== "object" || value === null) return false;
-  const record = value as Record<string, unknown>;
+  if (!isRecord(value)) return false;
   return (
-    typeof record.id === "string" &&
-    typeof record.startedAt === "number" &&
-    typeof record.offlineMsAtStart === "number" &&
-    (record.storedOffliniumCost === undefined ||
-      typeof record.storedOffliniumCost === "number") &&
-    (record.openPeriodOffliniumCost === undefined ||
-      typeof record.openPeriodOffliniumCost === "number")
+    sanitizeId(value.id) !== null &&
+    isFiniteNumber(value.startedAt) &&
+    isFiniteNumber(value.offlineMsAtStart) &&
+    isOptionalNumber(value.storedOffliniumCost) &&
+    isOptionalNumber(value.openPeriodOffliniumCost)
   );
 }

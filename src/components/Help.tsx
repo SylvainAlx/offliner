@@ -4,6 +4,7 @@ import {
   HOUSE_CONSTRUCTION_COST,
   TOWN_HALL_CONSTRUCTION_COST,
   OFFLINIUM_DELIVERY_INTERVAL,
+  UNOBSERVED_OFFLINE_CREDIT_CAP_MS,
 } from "../utils/constants";
 import Card from "./ui/Card";
 
@@ -24,6 +25,11 @@ export default function Help() {
       <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
         Pour tester, activez le mode avion, coupez le Wi-Fi ou utilisez l'onglet
         Réseau (Network → Offline) de vos outils de développement.
+      </p>
+      <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
+        Lorsque l&apos;application est fermée ou en arrière-plan, elle ne peut
+        pas vérifier votre connexion : ce temps est comptabilisé dans la limite
+        de {UNOBSERVED_OFFLINE_CREDIT_CAP_MS / 3600000} h par absence.
       </p>
       <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
         Les maisons se construisent avec {HOUSE_CONSTRUCTION_COST} ⬡ et

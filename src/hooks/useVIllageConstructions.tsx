@@ -18,7 +18,8 @@ export function useVillageConstructions() {
   const completePendingElements = useUser(
     (state) => state.completePendingElements,
   );
-  const { isOnline, totalOfflineMs } = useOnlineStatus();
+  const isOnline = useOnlineStatus((state) => state.isOnline);
+  const totalOfflineMs = useOnlineStatus((state) => state.totalOfflineMs);
   const { houses, companions, pendingElements } = user.village;
   const companionCapacity = user.village.companionCapacity;
   const liveOfflinium = user.getAvailableOfflinium(totalOfflineMs);

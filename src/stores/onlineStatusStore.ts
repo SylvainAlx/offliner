@@ -12,8 +12,24 @@ export interface OnlineStatusStore {
   initialize: () => () => void;
 }
 
+const TICK_INTERVAL_MS = 1000;
+// The countdown is checked often so the period starts on time, but the store
+// (and therefore the UI) is only updated when the displayed second changes.
+const COUNTDOWN_CHECK_INTERVAL_MS = 100;
+
 function getInitialOnline(): boolean {
   return typeof navigator !== "undefined" ? navigator.onLine : true;
+}
+
+/**
+ * Brings the companions up to date with the offline time at `now` and returns
+ * the values the UI derives from it.
+ */
+function syncTotals(now: number): Pick<OnlineStatusStore, "totalOfflineMs" | "lastChecked"> {
+  const userStore = useUser.getState();
+  const totalOfflineMs = userStore.user.periodList.computeTotalMs(now);
+  userStore.updateCompanionStages(totalOfflineMs);
+  return { totalOfflineMs, lastChecked: new Date(now) };
 }
 
 function persistDirectly(now: number, isOnline: boolean): void {
@@ -41,15 +57,7 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
   },
 
   refreshFromUser: () => {
-    const now = Date.now();
-    const user = useUser.getState().user;
-    const totalOfflineMs = user.periodList.computeTotalMs(now);
-    useUser.getState().updateCompanionStages(totalOfflineMs);
-    const updatedUser = useUser.getState().user;
-    set({
-      totalOfflineMs: updatedUser.periodList.computeTotalMs(now),
-      lastChecked: new Date(now),
-    });
+    set(syncTotals(Date.now()));
   },
 
   initialize: () => {
@@ -74,22 +82,16 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
     const cancelCountdown = () => {
       stopCountdownTimer();
       pendingOfflineStart = null;
-      set({ offlineCountdownMs: null });
+      if (get().offlineCountdownMs !== null) set({ offlineCountdownMs: null });
     };
 
     const startTick = () => {
       stopTick();
       tick = window.setInterval(() => {
         const now = Date.now();
-        const user = useUser.getState().user;
-        const totalOfflineMs = user.periodList.computeTotalMs(now);
-        useUser.getState().updateCompanionStages(totalOfflineMs);
-        const updatedUser = useUser.getState().user;
-        set({
-          totalOfflineMs: updatedUser.periodList.computeTotalMs(now),
-          lastChecked: new Date(now),
-        });
-      }, 1000);
+        useUser.getState().touchOpenPeriod(now);
+        set(syncTotals(now));
+      }, TICK_INTERVAL_MS);
     };
 
     const confirmOfflinePeriod = (now: number) => {
@@ -99,18 +101,7 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
       stopCountdownTimer();
       pendingOfflineStart = null;
       useUser.getState().openPeriodIfNeeded(start);
-
-      const totalOfflineMs = useUser
-        .getState()
-        .user.periodList.computeTotalMs(now);
-      useUser.getState().updateCompanionStages(totalOfflineMs);
-      const user = useUser.getState().user;
-      set({
-        isOnline: false,
-        offlineCountdownMs: null,
-        totalOfflineMs: user.periodList.computeTotalMs(now),
-        lastChecked: new Date(now),
-      });
+      set({ isOnline: false, offlineCountdownMs: null, ...syncTotals(now) });
       startTick();
     };
 
@@ -128,17 +119,23 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
         return;
       }
 
-      set({
-        offlineCountdownMs: remaining,
-        lastChecked: new Date(now),
-      });
+      const current = get().offlineCountdownMs;
+      if (
+        current === null ||
+        Math.ceil(current / 1000) !== Math.ceil(remaining / 1000)
+      ) {
+        set({ offlineCountdownMs: remaining });
+      }
     };
 
     const startCountdown = (startTs: number) => {
       if (pendingOfflineStart === null) pendingOfflineStart = startTs;
       stopCountdownTimer();
       updateCountdown();
-      countdownTick = window.setInterval(updateCountdown, 100);
+      countdownTick = window.setInterval(
+        updateCountdown,
+        COUNTDOWN_CHECK_INTERVAL_MS,
+      );
     };
 
     const ensureOfflineTracking = (now: number) => {
@@ -155,18 +152,9 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
     const goOnline = () => {
       const now = Date.now();
       cancelCountdown();
-      useUser.getState().closeAnyOpenPeriod(now);
-      const totalOfflineMs = useUser
-        .getState()
-        .user.periodList.computeTotalMs(now);
-      useUser.getState().updateCompanionStages(totalOfflineMs);
-      const user = useUser.getState().user;
-      set({
-        isOnline: true,
-        totalOfflineMs: user.periodList.computeTotalMs(now),
-        lastChecked: new Date(now),
-      });
       stopTick();
+      useUser.getState().closeAnyOpenPeriod(now);
+      set({ isOnline: true, ...syncTotals(now) });
     };
 
     const goOffline = () => {
@@ -178,8 +166,7 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
     const persistOnHide = () => {
       const now = Date.now();
       if (!navigator.onLine && pendingOfflineStart !== null) {
-        const deadline =
-          pendingOfflineStart + OFFLINE_CONFIRMATION_DELAY_MS;
+        const deadline = pendingOfflineStart + OFFLINE_CONFIRMATION_DELAY_MS;
         if (now >= deadline) confirmOfflinePeriod(now);
       }
       persistDirectly(now, navigator.onLine);
@@ -195,15 +182,8 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
 
       const now = Date.now();
       const online = navigator.onLine;
-      const user = useUser.getState().syncWithStorage(online, now);
-      const totalOfflineMs = user.periodList.computeTotalMs(now);
-      useUser.getState().updateCompanionStages(totalOfflineMs);
-      const updatedUser = useUser.getState().user;
-      set({
-        isOnline: online,
-        totalOfflineMs: updatedUser.periodList.computeTotalMs(now),
-        lastChecked: new Date(now),
-      });
+      useUser.getState().syncWithStorage(online, now);
+      set({ isOnline: online, ...syncTotals(now) });
 
       if (online) {
         cancelCountdown();
@@ -215,36 +195,26 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
 
     if (get().isOnline) {
       const now = Date.now();
-      const user = useUser.getState().user;
-      if (user.periodList.getOpenPeriod() !== null) {
+      if (useUser.getState().user.periodList.getOpenPeriod() !== null) {
         useUser.getState().closeAnyOpenPeriod(now);
       }
-      const totalOfflineMs = useUser
-        .getState()
-        .user.periodList.computeTotalMs(now);
-      useUser.getState().updateCompanionStages(totalOfflineMs);
-      set({
-        totalOfflineMs: useUser
-          .getState()
-          .user.periodList.computeTotalMs(now),
-        lastChecked: new Date(now),
-      });
+      set(syncTotals(now));
     } else {
       ensureOfflineTracking(Date.now());
     }
 
+    // "pagehide" and "visibilitychange" cover closing the page; "beforeunload"
+    // is not used because it prevents the back/forward cache in some browsers.
     window.addEventListener("online", goOnline);
     window.addEventListener("offline", goOffline);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("pagehide", persistOnHide);
-    window.addEventListener("beforeunload", persistOnHide);
 
     return () => {
       window.removeEventListener("online", goOnline);
       window.removeEventListener("offline", goOffline);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("pagehide", persistOnHide);
-      window.removeEventListener("beforeunload", persistOnHide);
       stopTick();
       cancelCountdown();
     };
