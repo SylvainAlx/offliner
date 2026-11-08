@@ -1,7 +1,7 @@
 # Offliner
 
 <p align="center">
-  <img src="./public/logo.png" alt="Logo Offliner" width="128" />
+  <img src="./public/icons/logo.svg" alt="Logo Offliner" width="128" />
 </p>
 
 <p align="center">
@@ -97,6 +97,8 @@ Tous les tests sont rassemblés dans `tests/`, qui reprend l’organisation de
   réinitialisation) ;
 - `tests/pwa/` : service worker (`public/sw.js`) exécuté dans un environnement
   simulé, et plugin de build `vite-plugins/offlinerServiceWorker.ts` ;
+- `tests/services/` et `tests/stores/installStore.test.ts` : détection de
+  l’appareil et gestion de l’invite d’installation ;
 - `tests/deployment/` : configuration Vercel (`vercel.json`) ;
 - `tests/helpers/` : utilitaires partagés par les tests.
 
