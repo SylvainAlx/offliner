@@ -30,7 +30,7 @@ export default function Header({
         <div className="flex items-center gap-2 max-md:mr-auto">
           <img
             className="hidden lg:block size-10 object-contain"
-            src="/logo.png"
+            src="/icons/logo.svg"
             alt=""
             aria-hidden="true"
           />

@@ -24,8 +24,9 @@ const APP_SHELL = [
   "./",
   SHELL_URL,
   "./manifest.webmanifest",
-  "./logo.png",
-  "./favicon.png",
+  "./icons/logo.svg",
+  "./icons/favicon.svg",
+  "./icons/icon-192.png",
 ];
 const NAVIGATION_TIMEOUT_MS = 4000;
 

@@ -36,7 +36,7 @@ export default function HomePage({ onPlay }: { onPlay: () => void }) {
             className="inline-flex items-center gap-1 text-[2rem] font-extrabold tracking-[-0.03em]"
             aria-label="Offliner"
           >
-            <img className="size-12.5" src="./logo.png" alt="Offliner" />
+            <img className="size-12.5" src="/icons/logo.svg" alt="Offliner" />
             <span>Offliner</span>
           </div>
         </header>

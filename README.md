@@ -1,7 +1,7 @@
 # Offliner
 
 <p align="center">
-  <img src="./public/logo.png" alt="Logo Offliner" width="128" />
+  <img src="./public/icons/logo.svg" alt="Logo Offliner" width="128" />
 </p>
 
 <p align="center">
