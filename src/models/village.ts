@@ -165,6 +165,20 @@ export class Village {
     return this.companions.find((companion) => companion.id === companionId);
   }
 
+  hasPendingStageUpdates(currentOfflineMs: number): boolean {
+    return this.companions.some(
+      (companion) => companion.getPendingStage(currentOfflineMs) !== undefined,
+    );
+  }
+
+  hasCompletedPendingElements(currentOfflineMs: number): boolean {
+    return this.pendingElements.some(
+      (pending) =>
+        currentOfflineMs - pending.offlineMsAtStart >=
+        pending.constructionOfflineMs,
+    );
+  }
+
   updateCompanionStages(currentOfflineMs: number): number {
     return this.companions.reduce(
       (updated, companion) =>

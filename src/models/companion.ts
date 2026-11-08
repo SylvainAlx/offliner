@@ -14,6 +14,8 @@ export const COMPANION_STAGES = [
 
 export type CompanionStage = (typeof COMPANION_STAGES)[number];
 
+const STAGES_FROM_OLDEST = [...COMPANION_STAGES].reverse();
+
 export const COMPANION_STAGE_LABELS: Record<CompanionStage, string> = {
   child: "Enfant",
   adolescent: "Adolescent",
@@ -75,17 +77,22 @@ export class Companion {
     );
   }
 
-  updateStage(currentOfflineMs: number): boolean {
+  /** Stage the companion should reach, or undefined when it is up to date. */
+  getPendingStage(currentOfflineMs: number): CompanionStage | undefined {
     const age = this.getAgeOfflineMs(currentOfflineMs);
-    const targetStage = [...COMPANION_STAGES]
-      .reverse()
-      .find((stage) => age >= COMPANION_STAGE_AGE_MS[stage]);
-
-    if (!targetStage) return false;
+    const targetStage = STAGES_FROM_OLDEST.find(
+      (stage) => age >= COMPANION_STAGE_AGE_MS[stage],
+    );
+    if (!targetStage) return;
 
     const currentIndex = COMPANION_STAGES.indexOf(this.stage);
     const targetIndex = COMPANION_STAGES.indexOf(targetStage);
-    if (targetIndex <= currentIndex) return false;
+    return targetIndex > currentIndex ? targetStage : undefined;
+  }
+
+  updateStage(currentOfflineMs: number): boolean {
+    const targetStage = this.getPendingStage(currentOfflineMs);
+    if (!targetStage) return false;
 
     this.stage = targetStage;
     return true;

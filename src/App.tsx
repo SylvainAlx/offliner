@@ -13,7 +13,7 @@ import Achievements from "./components/Achievements";
 import Sidebar, { type AppSection } from "./components/layouts/Sidebar";
 
 function AppContent() {
-  const { isOnline } = useOnlineStatus();
+  const isOnline = useOnlineStatus((state) => state.isOnline);
   const [activeSection, setActiveSection] = useState<AppSection>("village");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 

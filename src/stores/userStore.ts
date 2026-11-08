@@ -133,7 +133,10 @@ export const useUser = create<UserStore>((set, get) => ({
     return true;
   },
 
+  // Called every second: only clone and save when a stage actually changes.
   updateCompanionStages: (offlineMs) => {
+    if (!get().user.village.hasPendingStageUpdates(offlineMs)) return false;
+
     const next = get().user.clone();
     if (next.updateCompanionStages(offlineMs) === 0) return false;
 
@@ -183,6 +186,8 @@ export const useUser = create<UserStore>((set, get) => ({
   },
 
   completePendingElements: (offlineMs) => {
+    if (!get().user.village.hasCompletedPendingElements(offlineMs)) return;
+
     const next = get().user.clone();
     if (next.village.completePendingElements(offlineMs) === 0) return;
 

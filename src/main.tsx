@@ -4,8 +4,10 @@ import "./styles/index.css";
 import App from "./App.tsx";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useUser } from "./stores/userStore";
+import { setupServiceWorker } from "./services/serviceWorker";
 
 async function bootstrap() {
+  setupServiceWorker();
   const root = createRoot(document.getElementById("root")!);
 
   try {

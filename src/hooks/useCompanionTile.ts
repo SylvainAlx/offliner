@@ -15,7 +15,7 @@ export function useCompanionTile(companion: Companion) {
   const releaseCompanionAndGetOfflinium = useUser(
     (state) => state.releaseCompanionAndGetOfflinium,
   );
-  const { totalOfflineMs } = useOnlineStatus();
+  const totalOfflineMs = useOnlineStatus((state) => state.totalOfflineMs);
 
   function handleRename(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

@@ -3,7 +3,9 @@ import { formatDate, formatDuration } from "../utils/format";
 import Card from "./ui/Card";
 
 export default function Status() {
-  const { isOnline, lastChecked, totalOfflineMs } = useOnlineStatus();
+  const isOnline = useOnlineStatus((state) => state.isOnline);
+  const lastChecked = useOnlineStatus((state) => state.lastChecked);
+  const totalOfflineMs = useOnlineStatus((state) => state.totalOfflineMs);
 
   return (
     <Card

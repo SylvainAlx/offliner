@@ -3,15 +3,19 @@ import {
   OFFLINIUM_DELIVERY_INTERVAL,
 } from "../utils/constants";
 import { PeriodList } from "./periodList";
-import { Companion } from "./companion";
 import { Village } from "./village";
-import { House } from "./house";
-import { TownHall } from "./townHall";
 import { isFiniteNumber, isRecord, sanitizeName } from "../utils/sanitize";
 
 export interface OffliniumSpend {
   stored: number;
   openPeriod: number;
+}
+
+function cloneInstance<T extends object>(instance: T): T {
+  return Object.assign(
+    Object.create(Object.getPrototypeOf(instance) as object) as T,
+    instance,
+  );
 }
 
 export class User {
@@ -76,19 +80,17 @@ export class User {
     copy.createdAt = this.createdAt;
     copy.periodList = this.periodList.clone();
     copy.village = new Village();
-    copy.village.companions = this.village.companions.map((companion) => {
-      const clonedCompanion = new Companion();
-      Object.assign(clonedCompanion, companion);
-      return clonedCompanion;
-    });
-    copy.village.houses = this.village.houses.map((house) => {
-      const clonedHouse = new House();
-      Object.assign(clonedHouse, house);
-      return clonedHouse;
-    });
+    // Instances are copied without running their constructors, which would
+    // generate a random name and UUID for every clone.
+    copy.village.companions = this.village.companions.map((companion) =>
+      cloneInstance(companion),
+    );
+    copy.village.houses = this.village.houses.map((house) =>
+      cloneInstance(house),
+    );
     copy.village.name = this.village.name;
     copy.village.townHall = this.village.townHall
-      ? Object.assign(new TownHall(), this.village.townHall)
+      ? cloneInstance(this.village.townHall)
       : null;
     copy.village.pendingElements = this.village.pendingElements.map(
       (pending) => ({ ...pending }),
