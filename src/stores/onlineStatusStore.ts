@@ -81,6 +81,7 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
       stopTick();
       tick = window.setInterval(() => {
         const now = Date.now();
+        useUser.getState().touchOpenPeriod(now);
         const user = useUser.getState().user;
         const totalOfflineMs = user.periodList.computeTotalMs(now);
         useUser.getState().updateCompanionStages(totalOfflineMs);

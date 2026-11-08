@@ -23,3 +23,12 @@ export const TOWN_HALL_CONSTRUCTION_COST = 1800;
 export const HOUSE_CONSTRUCTION_OFFLINE_MS = 2 * 60 * 1000;
 export const TOWN_HALL_CONSTRUCTION_OFFLINE_MS = 5 * 60 * 1000;
 export const COMPANIONS_PER_HOUSE = 4;
+
+// Time spent while the app could not observe the device (background, closed,
+// device asleep) cannot be verified. It is credited, but capped per gap.
+export const UNOBSERVED_OFFLINE_CREDIT_CAP_MS = 12 * 60 * 60 * 1000;
+// How often an open offline period records that the app saw the device offline.
+export const OPEN_PERIOD_HEARTBEAT_MS = 30 * 1000;
+
+export const MAX_NAME_LENGTH = 40;
+export const MAX_BACKUP_FILE_BYTES = 5 * 1024 * 1024;

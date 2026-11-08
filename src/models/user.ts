@@ -7,6 +7,7 @@ import { Companion } from "./companion";
 import { Village } from "./village";
 import { House } from "./house";
 import { TownHall } from "./townHall";
+import { isFiniteNumber, isRecord, sanitizeName } from "../utils/sanitize";
 
 export interface OffliniumSpend {
   stored: number;
@@ -39,27 +40,26 @@ export class User {
         return;
       }
 
-      if (typeof parsed !== "object" || parsed === null) return;
-      const record = parsed as Record<string, unknown>;
+      if (!isRecord(parsed)) return;
 
-      if (typeof record.name === "string") this.name = record.name;
-      if (typeof record.offlinium === "number")
-        this.offlinium = Math.floor(record.offlinium);
-      if (typeof record.offliniumSpentDuringOpenPeriod === "number") {
+      this.name = sanitizeName(parsed.name) ?? this.name;
+      if (isFiniteNumber(parsed.offlinium)) {
+        this.offlinium = Math.max(0, Math.floor(parsed.offlinium));
+      }
+      if (isFiniteNumber(parsed.offliniumSpentDuringOpenPeriod)) {
         this.offliniumSpentDuringOpenPeriod = Math.max(
           0,
-          Math.floor(record.offliniumSpentDuringOpenPeriod),
+          Math.floor(parsed.offliniumSpentDuringOpenPeriod),
         );
       }
-      if (typeof record.createdAt === "number")
-        this.createdAt = record.createdAt;
+      if (isFiniteNumber(parsed.createdAt)) this.createdAt = parsed.createdAt;
 
-      if (record.periodList !== undefined && record.periodList !== null) {
-        this.periodList.loadPeriods(record.periodList);
+      if (parsed.periodList !== undefined && parsed.periodList !== null) {
+        this.periodList.loadPeriods(parsed.periodList);
       }
-      if (record.village !== undefined && record.village !== null) {
+      if (parsed.village !== undefined && parsed.village !== null) {
         this.village.loadVillage(
-          record.village,
+          parsed.village,
           this.periodList.computeTotalMs(Date.now()),
         );
       }
@@ -74,10 +74,7 @@ export class User {
     copy.offlinium = this.offlinium;
     copy.offliniumSpentDuringOpenPeriod = this.offliniumSpentDuringOpenPeriod;
     copy.createdAt = this.createdAt;
-    copy.periodList = new PeriodList(
-      this.periodList.days.map((day) => ({ ...day })),
-      this.periodList.openPeriodStart,
-    );
+    copy.periodList = this.periodList.clone();
     copy.village = new Village();
     copy.village.companions = this.village.companions.map((companion) => {
       const clonedCompanion = new Companion();

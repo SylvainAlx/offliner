@@ -2,10 +2,13 @@ import { useRef, useState, type ChangeEvent } from "react";
 import { useOnlineStatus } from "../stores/onlineStatusStore";
 import { useUser } from "../stores/userStore";
 import { userRepository } from "../services/userRepository";
+import { MAX_BACKUP_FILE_BYTES } from "../utils/constants";
+import { downloadJson, getBackupFileName } from "../utils/download";
 
 export function useDataBackup() {
   const saveUser = useUser((state) => state.saveUser);
-  const hydrate = useUser((state) => state.hydrate);
+  const importFromSnapshot = useUser((state) => state.importFromSnapshot);
+  const resetAll = useUser((state) => state.resetAll);
   const refreshOnlineStatus = useOnlineStatus((state) => state.refreshFromUser);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -68,17 +71,7 @@ export function useDataBackup() {
       return;
     }
 
-    const blob = new Blob([JSON.stringify(data)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `offliner-sauvegarde-${new Date().toISOString().slice(0, 10)}.json`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 0);
+    downloadJson(data, getBackupFileName());
 
     setFeedback({
       kind: "success",
@@ -91,6 +84,14 @@ export function useDataBackup() {
     event.target.value = "";
     if (!file) return;
 
+    if (file.size > MAX_BACKUP_FILE_BYTES) {
+      setFeedback({
+        kind: "error",
+        message: "Ce fichier est trop volumineux pour être une sauvegarde Offliner.",
+      });
+      return;
+    }
+
     try {
       const parsedData: unknown = JSON.parse(await file.text());
 
@@ -99,8 +100,7 @@ export function useDataBackup() {
       }
 
       await saveUser();
-      await userRepository.importSnapshot(parsedData);
-      await hydrate();
+      await importFromSnapshot(parsedData);
       refreshOnlineStatus();
       setFeedback({
         kind: "success",
@@ -125,9 +125,7 @@ export function useDataBackup() {
   async function handleClearAll() {
     if (typeof window === "undefined") return;
 
-    await saveUser();
-    await userRepository.clear();
-    await hydrate();
+    await resetAll();
     refreshOnlineStatus();
     setFeedback({
       kind: "success",
