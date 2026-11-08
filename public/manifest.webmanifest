@@ -4,6 +4,7 @@
   "description": "Déconnectez-vous et peuplez votre village.",
   "lang": "fr",
   "dir": "ltr",
+  "id": "/",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

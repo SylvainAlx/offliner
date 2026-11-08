@@ -5,9 +5,12 @@ import App from "./App.tsx";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useUser } from "./stores/userStore";
 import { setupServiceWorker } from "./services/serviceWorker";
+import { setupInstallTracking } from "./stores/installStore";
 
 async function bootstrap() {
   setupServiceWorker();
+  // Before any await: the install prompt event can fire very early.
+  setupInstallTracking();
   const root = createRoot(document.getElementById("root")!);
 
   try {

@@ -137,38 +137,16 @@ export default function HomePage({ onPlay }: { onPlay: () => void }) {
                 À utiliser sur mobile
               </h2>
               <p className="text-[0.76rem] leading-normal text-(--gray-600)">
-                Pour une expérience idéale, ouvrez Offliner sur votre téléphone
-                et installez-le comme une application.
+                Offliner s&apos;installe sur votre téléphone comme une
+                application, sans passer par un store. Nous vous guidons à
+                l&apos;étape suivante.
               </p>
-              <ol className="mt-2.5 mb-0 grid gap-1.25 pl-4.5 text-[0.76rem] leading-normal text-(--gray-600)">
-                <li>
-                  Ouvrez le menu de votre navigateur&nbsp;:{" "}
-                  <strong className="text-(--gray-800)">⋮</strong> sur Android
-                  ou <strong>Partager</strong> sur iPhone.
-                </li>
-                <li>
-                  Choisissez{" "}
-                  <strong className="text-(--gray-800)">
-                    Installer l&apos;application
-                  </strong>{" "}
-                  ou{" "}
-                  <strong className="text-(--gray-800)">
-                    Sur l&apos;écran d&apos;accueil
-                  </strong>
-                  .
-                </li>
-                <li>
-                  Confirmez, puis lancez Offliner depuis votre écran
-                  d&apos;accueil.
-                </li>
-              </ol>
             </div>
           </article>
         </section>
 
         <p className="px-0 pt-4.5 pb-1 text-center text-[0.68rem] text-(--gray-600)">
-          Disponible sur mobile et ordinateur · Installation proposée par votre
-          navigateur
+          Gratuit · Sans compte · Vos données restent sur votre appareil
         </p>
       </div>
     </main>

@@ -11,6 +11,9 @@ import Village from "./components/Village";
 import DataBackup from "./components/DataBackup";
 import Achievements from "./components/Achievements";
 import Sidebar, { type AppSection } from "./components/layouts/Sidebar";
+import InstallGuide from "./components/install/InstallGuide";
+import InstallBanner from "./components/install/InstallBanner";
+import { useInstall } from "./stores/installStore";
 
 function AppContent() {
   const isOnline = useOnlineStatus((state) => state.isOnline);
@@ -56,6 +59,7 @@ function AppContent() {
       }`}
     >
       <Header isMenuOpen={isMenuOpen} onMenuOpen={() => setIsMenuOpen(true)} />
+      <InstallBanner />
       <div className="flex items-start gap-5 w-[min(calc(100%-32px),1080px)] mx-auto flex-1 max-md:block max-md:w-full">
         <Sidebar
           activeSection={activeSection}
@@ -72,18 +76,38 @@ function AppContent() {
   );
 }
 
+const WELCOME_DISMISSED_KEY = "offliner:welcome-dismissed";
+const INSTALL_GUIDE_SEEN_KEY = "offliner:install-guide-seen";
+
+type Stage = "welcome" | "install" | "app";
+
 function App() {
-  const [showHomePage, setShowHomePage] = useState(() => {
-    if (typeof window === "undefined") return true;
-    return !sessionStorage.getItem("offliner:welcome-dismissed");
+  const isStandalone = useInstall((state) => state.isStandalone);
+  const [stage, setStage] = useState<Stage>(() => {
+    if (!sessionStorage.getItem(WELCOME_DISMISSED_KEY)) return "welcome";
+    if (!sessionStorage.getItem(INSTALL_GUIDE_SEEN_KEY)) return "install";
+    return "app";
   });
 
-  if (showHomePage) {
+  // In a browser tab, every new session goes through the install guide;
+  // once installed, the app opens directly after the welcome page.
+  if (stage === "welcome") {
     return (
       <HomePage
         onPlay={() => {
-          sessionStorage.setItem("offliner:welcome-dismissed", "1");
-          setShowHomePage(false);
+          sessionStorage.setItem(WELCOME_DISMISSED_KEY, "1");
+          setStage("install");
+        }}
+      />
+    );
+  }
+
+  if (stage === "install" && !isStandalone) {
+    return (
+      <InstallGuide
+        onContinue={() => {
+          sessionStorage.setItem(INSTALL_GUIDE_SEEN_KEY, "1");
+          setStage("app");
         }}
       />
     );
