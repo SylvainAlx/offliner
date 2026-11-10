@@ -13,6 +13,7 @@ import Achievements from "./components/Achievements";
 import Sidebar, { type AppSection } from "./components/layouts/Sidebar";
 import InstallGuide from "./components/install/InstallGuide";
 import InstallBanner from "./components/install/InstallBanner";
+import UnobservedGapPrompt from "./components/UnobservedGapPrompt";
 import { useInstall } from "./stores/installStore";
 
 function AppContent() {
@@ -72,6 +73,7 @@ function AppContent() {
         </main>
       </div>
       <Footer />
+      <UnobservedGapPrompt />
     </div>
   );
 }

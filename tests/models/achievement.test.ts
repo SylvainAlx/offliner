@@ -2,11 +2,12 @@ import { describe, expect, it } from "vitest";
 import { getAchievements } from "../../src/models/achievement";
 import { User } from "../../src/models/user";
 import { HOUR, local } from "../helpers/time";
+import { observeOffline } from "../helpers/periods";
 
 function userOfflineOn(days: Array<[number, number, number]>): User {
   const user = new User();
   for (const [year, month, day] of days) {
-    user.periodList.openPeriodIfNeeded(local(year, month, day, 10));
+    observeOffline(user.periodList, local(year, month, day, 10), local(year, month, day, 11));
     user.periodList.closeAnyOpenPeriod(local(year, month, day, 11));
   }
   return user;

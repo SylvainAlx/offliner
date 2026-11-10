@@ -262,7 +262,11 @@ export class Village {
     completed.forEach((pending) => {
       if (pending.type === "house") this.addHouse(new House());
       else if (pending.type === "townHall") this.addTownHall();
-      else this.addCompanion(new Companion(currentOfflineMs));
+      // Born when its invocation ended, even if this runs later.
+      else
+        this.addCompanion(
+          new Companion(pending.offlineMsAtStart + pending.constructionOfflineMs),
+        );
     });
     return completed.length;
   }

@@ -4,6 +4,7 @@ import {
   HOUSE_CONSTRUCTION_COST,
   TOWN_HALL_CONSTRUCTION_COST,
   OFFLINIUM_DELIVERY_INTERVAL,
+  UNOBSERVED_GAP_THRESHOLD_MS,
   UNOBSERVED_OFFLINE_CREDIT_CAP_MS,
 } from "../utils/constants";
 import Card from "./ui/Card";
@@ -28,8 +29,11 @@ export default function Help() {
       </p>
       <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
         Lorsque l&apos;application est fermée ou en arrière-plan, elle ne peut
-        pas vérifier votre connexion : ce temps est comptabilisé dans la limite
-        de {UNOBSERVED_OFFLINE_CREDIT_CAP_MS / 3600000} h par absence.
+        pas vérifier votre connexion. Après plus de{" "}
+        {UNOBSERVED_GAP_THRESHOLD_MS / 60000} minutes sans pouvoir le faire,
+        elle vous demande à votre retour si vous êtes resté hors ligne : ce
+        temps n&apos;est compté que si vous répondez oui, dans la limite de{" "}
+        {UNOBSERVED_OFFLINE_CREDIT_CAP_MS / 3600000} h par absence.
       </p>
       <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
         Les maisons se construisent avec {HOUSE_CONSTRUCTION_COST} ⬡ et
@@ -53,7 +57,8 @@ export default function Help() {
       <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
         Les compagnons évolués accélèrent la récolte : un adolescent ajoute +1
         ⬡, un adulte +2 ⬡ et un sage +3 ⬡ à chaque tranche de{" "}
-        {OFFLINIUM_DELIVERY_INTERVAL / 1000} secondes hors ligne.
+        {OFFLINIUM_DELIVERY_INTERVAL / 1000} secondes hors ligne, à partir du
+        moment où ils atteignent ce stade.
       </p>
     </Card>
   );

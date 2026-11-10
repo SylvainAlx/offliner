@@ -4,6 +4,7 @@ import {
 } from "../utils/constants";
 import { PeriodList } from "./periodList";
 import { Village } from "./village";
+import { particlesBetween } from "./harvest";
 import { isFiniteNumber, isRecord, sanitizeName } from "../utils/sanitize";
 
 export interface OffliniumSpend {
@@ -20,8 +21,13 @@ function cloneInstance<T extends object>(instance: T): T {
 
 export class User {
   name: string;
+  /**
+   * Settled balance: everything harvested up to `settledOfflineMs` (cumulative
+   * offline time), minus what was spent. What was harvested since is computed
+   * on demand, with the companions' bonus at each moment.
+   */
   offlinium: number;
-  offliniumSpentDuringOpenPeriod: number;
+  settledOfflineMs: number;
   periodList: PeriodList;
   village: Village;
   createdAt: number;
@@ -29,7 +35,7 @@ export class User {
   constructor(name: string = "Joueur") {
     this.name = name;
     this.offlinium = 0;
-    this.offliniumSpentDuringOpenPeriod = 0;
+    this.settledOfflineMs = 0;
     this.periodList = new PeriodList();
     this.village = new Village();
     this.createdAt = Date.now();
@@ -41,31 +47,53 @@ export class User {
 
       if (Array.isArray(parsed)) {
         this.periodList.loadPeriods(parsed);
+        this.settledOfflineMs = 0;
         return;
       }
 
       if (!isRecord(parsed)) return;
 
       this.name = sanitizeName(parsed.name) ?? this.name;
-      if (isFiniteNumber(parsed.offlinium)) {
-        this.offlinium = Math.max(0, Math.floor(parsed.offlinium));
-      }
-      if (isFiniteNumber(parsed.offliniumSpentDuringOpenPeriod)) {
-        this.offliniumSpentDuringOpenPeriod = Math.max(
-          0,
-          Math.floor(parsed.offliniumSpentDuringOpenPeriod),
-        );
-      }
       if (isFiniteNumber(parsed.createdAt)) this.createdAt = parsed.createdAt;
 
       if (parsed.periodList !== undefined && parsed.periodList !== null) {
         this.periodList.loadPeriods(parsed.periodList);
       }
+      // Offline time the app actually observed: an open period counts up to
+      // its last observation, the rest is checked when the app starts.
+      const totalOfflineMs = this.periodList.computeTotalMs(
+        this.periodList.openPeriodLastSeen ?? Date.now(),
+      );
       if (parsed.village !== undefined && parsed.village !== null) {
-        this.village.loadVillage(
-          parsed.village,
-          this.periodList.computeTotalMs(Date.now()),
+        this.village.loadVillage(parsed.village, totalOfflineMs);
+      }
+
+      const storedOfflinium = isFiniteNumber(parsed.offlinium)
+        ? Math.max(0, Math.floor(parsed.offlinium))
+        : 0;
+
+      if (isFiniteNumber(parsed.settledOfflineMs)) {
+        this.offlinium = storedOfflinium;
+        this.settledOfflineMs = Math.min(
+          Math.max(0, parsed.settledOfflineMs),
+          totalOfflineMs,
         );
+      } else {
+        // Saves made before the continuous harvest: closed periods were
+        // already paid into `offlinium`, the open one was paid at the current
+        // rate minus what was spent during it. Settle all of it now.
+        const completedMs = this.periodList.computeCompletedMs();
+        const openPeriodParticles =
+          Math.floor((totalOfflineMs - completedMs) / OFFLINIUM_DELIVERY_INTERVAL) *
+          this.offliniumHarvestRate;
+        const spentDuringOpenPeriod = isFiniteNumber(parsed.offliniumSpentDuringOpenPeriod)
+          ? Math.max(0, Math.floor(parsed.offliniumSpentDuringOpenPeriod))
+          : 0;
+        this.offlinium = Math.max(
+          0,
+          storedOfflinium + openPeriodParticles - spentDuringOpenPeriod,
+        );
+        this.settledOfflineMs = totalOfflineMs;
       }
     } catch (e) {
       console.error("Error loading user data:", e);
@@ -76,7 +104,7 @@ export class User {
   clone(): User {
     const copy = new User(this.name);
     copy.offlinium = this.offlinium;
-    copy.offliniumSpentDuringOpenPeriod = this.offliniumSpentDuringOpenPeriod;
+    copy.settledOfflineMs = this.settledOfflineMs;
     copy.createdAt = this.createdAt;
     copy.periodList = this.periodList.clone();
     copy.village = new Village();
@@ -98,38 +126,29 @@ export class User {
     return copy;
   }
 
+  /** Current harvest rate, for display. */
   get offliniumHarvestRate(): number {
     return 1 + this.village.offliniumHarvestBonus;
   }
 
-  addOfflinium(periodDurationMs: number): void {
-    if (periodDurationMs < 0) {
-      throw new Error("La durée du période doit être supérieure à 0.");
-    } else {
-      this.offlinium +=
-        Math.floor(periodDurationMs / OFFLINIUM_DELIVERY_INTERVAL) *
-        this.offliniumHarvestRate;
-    }
-  }
-
-  getCurrentPeriodOfflinium(totalOfflineMs: number): number {
-    const completedOfflineMs = this.periodList.computeCompletedMs();
-
-    return (
-      Math.floor(
-        Math.max(0, totalOfflineMs - completedOfflineMs) /
-          OFFLINIUM_DELIVERY_INTERVAL,
-      ) * this.offliniumHarvestRate
+  /** Particles harvested since the balance was last settled. */
+  getUnsettledOfflinium(totalOfflineMs: number): number {
+    return particlesBetween(
+      this.village.companions,
+      this.settledOfflineMs,
+      totalOfflineMs,
     );
   }
 
   getAvailableOfflinium(totalOfflineMs: number): number {
-    return Math.max(
-      0,
-      this.offlinium +
-        this.getCurrentPeriodOfflinium(totalOfflineMs) -
-        this.offliniumSpentDuringOpenPeriod,
-    );
+    return Math.max(0, this.offlinium + this.getUnsettledOfflinium(totalOfflineMs));
+  }
+
+  /** Moves the harvest up to `totalOfflineMs` into the settled balance. */
+  settleOfflinium(totalOfflineMs: number): void {
+    if (totalOfflineMs <= this.settledOfflineMs) return;
+    this.offlinium += this.getUnsettledOfflinium(totalOfflineMs);
+    this.settledOfflineMs = totalOfflineMs;
   }
 
   spendOfflinium(
@@ -141,56 +160,32 @@ export class User {
     }
     if (this.getAvailableOfflinium(totalOfflineMs) < amount) return;
 
-    const fromStoredBalance = Math.min(amount, this.offlinium);
-    this.offlinium -= fromStoredBalance;
-    const fromOpenPeriod = amount - fromStoredBalance;
-    this.offliniumSpentDuringOpenPeriod += fromOpenPeriod;
-    return { stored: fromStoredBalance, openPeriod: fromOpenPeriod };
+    this.settleOfflinium(totalOfflineMs);
+    this.offlinium -= amount;
+    return { stored: amount, openPeriod: 0 };
   }
 
   closeOfflinePeriod(endTs: number): number | undefined {
-    const duration = this.periodList.closeAnyOpenPeriod(endTs);
-    if (duration === undefined) return;
-
-    const spentDuringPeriod = this.offliniumSpentDuringOpenPeriod;
-    this.addOfflinium(duration);
-    this.offlinium = Math.max(0, this.offlinium - spentDuringPeriod);
-    this.offliniumSpentDuringOpenPeriod = 0;
-    return duration;
-  }
-
-  discardOpenPeriod(): void {
-    this.periodList.discardOpenPeriod();
-    this.offliniumSpentDuringOpenPeriod = 0;
-  }
-
-  removeOfflinium(amount: number): void {
-    if (amount < 0) {
-      throw new Error("Le montant à retirer doit être supérieur à 0.");
-    } else {
-      this.offlinium = Math.max(0, this.offlinium - amount);
-    }
+    return this.periodList.closeAnyOpenPeriod(endTs);
   }
 
   refundOfflinium(spend: {
     storedOffliniumCost: number;
     openPeriodOffliniumCost: number;
   }): void {
-    const refundedFromOpenPeriod = Math.min(
-      this.offliniumSpentDuringOpenPeriod,
-      spend.openPeriodOffliniumCost,
-    );
-    const settledOpenPeriodCost =
-      spend.openPeriodOffliniumCost - refundedFromOpenPeriod;
-
-    this.offliniumSpentDuringOpenPeriod -= refundedFromOpenPeriod;
-    this.offlinium += spend.storedOffliniumCost + settledOpenPeriodCost;
+    // Saves from before the continuous harvest may split a cost in two parts.
+    this.offlinium += spend.storedOffliniumCost + spend.openPeriodOffliniumCost;
   }
 
-  releaseCompanionAndGetOfflinium(companionId: string): boolean {
-    const released = this.village.releaseCompanion(companionId);
-    if (!released) return false;
+  releaseCompanionAndGetOfflinium(
+    companionId: string,
+    totalOfflineMs: number,
+  ): boolean {
+    if (!this.village.getCompanion(companionId)) return false;
 
+    // What the companion helped harvest so far stays earned.
+    this.settleOfflinium(totalOfflineMs);
+    this.village.releaseCompanion(companionId);
     this.offlinium += COMPANION_INVOCATION_COST;
     return true;
   }

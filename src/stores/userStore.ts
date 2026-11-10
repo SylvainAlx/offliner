@@ -23,7 +23,10 @@ export interface UserStore {
   updateCompanionStages: (offlineMs: number) => boolean;
   renameVillage: (name: string) => boolean;
   renameCompanion: (companionId: string, name: string) => boolean;
-  releaseCompanionAndGetOfflinium: (companionId: string) => boolean;
+  releaseCompanionAndGetOfflinium: (
+    companionId: string,
+    offlineMs: number,
+  ) => boolean;
   cancelCompanionInvocation: (companionId: string, offlineMs: number) => boolean;
   completeCompanionInvocations: (offlineMs: number) => void;
   completePendingElements: (offlineMs: number) => void;
@@ -31,6 +34,7 @@ export interface UserStore {
   importFromSnapshot: (snapshot: unknown) => Promise<void>;
   resetAll: () => Promise<void>;
   touchOpenPeriod: (now: number) => boolean;
+  resolveUnconfirmedGaps: (stayedOffline: boolean) => void;
   syncWithStorage: (online: boolean, now: number) => User;
 }
 
@@ -48,7 +52,11 @@ function persist(user: User): Promise<void> {
   return writeQueue;
 }
 
-/** Applies the unobserved-time rule to a freshly loaded profile. */
+/**
+ * Records the time the app could not observe since the profile was saved (it
+ * becomes a gap to confirm), then closes a period left open if the app starts
+ * online.
+ */
 function prepareLoadedUser(user: User, now: number, online: boolean): User {
   user.periodList.recordObservation(now);
   // A confirmed period must be closed when the app starts online.
@@ -163,9 +171,9 @@ export const useUser = create<UserStore>((set, get) => ({
     return true;
   },
 
-  releaseCompanionAndGetOfflinium: (companionId) => {
+  releaseCompanionAndGetOfflinium: (companionId, offlineMs) => {
     const next = get().user.clone();
-    if (!next.releaseCompanionAndGetOfflinium(companionId)) return false;
+    if (!next.releaseCompanionAndGetOfflinium(companionId, offlineMs)) return false;
 
     set({ user: next });
     void persist(next);
@@ -223,7 +231,7 @@ export const useUser = create<UserStore>((set, get) => ({
     const elapsedOfflineMs = next.periodList.computeTotalMs(Date.now());
     next.periodList.clearPeriods();
     next.offlinium = 0;
-    next.offliniumSpentDuringOpenPeriod = 0;
+    next.settledOfflineMs = 0;
     next.village.shiftCompanionBirthTimes(elapsedOfflineMs);
     next.village.pendingElements = next.village.pendingElements.map(
       (pending) => ({
@@ -255,7 +263,8 @@ export const useUser = create<UserStore>((set, get) => ({
   },
 
   // Records, at most every OPEN_PERIOD_HEARTBEAT_MS, that the device is still
-  // seen offline, and caps the time during which the app could not observe it.
+  // seen offline. A long silence between two records (device asleep with the
+  // app open) becomes a gap to confirm.
   touchOpenPeriod: (now) => {
     if (!get().user.periodList.needsHeartbeat(now)) return false;
 
@@ -264,6 +273,16 @@ export const useUser = create<UserStore>((set, get) => ({
     set({ user: next });
     void persist(next);
     return true;
+  },
+
+  // The player's answer to "did you stay offline while the app could not see it?".
+  resolveUnconfirmedGaps: (stayedOffline) => {
+    if (get().user.periodList.unconfirmedGaps.length === 0) return;
+
+    const next = get().user.clone();
+    next.periodList.resolveUnconfirmedGaps(stayedOffline);
+    set({ user: next });
+    void persist(next);
   },
 
   // Kept as a compatibility name for the lifecycle store. The in-memory
