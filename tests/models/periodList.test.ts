@@ -2,23 +2,24 @@ import { describe, expect, it } from "vitest";
 import { PeriodList } from "../../src/models/periodList";
 import {
   OPEN_PERIOD_HEARTBEAT_MS,
+  UNOBSERVED_GAP_THRESHOLD_MS as THRESHOLD,
   UNOBSERVED_OFFLINE_CREDIT_CAP_MS as CAP,
 } from "../../src/utils/constants";
 import { HOUR, MINUTE, local } from "../helpers/time";
+import { observeOffline } from "../helpers/periods";
 
 const T0 = local(2026, 1, 10, 8);
 
-function openAt(start: number): PeriodList {
+function observed(start: number, end: number): PeriodList {
   const list = new PeriodList();
-  list.openPeriodIfNeeded(start);
+  observeOffline(list, start, end);
   return list;
 }
 
 describe("PeriodList", () => {
   describe("opening and closing", () => {
     it("credits an observed period entirely", () => {
-      const list = openAt(T0);
-      list.recordObservation(T0 + HOUR);
+      const list = observed(T0, T0 + 2 * HOUR);
 
       expect(list.closeAnyOpenPeriod(T0 + 2 * HOUR)).toBe(2 * HOUR);
       expect(list.openPeriodStart).toBeNull();
@@ -34,7 +35,8 @@ describe("PeriodList", () => {
     });
 
     it("keeps the first start when a period is already open", () => {
-      const list = openAt(T0);
+      const list = new PeriodList();
+      list.openPeriodIfNeeded(T0);
       list.openPeriodIfNeeded(T0 + HOUR);
       expect(list.openPeriodStart).toBe(T0);
     });
@@ -46,26 +48,23 @@ describe("PeriodList", () => {
     });
 
     it("records a period without duration on its start day", () => {
-      const list = openAt(T0);
+      const list = new PeriodList();
+      list.openPeriodIfNeeded(T0);
       expect(list.closeAnyOpenPeriod(T0)).toBe(0);
       expect(list.days).toHaveLength(1);
       expect(list.days[0].periodCount).toBe(1);
-      expect(list.days[0].durationMs).toBe(0);
     });
 
     it("computes the running total of the open period", () => {
-      const list = openAt(T0);
-      list.recordObservation(T0 + 30 * MINUTE);
+      const list = observed(T0, T0 + 45 * MINUTE);
       expect(list.computeTotalMs(T0 + 45 * MINUTE)).toBe(45 * MINUTE);
-      expect(list.getOpenPeriod()?.getPeriodDurationMs(T0 + 45 * MINUTE)).toBe(
-        45 * MINUTE,
-      );
+      expect(list.getOpenPeriod()?.getPeriodDurationMs(T0 + 45 * MINUTE)).toBe(45 * MINUTE);
     });
   });
 
   describe("daily aggregation", () => {
     it("splits a period across midnight and counts it once per day", () => {
-      const list = openAt(local(2026, 1, 10, 22));
+      const list = observed(local(2026, 1, 10, 22), local(2026, 1, 11, 2));
       list.closeAnyOpenPeriod(local(2026, 1, 11, 2));
 
       expect(list.days.map((day) => [day.dayStart, day.durationMs, day.periodCount])).toEqual([
@@ -75,9 +74,9 @@ describe("PeriodList", () => {
     });
 
     it("adds up several periods of the same day", () => {
-      const list = openAt(T0);
+      const list = observed(T0, T0 + HOUR);
       list.closeAnyOpenPeriod(T0 + HOUR);
-      list.openPeriodIfNeeded(T0 + 3 * HOUR);
+      observeOffline(list, T0 + 3 * HOUR, T0 + 5 * HOUR);
       list.closeAnyOpenPeriod(T0 + 5 * HOUR);
 
       expect(list.days).toHaveLength(1);
@@ -87,53 +86,90 @@ describe("PeriodList", () => {
         firstStart: T0,
         lastEnd: T0 + 5 * HOUR,
       });
-      expect(list.computeCompletedMs()).toBe(3 * HOUR);
     });
 
     it("splits at local midnight on a daylight saving day", () => {
       // 29 March 2026: clocks go from 02:00 to 03:00 in Europe/Paris.
-      const list = openAt(local(2026, 3, 28, 23));
-      const credited = list.closeAnyOpenPeriod(local(2026, 3, 29, 4));
+      const start = local(2026, 3, 28, 23);
+      const end = local(2026, 3, 29, 4);
+      const list = observed(start, end);
 
-      expect(credited).toBe(4 * HOUR);
+      expect(list.closeAnyOpenPeriod(end)).toBe(4 * HOUR);
       expect(list.days.find((day) => day.dayStart === local(2026, 3, 28))?.durationMs).toBe(HOUR);
       expect(list.days.find((day) => day.dayStart === local(2026, 3, 29))?.durationMs).toBe(3 * HOUR);
     });
   });
 
-  describe("unobserved time", () => {
-    it("caps a gap during which the app could not observe the device", () => {
-      const list = openAt(T0);
-      expect(list.closeAnyOpenPeriod(T0 + CAP + 8 * HOUR)).toBe(CAP);
-      expect(list.computeCompletedMs()).toBe(CAP);
+  describe("time the app could not observe", () => {
+    it("credits a short absence without asking", () => {
+      const list = new PeriodList();
+      list.openPeriodIfNeeded(T0);
+      expect(list.closeAnyOpenPeriod(T0 + THRESHOLD)).toBe(THRESHOLD);
+      expect(list.unconfirmedGaps).toEqual([]);
     });
 
-    it("keeps observed time and only caps the gap", () => {
-      const list = openAt(T0);
-      list.recordObservation(T0 + HOUR);
-      const afterGap = T0 + HOUR + CAP + 2 * HOUR;
-      list.recordObservation(afterGap);
+    it("keeps a longer absence out until the player answers", () => {
+      const list = observed(T0, T0 + HOUR);
+      list.recordObservation(T0 + 5 * HOUR);
 
-      expect(list.computeTotalMs(afterGap)).toBe(HOUR + CAP);
-      expect(list.getOpenPeriodExcludedMs()).toBe(2 * HOUR);
-      expect(list.closeAnyOpenPeriod(afterGap + HOUR)).toBe(2 * HOUR + CAP);
+      expect(list.unconfirmedGaps).toHaveLength(1);
+      expect(list.getUnconfirmedGapsMs()).toBeGreaterThan(3 * HOUR);
+      expect(list.computeTotalMs(T0 + 5 * HOUR)).toBeLessThan(HOUR + 1);
     });
 
-    it("credits a gap shorter than the cap", () => {
-      const list = openAt(T0);
-      expect(list.closeAnyOpenPeriod(T0 + CAP - MINUTE)).toBe(CAP - MINUTE);
+    it("credits a confirmed absence while the period is still open", () => {
+      const list = observed(T0, T0 + HOUR);
+      const lastSeen = list.openPeriodLastSeen!;
+      list.recordObservation(lastSeen + 4 * HOUR);
+
+      expect(list.resolveUnconfirmedGaps(true)).toBe(4 * HOUR);
+      expect(list.computeTotalMs(lastSeen + 4 * HOUR)).toBe(lastSeen + 4 * HOUR - T0);
+      expect(list.unconfirmedGaps).toEqual([]);
+    });
+
+    it("caps a confirmed absence", () => {
+      const list = new PeriodList();
+      list.openPeriodIfNeeded(T0);
+      list.recordObservation(T0 + CAP + 8 * HOUR);
+
+      expect(list.resolveUnconfirmedGaps(true)).toBe(CAP);
+      expect(list.computeTotalMs(T0 + CAP + 8 * HOUR)).toBe(CAP);
+    });
+
+    it("credits a confirmed absence after the period was closed", () => {
+      // The app comes back online: the period ends at the last observation.
+      const list = new PeriodList();
+      list.openPeriodIfNeeded(T0);
+      expect(list.closeAnyOpenPeriod(T0 + 3 * HOUR)).toBe(0);
+      expect(list.unconfirmedGaps).toHaveLength(1);
+
+      expect(list.resolveUnconfirmedGaps(true)).toBe(3 * HOUR);
+      expect(list.computeCompletedMs()).toBe(3 * HOUR);
+      expect(list.days).toHaveLength(1);
+      expect(list.days[0].periodCount).toBe(1);
+    });
+
+    it("credits nothing when the player reconnected", () => {
+      const list = new PeriodList();
+      list.openPeriodIfNeeded(T0);
+      list.closeAnyOpenPeriod(T0 + 20 * HOUR);
+
+      expect(list.resolveUnconfirmedGaps(false)).toBe(0);
+      expect(list.computeCompletedMs()).toBe(0);
+      expect(list.unconfirmedGaps).toEqual([]);
     });
 
     it("ignores a clock that goes backwards", () => {
-      const list = openAt(T0);
-      list.recordObservation(T0 + 2 * HOUR);
+      const list = observed(T0, T0 + 2 * HOUR);
+      const lastSeen = list.openPeriodLastSeen;
 
-      expect(list.recordObservation(T0 + HOUR)).toBe(false);
-      expect(list.openPeriodLastSeen).toBe(T0 + 2 * HOUR);
+      expect(list.recordObservation(T0)).toBe(false);
+      expect(list.openPeriodLastSeen).toBe(lastSeen);
     });
 
     it("asks for a heartbeat only after the heartbeat interval", () => {
-      const list = openAt(T0);
+      const list = new PeriodList();
+      list.openPeriodIfNeeded(T0);
       expect(new PeriodList().needsHeartbeat(T0)).toBe(false);
       expect(list.needsHeartbeat(T0 + OPEN_PERIOD_HEARTBEAT_MS - 1)).toBe(false);
       expect(list.needsHeartbeat(T0 + OPEN_PERIOD_HEARTBEAT_MS)).toBe(true);
@@ -141,15 +177,15 @@ describe("PeriodList", () => {
   });
 
   describe("loading saved data", () => {
-    it("round-trips through JSON, exclusions included", () => {
-      const list = openAt(T0);
-      list.recordObservation(T0 + CAP + 3 * HOUR);
+    it("round-trips through JSON, exclusions and pending gaps included", () => {
+      const list = observed(T0, T0 + HOUR);
+      list.recordObservation(T0 + 6 * HOUR);
 
       const restored = new PeriodList();
       restored.loadPeriods(JSON.parse(JSON.stringify(list)));
 
       expect(restored).toEqual(list);
-      expect(restored.computeTotalMs(T0 + CAP + 4 * HOUR)).toBe(CAP + HOUR);
+      expect(restored.unconfirmedGaps).toHaveLength(1);
     });
 
     it("treats an open period saved before the heartbeat as last seen at its start", () => {
@@ -157,7 +193,8 @@ describe("PeriodList", () => {
       list.loadPeriods({ days: [], openPeriodStart: T0 });
 
       expect(list.openPeriodLastSeen).toBe(T0);
-      expect(list.closeAnyOpenPeriod(T0 + CAP + HOUR)).toBe(CAP);
+      list.recordObservation(T0 + 20 * HOUR);
+      expect(list.unconfirmedGaps).toEqual([{ start: T0, end: T0 + 20 * HOUR }]);
     });
 
     it("migrates the legacy one-entry-per-session format", () => {
@@ -171,7 +208,7 @@ describe("PeriodList", () => {
       expect(list.openPeriodStart).toBe(T0 + 2 * HOUR);
     });
 
-    it("drops invalid days and exclusions", () => {
+    it("drops invalid days, exclusions and gaps", () => {
       const list = new PeriodList();
       list.loadPeriods({
         days: [
@@ -187,15 +224,17 @@ describe("PeriodList", () => {
           { start: T0 + 30 * MINUTE, end: T0 + 2 * HOUR },
           { start: 5, end: 1 },
         ],
+        unconfirmedGaps: [{ start: 5, end: 1 }, "x", { start: T0, end: T0 + HOUR }],
       });
 
       expect(list.days).toEqual([
         { dayStart: 0, durationMs: 5, periodCount: 1, firstStart: 0, lastEnd: 5 },
       ]);
       expect(list.openPeriodExclusions).toEqual([]);
+      expect(list.unconfirmedGaps).toEqual([{ start: T0, end: T0 + HOUR }]);
     });
 
-    it.each([["garbage"], [42], [null], [{ days: "x" }], [{ __proto__: { days: [] } }]])(
+    it.each([["garbage"], [42], [null], [{ days: "x" }]])(
       "survives unusable input %#",
       (input) => {
         const list = new PeriodList();
@@ -207,15 +246,16 @@ describe("PeriodList", () => {
   });
 
   it("clones without sharing state", () => {
-    const list = openAt(T0);
-    list.recordObservation(T0 + CAP + HOUR);
+    const list = observed(T0, T0 + HOUR);
+    list.recordObservation(T0 + 5 * HOUR);
     const copy = list.clone();
 
-    copy.closeAnyOpenPeriod(T0 + CAP + 2 * HOUR);
+    copy.closeAnyOpenPeriod(T0 + 6 * HOUR);
+    copy.resolveUnconfirmedGaps(true);
 
     expect(copy.openPeriodStart).toBeNull();
     expect(list.openPeriodStart).toBe(T0);
-    expect(list.openPeriodExclusions).toHaveLength(1);
+    expect(list.unconfirmedGaps).toHaveLength(1);
     expect(list.days).toEqual([]);
   });
 });

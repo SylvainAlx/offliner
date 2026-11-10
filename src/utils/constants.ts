@@ -24,8 +24,10 @@ export const HOUSE_CONSTRUCTION_OFFLINE_MS = 2 * 60 * 1000;
 export const TOWN_HALL_CONSTRUCTION_OFFLINE_MS = 5 * 60 * 1000;
 export const COMPANIONS_PER_HOUSE = 4;
 
-// Time spent while the app could not observe the device (background, closed,
-// device asleep) cannot be verified. It is credited, but capped per gap.
+// Time during which the app could not observe the device (background, closed,
+// device asleep) cannot be verified. Beyond this threshold, the player is asked
+// whether they stayed offline; if so, at most the cap is credited per gap.
+export const UNOBSERVED_GAP_THRESHOLD_MS = 15 * 60 * 1000;
 export const UNOBSERVED_OFFLINE_CREDIT_CAP_MS = 12 * 60 * 60 * 1000;
 // How often an open offline period records that the app saw the device offline.
 export const OPEN_PERIOD_HEARTBEAT_MS = 30 * 1000;

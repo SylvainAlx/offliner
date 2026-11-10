@@ -1,6 +1,7 @@
 import { Period } from "./period";
 import {
   OPEN_PERIOD_HEARTBEAT_MS,
+  UNOBSERVED_GAP_THRESHOLD_MS,
   UNOBSERVED_OFFLINE_CREDIT_CAP_MS,
 } from "../utils/constants";
 import { isFiniteNumber, isRecord } from "../utils/sanitize";
@@ -13,7 +14,7 @@ export interface OfflineDay {
   lastEnd: number;
 }
 
-/** Part of an open period that is not credited (unobserved time over the cap). */
+/** Part of an open period that is not credited. */
 export interface ExcludedInterval {
   start: number;
   end: number;
@@ -25,17 +26,26 @@ export class PeriodList {
   /** Last time the app observed the device offline during the open period. */
   openPeriodLastSeen: number | null;
   openPeriodExclusions: ExcludedInterval[];
+  /**
+   * Stretches of time during which the app could not observe the device (in
+   * the background, closed, device asleep) for longer than
+   * UNOBSERVED_GAP_THRESHOLD_MS. They are not credited until the player says
+   * they stayed offline, and they outlive the period they belong to.
+   */
+  unconfirmedGaps: ExcludedInterval[];
 
   constructor(
     days: OfflineDay[] = [],
     openPeriodStart: number | null = null,
     openPeriodLastSeen: number | null = openPeriodStart,
     openPeriodExclusions: ExcludedInterval[] = [],
+    unconfirmedGaps: ExcludedInterval[] = [],
   ) {
     this.days = days;
     this.openPeriodStart = openPeriodStart;
     this.openPeriodLastSeen = openPeriodLastSeen;
     this.openPeriodExclusions = openPeriodExclusions;
+    this.unconfirmedGaps = unconfirmedGaps;
   }
 
   clone(): PeriodList {
@@ -44,6 +54,7 @@ export class PeriodList {
       this.openPeriodStart,
       this.openPeriodLastSeen,
       this.openPeriodExclusions.map((interval) => ({ ...interval })),
+      this.unconfirmedGaps.map((interval) => ({ ...interval })),
     );
   }
 
@@ -58,6 +69,12 @@ export class PeriodList {
           candidate.openPeriodLastSeen,
           candidate.openPeriodExclusions,
         );
+        this.unconfirmedGaps = Array.isArray(candidate.unconfirmedGaps)
+          ? candidate.unconfirmedGaps
+              .filter(isExcludedInterval)
+              .slice(-MAX_UNCONFIRMED_GAPS)
+              .map((interval) => ({ start: interval.start, end: interval.end }))
+          : [];
         return;
       }
 
@@ -88,6 +105,7 @@ export class PeriodList {
 
   clearPeriods(): void {
     this.days = [];
+    this.unconfirmedGaps = [];
     this.discardOpenPeriod();
   }
 
@@ -129,25 +147,74 @@ export class PeriodList {
 
   /**
    * Records that the device is observed offline at `now`. When the previous
-   * observation is older than the cap (app in background, closed, device
-   * asleep), the time beyond the cap is excluded from the open period.
-   * Returns true when the open period changed.
+   * observation is older than UNOBSERVED_GAP_THRESHOLD_MS (app in the
+   * background, closed, device asleep), nothing proves the device stayed
+   * offline meanwhile: that stretch is excluded and kept as an unconfirmed gap
+   * until the player answers. Returns true when the open period changed.
    */
-  recordObservation(
-    now: number,
-    capMs: number = UNOBSERVED_OFFLINE_CREDIT_CAP_MS,
-  ): boolean {
+  recordObservation(now: number): boolean {
     if (this.openPeriodStart === null) return false;
 
     const lastSeen = this.openPeriodLastSeen ?? this.openPeriodStart;
     // Ignore clocks going backwards: never shorten what was already observed.
     if (now <= lastSeen) return false;
 
-    if (now - lastSeen > capMs) {
-      this.openPeriodExclusions.push({ start: lastSeen + capMs, end: now });
+    if (now - lastSeen > UNOBSERVED_GAP_THRESHOLD_MS) {
+      const gap = { start: lastSeen, end: now };
+      this.openPeriodExclusions.push(gap);
+      this.unconfirmedGaps.push({ ...gap });
+      // Unanswered for too long: the oldest gaps can no longer be credited.
+      if (this.unconfirmedGaps.length > MAX_UNCONFIRMED_GAPS) {
+        this.unconfirmedGaps.splice(0, this.unconfirmedGaps.length - MAX_UNCONFIRMED_GAPS);
+      }
     }
     this.openPeriodLastSeen = now;
     return true;
+  }
+
+  getUnconfirmedGapsMs(): number {
+    return this.unconfirmedGaps.reduce(
+      (total, gap) => total + (gap.end - gap.start),
+      0,
+    );
+  }
+
+  /**
+   * Applies the player's answer to the unconfirmed gaps. Confirmed gaps are
+   * credited up to `capMs` each, whether their period is still open or not;
+   * denied gaps stay excluded. Returns the credited duration.
+   */
+  resolveUnconfirmedGaps(
+    stayedOffline: boolean,
+    capMs: number = UNOBSERVED_OFFLINE_CREDIT_CAP_MS,
+  ): number {
+    const gaps = this.unconfirmedGaps;
+    this.unconfirmedGaps = [];
+    if (!stayedOffline) return 0;
+
+    let credited = 0;
+    for (const gap of gaps) {
+      const creditedEnd = Math.min(gap.end, gap.start + capMs);
+      const exclusionIndex = this.openPeriodExclusions.findIndex(
+        (interval) => interval.start === gap.start && interval.end === gap.end,
+      );
+
+      if (exclusionIndex !== -1) {
+        // Still part of the open period: only the time beyond the cap stays excluded.
+        if (creditedEnd < gap.end) {
+          this.openPeriodExclusions[exclusionIndex] = { start: creditedEnd, end: gap.end };
+        } else {
+          this.openPeriodExclusions.splice(exclusionIndex, 1);
+        }
+      } else {
+        // The period was closed meanwhile: add the time to its days.
+        const countedDays = new Set(this.days.map((day) => day.dayStart));
+        this.aggregatePeriod(gap.start, creditedEnd, countedDays);
+        this.sortDays();
+      }
+      credited += creditedEnd - gap.start;
+    }
+    return credited;
   }
 
   needsHeartbeat(now: number): boolean {
@@ -277,7 +344,10 @@ export class PeriodList {
   }
 }
 
+const MAX_UNCONFIRMED_GAPS = 50;
+
 type PeriodCandidate = {
+  unconfirmedGaps?: unknown;
   days?: unknown;
   openPeriodStart?: unknown;
   openPeriodLastSeen?: unknown;

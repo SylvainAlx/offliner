@@ -11,38 +11,68 @@ import {
   OFFLINIUM_DELIVERY_INTERVAL as INTERVAL,
 } from "../../src/utils/constants";
 import { HOUR, local } from "../helpers/time";
+import { observeOffline } from "../helpers/periods";
 
 const T0 = local(2026, 1, 10, 8);
 
-/** A user whose open period has produced `particles` particles at T0 + duration. */
+/** A user observed offline from T0 for `particles` delivery intervals. */
 function userWithOpenPeriod(particles: number): { user: User; now: number } {
   const user = new User();
-  user.periodList.openPeriodIfNeeded(T0);
   const now = T0 + particles * INTERVAL;
+  observeOffline(user.periodList, T0, now);
   user.periodList.recordObservation(now);
   return { user, now };
 }
 
+function companionBornAt(birthOfflineMs: number): Companion {
+  const companion = new Companion(0);
+  companion.birthOfflineMs = birthOfflineMs;
+  companion.updateStage(Math.max(0, -birthOfflineMs));
+  return companion;
+}
+
 describe("User", () => {
   describe("Offlinium", () => {
-    it("earns one particle per full interval when a period closes", () => {
-      const user = new User();
-      user.periodList.openPeriodIfNeeded(T0);
-      user.closeOfflinePeriod(T0 + 10 * INTERVAL + INTERVAL / 2);
-      expect(user.offlinium).toBe(10);
+    it("delivers one particle per full interval of offline time", () => {
+      const { user, now } = userWithOpenPeriod(10);
+      const total = user.periodList.computeTotalMs(now + INTERVAL / 2);
+      expect(user.getAvailableOfflinium(total)).toBe(10);
     });
 
-    it("multiplies the harvest by the bonus of evolved companions", () => {
+    it("keeps what was harvested once the period is closed", () => {
+      const { user, now } = userWithOpenPeriod(10);
+      user.closeOfflinePeriod(now);
+      expect(user.getAvailableOfflinium(user.periodList.computeTotalMs(now))).toBe(10);
+    });
+
+    it("adds the bonus of companions that are already evolved", () => {
       const user = new User();
-      const adolescent = new Companion(0);
-      adolescent.stage = "adolescent";
-      user.village.addCompanion(adolescent);
+      user.village.addCompanion(companionBornAt(-COMPANION_STAGE_AGE_MS.adolescent));
+      expect(user.getAvailableOfflinium(10 * INTERVAL)).toBe(20);
+    });
 
-      user.periodList.openPeriodIfNeeded(T0);
-      user.closeOfflinePeriod(T0 + 10 * INTERVAL);
+    it("applies a companion's bonus only from the moment it evolves", () => {
+      // The bug this guards against: 12 h credited at once turned every
+      // companion into a sage and paid the whole 12 h at the sage rate.
+      const user = new User();
+      user.village.addCompanion(new Companion(0));
+      const deliveries = (ms: number) => ms / INTERVAL;
 
-      expect(user.offliniumHarvestRate).toBe(2);
-      expect(user.offlinium).toBe(20);
+      expect(user.getAvailableOfflinium(12 * HOUR)).toBe(
+        deliveries(1 * HOUR) * 1 + // child
+          deliveries(2 * HOUR) * 2 + // adolescent
+          deliveries(4 * HOUR) * 3 + // adult
+          deliveries(5 * HOUR) * 4, // sage
+      );
+    });
+
+    it("never loses what was harvested when a companion dies", () => {
+      const user = new User();
+      user.village.addCompanion(new Companion(0));
+      const atDeath = user.getAvailableOfflinium(COMPANION_STAGE_AGE_MS.dead);
+      const anHourLater = user.getAvailableOfflinium(COMPANION_STAGE_AGE_MS.dead + HOUR);
+      // A dead companion stops helping, but what it harvested stays.
+      expect(anHourLater).toBe(atDeath + HOUR / INTERVAL);
     });
 
     it("counts the particles of the open period as available", () => {
@@ -51,19 +81,18 @@ describe("User", () => {
       expect(user.getAvailableOfflinium(user.periodList.computeTotalMs(now))).toBe(17);
     });
 
-    it("spends the stored balance first, then the open period", () => {
+    it("settles the harvest before spending", () => {
       const { user, now } = userWithOpenPeriod(10);
       user.offlinium = 5;
+      const total = user.periodList.computeTotalMs(now);
 
-      const spend = user.spendOfflinium(8, user.periodList.computeTotalMs(now));
-
-      expect(spend).toEqual({ stored: 5, openPeriod: 3 });
-      expect(user.offlinium).toBe(0);
-      expect(user.offliniumSpentDuringOpenPeriod).toBe(3);
+      expect(user.spendOfflinium(8, total)).toEqual({ stored: 8, openPeriod: 0 });
+      expect(user.offlinium).toBe(7);
+      expect(user.settledOfflineMs).toBe(total);
+      expect(user.getAvailableOfflinium(total)).toBe(7);
 
       user.closeOfflinePeriod(now);
-      expect(user.offlinium).toBe(7);
-      expect(user.offliniumSpentDuringOpenPeriod).toBe(0);
+      expect(user.getAvailableOfflinium(user.periodList.computeTotalMs(now))).toBe(7);
     });
 
     it("refuses to spend more than available", () => {
@@ -75,41 +104,35 @@ describe("User", () => {
 
     it("rejects negative amounts", () => {
       expect(() => new User().spendOfflinium(-1, 0)).toThrow();
-      expect(() => new User().addOfflinium(-1)).toThrow();
     });
 
     it("refunds a cancelled construction", () => {
-      const user = new User();
-      user.offlinium = HOUSE_CONSTRUCTION_COST;
-      const spend = user.spendOfflinium(HOUSE_CONSTRUCTION_COST, 0)!;
-      user.village.addPendingElement("house", 0, spend.stored, spend.openPeriod);
-
-      const [pending] = user.village.pendingElements;
-      expect(user.cancelPendingElement(pending.id, 0)).toBe(true);
-      expect(user.offlinium).toBe(HOUSE_CONSTRUCTION_COST);
-      expect(user.village.pendingElements).toEqual([]);
-    });
-
-    it("refunds the open-period part as stored balance once the period is closed", () => {
       const { user, now } = userWithOpenPeriod(HOUSE_CONSTRUCTION_COST);
-      const totalMs = user.periodList.computeTotalMs(now);
-      const spend = user.spendOfflinium(HOUSE_CONSTRUCTION_COST, totalMs)!;
-      user.village.addPendingElement("house", totalMs, spend.stored, spend.openPeriod);
+      const total = user.periodList.computeTotalMs(now);
+      const spend = user.spendOfflinium(HOUSE_CONSTRUCTION_COST, total)!;
+      user.village.addPendingElement("house", total, spend.stored, spend.openPeriod);
       user.closeOfflinePeriod(now);
-      expect(user.offlinium).toBe(0);
+      expect(user.getAvailableOfflinium(total)).toBe(0);
 
-      user.cancelPendingElement(user.village.pendingElements[0].id, totalMs);
-      expect(user.offlinium).toBe(HOUSE_CONSTRUCTION_COST);
+      expect(user.cancelPendingElement(user.village.pendingElements[0].id, total)).toBe(true);
+      expect(user.getAvailableOfflinium(total)).toBe(HOUSE_CONSTRUCTION_COST);
     });
 
-    it("gives back the invocation cost when a companion is released", () => {
+    it("refunds both parts of a cost saved by an older version", () => {
       const user = new User();
-      const companion = new Companion(0);
-      user.village.addCompanion(companion);
+      user.refundOfflinium({ storedOffliniumCost: 100, openPeriodOffliniumCost: 20 });
+      expect(user.offlinium).toBe(120);
+    });
 
-      expect(user.releaseCompanionAndGetOfflinium(companion.id)).toBe(true);
-      expect(user.offlinium).toBe(COMPANION_INVOCATION_COST);
-      expect(user.releaseCompanionAndGetOfflinium(companion.id)).toBe(false);
+    it("gives back the invocation cost and keeps what a released companion harvested", () => {
+      const user = new User();
+      const sage = companionBornAt(-COMPANION_STAGE_AGE_MS.sage);
+      user.village.addCompanion(sage);
+      const harvested = user.getAvailableOfflinium(HOUR);
+
+      expect(user.releaseCompanionAndGetOfflinium(sage.id, HOUR)).toBe(true);
+      expect(user.getAvailableOfflinium(HOUR)).toBe(harvested + COMPANION_INVOCATION_COST);
+      expect(user.releaseCompanionAndGetOfflinium(sage.id, HOUR)).toBe(false);
     });
 
     it("cannot build a second town hall", () => {
@@ -173,6 +196,23 @@ describe("User", () => {
         "storedOffliniumCost",
         "type",
       ]);
+    });
+
+    it("settles a save made before the continuous harvest", () => {
+      const user = new User();
+      user.loadFromSnapshot({
+        offlinium: 100,
+        offliniumSpentDuringOpenPeriod: 30,
+        periodList: {
+          days: [{ dayStart: 0, durationMs: HOUR, periodCount: 1, firstStart: 0, lastEnd: HOUR }],
+          openPeriodStart: T0,
+          openPeriodLastSeen: T0 + 60 * INTERVAL,
+        },
+        village: { companions: [], houses: [], pendingElements: [] },
+      });
+
+      expect(user.offlinium).toBe(100 + 60 - 30);
+      expect(user.settledOfflineMs).toBe(HOUR + 60 * INTERVAL);
     });
 
     it("trims and limits the player name", () => {

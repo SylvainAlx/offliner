@@ -51,6 +51,7 @@ export function useCompanionTile(companion: Companion) {
     isNameSaved,
     setIsNameSaved,
     handleRename,
-    releaseCompanionAndGetOfflinium,
+    releaseCompanionAndGetOfflinium: (companionId: string) =>
+      releaseCompanionAndGetOfflinium(companionId, totalOfflineMs),
   };
 }

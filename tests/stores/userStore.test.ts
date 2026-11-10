@@ -53,7 +53,7 @@ beforeEach(async () => {
 
 describe("userStore", () => {
   describe("hydrate", () => {
-    it("closes an open period when the app starts online, with the cap applied", async () => {
+    it("closes a period left open and asks about the time it could not observe", async () => {
       const stored = new UserModel();
       stored.periodList.openPeriodIfNeeded(T0);
       vi.mocked(userRepository.load).mockResolvedValueOnce(stored);
@@ -62,10 +62,43 @@ describe("userStore", () => {
       const user = await useUser.getState().hydrate();
       vi.useRealTimers();
 
+      // Back online after a night the app did not see: nothing is credited yet.
       expect(user.periodList.openPeriodStart).toBeNull();
-      expect(user.periodList.computeCompletedMs()).toBe(CAP);
-      expect(user.offlinium).toBe(CAP / INTERVAL);
-      expect(lastSaved()).toMatchObject({ offlinium: CAP / INTERVAL });
+      expect(user.periodList.computeCompletedMs()).toBe(0);
+      expect(user.periodList.unconfirmedGaps).toHaveLength(1);
+      expect(user.getAvailableOfflinium(0)).toBe(0);
+    });
+
+    it("credits at most the cap when the player confirms", async () => {
+      const stored = new UserModel();
+      stored.periodList.openPeriodIfNeeded(T0);
+      vi.mocked(userRepository.load).mockResolvedValueOnce(stored);
+      vi.useFakeTimers({ now: T0 + CAP + 5 * HOUR, toFake: ["Date"] });
+      await useUser.getState().hydrate();
+      vi.useRealTimers();
+
+      useUser.getState().resolveUnconfirmedGaps(true);
+      const user = useUser.getState().user;
+      const total = user.periodList.computeTotalMs();
+
+      expect(total).toBe(CAP);
+      expect(user.getAvailableOfflinium(total)).toBe(CAP / INTERVAL);
+      expect(user.periodList.unconfirmedGaps).toEqual([]);
+    });
+
+    it("credits nothing when the player says they reconnected", async () => {
+      const stored = new UserModel();
+      stored.periodList.openPeriodIfNeeded(T0);
+      vi.mocked(userRepository.load).mockResolvedValueOnce(stored);
+      vi.useFakeTimers({ now: T0 + 20 * HOUR, toFake: ["Date"] });
+      await useUser.getState().hydrate();
+      vi.useRealTimers();
+
+      useUser.getState().resolveUnconfirmedGaps(false);
+      await useUser.getState().saveUser();
+
+      expect(useUser.getState().user.periodList.computeTotalMs()).toBe(0);
+      expect(lastSaved()).toMatchObject({ periodList: { unconfirmedGaps: [] } });
     });
 
     it("keeps the period open when the app starts offline", async () => {
@@ -80,6 +113,7 @@ describe("userStore", () => {
 
       expect(user.periodList.openPeriodStart).toBe(T0);
       expect(user.periodList.openPeriodLastSeen).toBe(T0 + HOUR);
+      expect(user.periodList.unconfirmedGaps).toEqual([{ start: T0, end: T0 + HOUR }]);
     });
   });
 

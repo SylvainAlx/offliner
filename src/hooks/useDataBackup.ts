@@ -36,8 +36,6 @@ export function useDataBackup() {
       !Number.isFinite(record.createdAt) ||
       typeof record.offlinium !== "number" ||
       !Number.isFinite(record.offlinium) ||
-      typeof record.offliniumSpentDuringOpenPeriod !== "number" ||
-      !Number.isFinite(record.offliniumSpentDuringOpenPeriod) ||
       typeof periodList !== "object" ||
       periodList === null ||
       typeof village !== "object" ||
