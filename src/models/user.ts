@@ -16,7 +16,46 @@ import {
   type ResourceAmounts,
   type Resources,
 } from "./resources";
+import { getVillageEvents, type VillageEvent } from "./timeline";
 import { isFiniteNumber, isRecord, sanitizeName } from "../utils/sanitize";
+
+/**
+ * The time since the player last read a report. It starts when an offline
+ * period opens and keeps going across several periods until the report of
+ * the absence is dismissed.
+ */
+export interface Absence {
+  startedAt: number;
+  /** Cumulative offline time when the absence started. */
+  offlineMsAtStart: number;
+  /** Everything ever harvested, when the absence started. */
+  harvestedAtStart: Resources;
+  /** When the player came back online; null while still offline. */
+  endedAt: number | null;
+}
+
+export interface AbsenceReport {
+  startedAt: number;
+  endedAt: number;
+  /** Offline time credited during the absence. */
+  offlineMs: number;
+  /** What was harvested during the absence (before spending). */
+  gains: Resources;
+  events: VillageEvent[];
+}
+
+function loadAbsence(value: unknown): Absence | null {
+  if (!isRecord(value)) return null;
+  if (!isFiniteNumber(value.startedAt) || !isFiniteNumber(value.offlineMsAtStart)) {
+    return null;
+  }
+  return {
+    startedAt: value.startedAt,
+    offlineMsAtStart: value.offlineMsAtStart,
+    harvestedAtStart: sanitizeResources(value.harvestedAtStart),
+    endedAt: isFiniteNumber(value.endedAt) ? value.endedAt : null,
+  };
+}
 
 function cloneInstance<T extends object>(instance: T): T {
   return Object.assign(
@@ -33,6 +72,9 @@ export class User {
    * on demand, with the rates in force at each moment.
    */
   resources: Resources;
+  /** Everything harvested up to `settledOfflineMs`, spending aside. */
+  harvested: Resources;
+  absence: Absence | null;
   settledOfflineMs: number;
   periodList: PeriodList;
   village: Village;
@@ -41,6 +83,8 @@ export class User {
   constructor(name: string = "Joueur") {
     this.name = name;
     this.resources = emptyResources();
+    this.harvested = emptyResources();
+    this.absence = null;
     this.settledOfflineMs = 0;
     this.periodList = new PeriodList();
     this.village = new Village();
@@ -92,6 +136,10 @@ export class User {
               : 0,
           });
 
+      // Saves made before the lifetime counter start counting from now.
+      this.harvested = sanitizeResources(parsed.harvested);
+      this.absence = loadAbsence(parsed.absence);
+
       if (isFiniteNumber(parsed.settledOfflineMs)) {
         this.resources = storedResources;
         this.settledOfflineMs = Math.min(
@@ -125,6 +173,10 @@ export class User {
   clone(): User {
     const copy = new User(this.name);
     copy.resources = { ...this.resources };
+    copy.harvested = { ...this.harvested };
+    copy.absence = this.absence
+      ? { ...this.absence, harvestedAtStart: { ...this.absence.harvestedAtStart } }
+      : null;
     copy.settledOfflineMs = this.settledOfflineMs;
     copy.createdAt = this.createdAt;
     copy.periodList = this.periodList.clone();
@@ -174,7 +226,9 @@ export class User {
   /** Moves the harvest up to `totalOfflineMs` into the settled balance. */
   settleHarvest(totalOfflineMs: number): void {
     if (totalOfflineMs <= this.settledOfflineMs) return;
-    addResources(this.resources, this.getUnsettledResources(totalOfflineMs));
+    const unsettled = this.getUnsettledResources(totalOfflineMs);
+    addResources(this.resources, unsettled);
+    addResources(this.harvested, unsettled);
     this.settledOfflineMs = totalOfflineMs;
   }
 
@@ -201,8 +255,62 @@ export class User {
     addResources(this.resources, cost);
   }
 
+  /** Everything ever harvested up to `totalOfflineMs`, spending aside. */
+  getHarvestedTotal(totalOfflineMs: number): Resources {
+    const total = { ...this.harvested };
+    addResources(total, this.getUnsettledResources(totalOfflineMs));
+    return total;
+  }
+
+  // --- Offline periods and absence report ---------------------------------
+
+  /** Opens an offline period, and starts an absence unless one is running. */
+  openOfflinePeriod(startTs: number): void {
+    if (this.periodList.openPeriodStart !== null) return;
+
+    const offlineMsAtStart = this.periodList.computeTotalMs(startTs);
+    this.periodList.openPeriodIfNeeded(startTs);
+    if (this.absence) {
+      // The previous report was not read yet: it now covers this period too.
+      this.absence.endedAt = null;
+      return;
+    }
+    this.absence = {
+      startedAt: startTs,
+      offlineMsAtStart,
+      harvestedAtStart: this.getHarvestedTotal(offlineMsAtStart),
+      endedAt: null,
+    };
+  }
+
   closeOfflinePeriod(endTs: number): number | undefined {
-    return this.periodList.closeAnyOpenPeriod(endTs);
+    const credited = this.periodList.closeAnyOpenPeriod(endTs);
+    if (credited !== undefined && this.absence) this.absence.endedAt = endTs;
+    return credited;
+  }
+
+  /** What happened during the absence, once the player is back online. */
+  getAbsenceReport(totalOfflineMs: number): AbsenceReport | null {
+    const absence = this.absence;
+    if (!absence || absence.endedAt === null) return null;
+
+    const from = absence.offlineMsAtStart;
+    const to = Math.max(from, totalOfflineMs);
+    const gains = this.getHarvestedTotal(to);
+    for (const type of RESOURCE_TYPES) {
+      gains[type] = Math.max(0, gains[type] - absence.harvestedAtStart[type]);
+    }
+    return {
+      startedAt: absence.startedAt,
+      endedAt: absence.endedAt,
+      offlineMs: to - from,
+      gains,
+      events: getVillageEvents(this.village, from, to),
+    };
+  }
+
+  dismissAbsenceReport(): void {
+    this.absence = null;
   }
 
   // --- Village ------------------------------------------------------------

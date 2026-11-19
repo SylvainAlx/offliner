@@ -27,6 +27,10 @@ export const COMPANIONS_PER_HOUSE = 4;
 // whether they stayed offline; if so, at most the cap is credited per gap.
 export const UNOBSERVED_GAP_THRESHOLD_MS = 15 * 60 * 1000;
 export const UNOBSERVED_OFFLINE_CREDIT_CAP_MS = 12 * 60 * 60 * 1000;
+// Absences shorter than this (in credited offline time) get no report.
+export const ABSENCE_REPORT_MIN_OFFLINE_MS = 5 * 60 * 1000;
+// Durations offered by the "if you leave now" projection.
+export const PROJECTION_DURATIONS_MS = [1, 4, 8, 12].map((hours) => hours * 60 * 60 * 1000);
 // How often an open offline period records that the app saw the device offline.
 export const OPEN_PERIOD_HEARTBEAT_MS = 30 * 1000;
 

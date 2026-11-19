@@ -11,6 +11,7 @@ export interface UserStore {
   hydrate: () => Promise<User>;
   updateName: (name: string) => void;
   openPeriodIfNeeded: (startTs: number) => void;
+  dismissAbsenceReport: () => void;
   closeAnyOpenPeriod: (endTs: number) => void;
   resetPeriods: () => void;
   saveUser: () => Promise<void>;
@@ -183,7 +184,15 @@ export const useUser = create<UserStore>((set, get) => ({
 
   openPeriodIfNeeded: (startTs) => {
     const next = get().user.clone();
-    next.periodList.openPeriodIfNeeded(startTs);
+    next.openOfflinePeriod(startTs);
+    set({ user: next });
+    void persist(next);
+  },
+
+  dismissAbsenceReport: () => {
+    if (get().user.absence === null) return;
+    const next = get().user.clone();
+    next.dismissAbsenceReport();
     set({ user: next });
     void persist(next);
   },
@@ -200,6 +209,7 @@ export const useUser = create<UserStore>((set, get) => ({
     const elapsedOfflineMs = next.periodList.computeTotalMs(Date.now());
     next.periodList.clearPeriods();
     next.resources = emptyResources();
+    next.absence = null;
     next.settledOfflineMs = 0;
     next.village.shiftOfflineTimes(elapsedOfflineMs);
     set({ user: next });
@@ -214,6 +224,8 @@ export const useUser = create<UserStore>((set, get) => ({
     // device: an exported open period ends at its last observation.
     const lastSeen = user.periodList.openPeriodLastSeen;
     if (lastSeen !== null) user.closeOfflinePeriod(lastSeen);
+    // An absence lived on another device is not reported here.
+    user.dismissAbsenceReport();
 
     set({ user, isHydrated: true });
     await persist(user);

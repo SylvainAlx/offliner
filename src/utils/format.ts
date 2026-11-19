@@ -60,4 +60,15 @@ export const formatCountdown = (milliseconds: number): string => {
     : mmss;
 };
 
-export { formatDate, formatDateTime, formatDay, formatMonth, formatDuration };
+/** A rounded length of time, such as "35 min" or "2 h 05". */
+function formatLength(ms: number): string {
+  const totalMinutes = Math.round(ms / 60_000);
+  if (totalMinutes < 1) return "moins d'une minute";
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes} min`;
+  if (minutes === 0) return `${hours} h`;
+  return `${hours} h ${String(minutes).padStart(2, "0")}`;
+}
+
+export { formatLength, formatDate, formatDateTime, formatDay, formatMonth, formatDuration };
