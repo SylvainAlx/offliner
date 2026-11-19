@@ -3,12 +3,12 @@ import CompanionTile from "./CompanionTile";
 import VillageSection from "./VillageSection";
 
 export default function VillageCompanions() {
-  const { houses, companions } = useVillageCompanions();
+  const { houseLevel, companions } = useVillageCompanions();
 
   return (
     <VillageSection
       title="Vos compagnons"
-      subtitle="Votre population utilise les places disponibles dans vos maisons."
+      subtitle="Votre population utilise les places disponibles dans votre maison."
     >
       {companions.length > 0 ? (
         <ul className="m-0 grid w-full grid-cols-1 list-none gap-2.5 p-0 md:grid-cols-2">
@@ -28,7 +28,7 @@ export default function VillageCompanions() {
             Votre village n&apos;a pas encore de compagnon.
           </p>
           <span className="text-[0.75rem]">
-            {houses.length === 0
+            {houseLevel === 0
               ? "Construisez d'abord une maison."
               : "La première invocation vous attend."}
           </span>

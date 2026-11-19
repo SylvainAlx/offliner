@@ -14,6 +14,7 @@ import Sidebar, { type AppSection } from "./components/layouts/Sidebar";
 import InstallGuide from "./components/install/InstallGuide";
 import InstallBanner from "./components/install/InstallBanner";
 import UnobservedGapPrompt from "./components/UnobservedGapPrompt";
+import AbsenceReport from "./components/report/AbsenceReport";
 import { useInstall } from "./stores/installStore";
 
 function AppContent() {
@@ -74,6 +75,7 @@ function AppContent() {
       </div>
       <Footer />
       <UnobservedGapPrompt />
+      <AbsenceReport />
     </div>
   );
 }

@@ -15,9 +15,10 @@ export function useInstallGuide() {
     const { user } = state;
     return (
       user.offlinium > 0 ||
+      user.resources.materials > 0 ||
       user.periodList.days.length > 0 ||
       user.periodList.openPeriodStart !== null ||
-      user.village.houses.length > 0
+      user.village.buildings.length > 0
     );
   });
   const [feedback, setFeedback] = useState<InstallFeedback | null>(null);

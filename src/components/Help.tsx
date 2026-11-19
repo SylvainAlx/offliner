@@ -1,13 +1,13 @@
 import {
   COMPANIONS_PER_HOUSE,
   COMPANION_STAGE_AGE_MS,
-  HOUSE_CONSTRUCTION_COST,
-  TOWN_HALL_CONSTRUCTION_COST,
   OFFLINIUM_DELIVERY_INTERVAL,
   UNOBSERVED_GAP_THRESHOLD_MS,
   UNOBSERVED_OFFLINE_CREDIT_CAP_MS,
 } from "../utils/constants";
 import Card from "./ui/Card";
+import { BUILDINGS, getBuildingCost } from "../models/building";
+import { formatResources } from "../models/resources";
 
 export default function Help() {
   return (
@@ -36,15 +36,27 @@ export default function Help() {
         {UNOBSERVED_OFFLINE_CREDIT_CAP_MS / 3600000} h par absence.
       </p>
       <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
-        Les maisons se construisent avec {HOUSE_CONSTRUCTION_COST} ⬡ et
-        permettent d&apos;accueillir chacune {COMPANIONS_PER_HOUSE} compagnons.
-        Votre capacité maximale augmente lorsque la construction est terminée,
-        et le compteur du bouton indique le nombre de maisons construites.
+        Les bâtiments ont des niveaux. Chaque niveau coûte plus cher et prend
+        plus de temps que le précédent, et tout se construit pendant votre
+        temps hors ligne, dans une seule file d&apos;attente.
       </p>
       <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
-        L’hôtel de ville coûte {TOWN_HALL_CONSTRUCTION_COST} ⬡ et ne peut être
-        construit qu’une seule fois. Il débloque le nom du village et le
-        renommage des compagnons.
+        La maison (niveau 1 : {formatResources(getBuildingCost("house", 1))})
+        accueille {COMPANIONS_PER_HOUSE} compagnons par niveau. À partir du
+        niveau 3, elle demande aussi des matériaux.
+      </p>
+      <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
+        L’hôtel de ville coûte {formatResources(getBuildingCost("townHall", 1))}{" "}
+        et ne se construit qu’une fois. Il débloque le nom du village, le
+        renommage des compagnons et les bâtiments de production :{" "}
+        {BUILDINGS.well.label.toLowerCase()}, qui ajoute de l&apos;Offlinium à
+        chaque récolte, et {BUILDINGS.quarry.label.toLowerCase()}, qui extrait
+        des matériaux.
+      </p>
+      <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
+        Annuler une construction rembourse tout ce qu&apos;elle a coûté. Annuler
+        un niveau annule aussi les niveaux suivants du même bâtiment déjà en
+        file.
       </p>
       <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
         Chaque compagnon commence enfant et évolue automatiquement selon son

@@ -4,6 +4,7 @@ import { useUser } from "../stores/userStore";
 import VillageCompanions from "./VillageCompanions";
 import VillageConstructions from "./VillageConstructions";
 import VillageIdentity from "./VillageIdentity";
+import VillageProjection from "./VillageProjection";
 
 export default function Village() {
   const { isOnline } = useVillage();
@@ -22,6 +23,7 @@ export default function Village() {
       <VillageIdentity />
       <VillageConstructions />
       <VillageCompanions />
+      <VillageProjection />
     </Card>
   );
 }

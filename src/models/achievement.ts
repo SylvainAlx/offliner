@@ -85,7 +85,7 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     category: "Village",
     icon: "🏠",
     target: 1,
-    getProgress: (user) => user.village.houses.length,
+    getProgress: (user) => user.village.getBuildingLevel("house"),
   },
   {
     id: "full-house",
