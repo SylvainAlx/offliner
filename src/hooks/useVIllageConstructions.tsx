@@ -1,18 +1,44 @@
 import { useEffect } from "react";
 import { useOnlineStatus } from "../stores/onlineStatusStore";
 import { useUser } from "../stores/userStore";
+import { COMPANION_INVOCATION_COST } from "../utils/constants";
 import {
-  COMPANION_INVOCATION_COST,
-  HOUSE_CONSTRUCTION_COST,
-  TOWN_HALL_CONSTRUCTION_COST,
-} from "../utils/constants";
+  BUILDINGS,
+  BUILDING_TYPES,
+  getBuildingProduction,
+  type BuildingDefinition,
+  type BuildingType,
+} from "../models/building";
+import {
+  hasResources,
+  missingResources,
+  type ResourceAmounts,
+  type Resources,
+} from "../models/resources";
 import type { PendingElement } from "../models/village";
 import { formatCountdown } from "../utils/format";
 
+export interface BuildingTileData {
+  type: BuildingType;
+  definition: BuildingDefinition;
+  level: number;
+  /** Level the next construction would reach. */
+  nextLevel: number;
+  cost: ResourceAmounts;
+  missing: ResourceAmounts;
+  constructionOfflineMs: number;
+  /** Production per delivery at the current and at the next level. */
+  production: ResourceAmounts;
+  nextProduction: ResourceAmounts;
+  isUnlocked: boolean;
+  isMaxed: boolean;
+  canQueue: boolean;
+  pendingElements: PendingElement[];
+}
+
 export function useVillageConstructions() {
   const user = useUser((state) => state.user);
-  const buildHouse = useUser((state) => state.buildHouse);
-  const buildTownHall = useUser((state) => state.buildTownHall);
+  const queueBuilding = useUser((state) => state.queueBuilding);
   const invokeCompanion = useUser((state) => state.invokeCompanion);
 
   const completePendingElements = useUser(
@@ -20,30 +46,44 @@ export function useVillageConstructions() {
   );
   const isOnline = useOnlineStatus((state) => state.isOnline);
   const totalOfflineMs = useOnlineStatus((state) => state.totalOfflineMs);
-  const { houses, companions, pendingElements } = user.village;
-  const companionCapacity = user.village.companionCapacity;
-  const liveOfflinium = user.getAvailableOfflinium(totalOfflineMs);
-  const pendingHouses = pendingElements.filter(
-    (pending) => pending.type === "house",
-  );
-  const pendingCompanions = pendingElements.filter(
-    (pending) => pending.type === "companion",
-  );
-  const pendingTownHalls = pendingElements.filter(
-    (pending) => pending.type === "townHall",
-  );
+  const { village } = user;
+  const { companions, pendingElements } = village;
+  const companionCapacity = village.companionCapacity;
+  const available: Resources = user.getAvailableResources(totalOfflineMs);
 
   useEffect(() => {
     completePendingElements(totalOfflineMs);
   }, [completePendingElements, totalOfflineMs]);
 
-  const canBuildHouse = liveOfflinium >= HOUSE_CONSTRUCTION_COST;
-  const canBuildTownHall =
-    user.village.canBuildTownHall() &&
-    liveOfflinium >= TOWN_HALL_CONSTRUCTION_COST;
-  const hasCompanionSlot = user.village.canInvokeCompanion();
-  const canInvoke =
-    hasCompanionSlot && liveOfflinium >= COMPANION_INVOCATION_COST;
+  const buildings: BuildingTileData[] = BUILDING_TYPES.map((type) => {
+    const level = village.getBuildingLevel(type);
+    const plannedLevel = village.getPlannedLevel(type);
+    const cost = village.getNextBuildingCost(type);
+    const isUnlocked = village.isBuildingUnlocked(type);
+    const isMaxed = village.isBuildingMaxed(type);
+    return {
+      type,
+      definition: BUILDINGS[type],
+      level,
+      nextLevel: plannedLevel + 1,
+      cost,
+      missing: missingResources(available, cost),
+      constructionOfflineMs: village.getNextBuildingConstructionMs(type),
+      production: getBuildingProduction(type, plannedLevel),
+      nextProduction: getBuildingProduction(type, plannedLevel + 1),
+      isUnlocked,
+      isMaxed,
+      canQueue: isUnlocked && !isMaxed && hasResources(available, cost),
+      pendingElements: pendingElements.filter((pending) => pending.type === type),
+    };
+  });
+
+  const companionCost: ResourceAmounts = { offlinium: COMPANION_INVOCATION_COST };
+  const pendingCompanions = pendingElements.filter(
+    (pending) => pending.type === "companion",
+  );
+  const hasCompanionSlot = village.canInvokeCompanion();
+  const canInvoke = hasCompanionSlot && hasResources(available, companionCost);
 
   const renderProgress = (pending: PendingElement) => {
     const queueIndex = pendingElements.findIndex(
@@ -60,6 +100,8 @@ export function useVillageConstructions() {
           Math.max(0, (elapsed / pending.constructionOfflineMs) * 100),
         )
       : 0;
+    const levelLabel =
+      pending.targetLevel !== undefined ? ` · niv. ${pending.targetLevel}` : "";
 
     return (
       <span className="flex flex-col gap-1" key={pending.id}>
@@ -68,12 +110,10 @@ export function useVillageConstructions() {
             {isActive
               ? isOnline
                 ? "En attente hors ligne"
-                : pending.type === "house"
-                  ? "Construction"
-                  : pending.type === "townHall"
-                    ? "Construction de l'hôtel de ville"
-                    : "Invocation"
-              : `En file · position ${queueIndex + 1}`}
+                : pending.type === "companion"
+                  ? "Invocation"
+                  : `Construction${levelLabel}`
+              : `En file · position ${queueIndex + 1}${levelLabel}`}
           </span>
           <strong className="font-[var(--mono)] text-[0.7rem] text-(--accent)">
             {isActive ? formatCountdown(remaining) : "—"}
@@ -93,23 +133,21 @@ export function useVillageConstructions() {
   };
 
   return {
-    houses,
-    townHall: user.village.townHall,
+    buildings,
     companions,
     companionCapacity,
-    canBuildHouse,
-    buildHouse,
-    buildTownHall,
+    companionCost,
     canInvoke,
-    invokeCompanion,
-    pendingElements,
-    pendingHouses,
-    renderProgress,
-    pendingCompanions,
-    pendingTownHalls,
-    totalOfflineMs,
-    canBuildTownHall,
-    liveOfflinium,
     hasCompanionSlot,
+    houseLevel: village.getBuildingLevel("house"),
+    getLevel: (type: BuildingType) => village.getBuildingLevel(type),
+    getPlannedLevel: (type: BuildingType) => village.getPlannedLevel(type),
+    invokeCompanion,
+    queueBuilding,
+    pendingElements,
+    pendingCompanions,
+    renderProgress,
+    totalOfflineMs,
+    available,
   };
 }

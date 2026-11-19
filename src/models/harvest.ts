@@ -4,75 +4,98 @@ import {
   OFFLINIUM_DELIVERY_INTERVAL,
 } from "../utils/constants";
 import { COMPANION_STAGES, type CompanionStage } from "./companion";
+import {
+  RESOURCE_TYPES,
+  emptyResources,
+  type ResourceAmounts,
+  type Resources,
+} from "./resources";
 
-/** What the harvest needs to know about a companion. */
-export interface HarvestCompanion {
-  birthOfflineMs: number;
+/**
+ * Something that adds `rates` to every delivery made while the cumulative
+ * offline time is in [from, to). The harvest of any stretch of offline time
+ * follows from these segments alone: nothing ticks, so a long absence is
+ * computed exactly, at once, when the app comes back.
+ */
+export interface RateSegment {
+  from: number;
+  to: number;
+  rates: ResourceAmounts;
 }
+
+/** One Offlinium per delivery, whatever the village looks like. */
+export const BASE_RATE_SEGMENT: RateSegment = {
+  from: Number.NEGATIVE_INFINITY,
+  to: Number.POSITIVE_INFINITY,
+  rates: { offlinium: 1 },
+};
 
 const BONUS_BY_STAGE: Record<CompanionStage, number> = {
   child: 0,
   ...COMPANION_STAGE_HARVEST_BONUS,
 };
 
-/**
- * Harvest bonus of a companion when the cumulative offline time is
- * `offlineMs`. A companion's age is counted in offline time, so its bonus at
- * any moment follows from its birth alone.
- */
-export function companionBonusAt(birthOfflineMs: number, offlineMs: number): number {
-  const age = offlineMs - birthOfflineMs;
-  if (age < 0) return 0;
+/** The bonus of a companion born at `birthOfflineMs`, stage by stage. */
+export function companionRateSegments(birthOfflineMs: number): RateSegment[] {
+  return COMPANION_STAGES.flatMap((stage, index) => {
+    const bonus = BONUS_BY_STAGE[stage];
+    if (bonus <= 0) return [];
+    const nextStage = COMPANION_STAGES[index + 1];
+    return [
+      {
+        from: birthOfflineMs + COMPANION_STAGE_AGE_MS[stage],
+        to: nextStage
+          ? birthOfflineMs + COMPANION_STAGE_AGE_MS[nextStage]
+          : Number.POSITIVE_INFINITY,
+        rates: { offlinium: bonus },
+      },
+    ];
+  });
+}
 
-  let stage: CompanionStage = "child";
-  for (const candidate of COMPANION_STAGES) {
-    if (age >= COMPANION_STAGE_AGE_MS[candidate]) stage = candidate;
+export function ratesAt(segments: readonly RateSegment[], offlineMs: number): Resources {
+  const rates = emptyResources();
+  for (const segment of segments) {
+    if (segment.from <= offlineMs && offlineMs < segment.to) {
+      for (const type of RESOURCE_TYPES) rates[type] += segment.rates[type] ?? 0;
+    }
   }
-  return BONUS_BY_STAGE[stage];
-}
-
-export function harvestRateAt(
-  companions: readonly HarvestCompanion[],
-  offlineMs: number,
-): number {
-  return companions.reduce(
-    (rate, companion) => rate + companionBonusAt(companion.birthOfflineMs, offlineMs),
-    1,
-  );
+  return rates;
 }
 
 /**
- * Particles delivered between two cumulative offline times (`fromMs`
+ * Resources delivered between two cumulative offline times (`fromMs`
  * excluded, `toMs` included): one delivery every OFFLINIUM_DELIVERY_INTERVAL
- * of offline time, worth the harvest rate in force at that moment. A companion
- * that becomes a sage therefore only boosts the deliveries made after it did,
- * never the ones before.
+ * of offline time, worth the rates in force at that moment. A companion that
+ * becomes a sage, or a building that gains a level, therefore only boosts the
+ * deliveries made after it did, never the ones before.
  */
-export function particlesBetween(
-  companions: readonly HarvestCompanion[],
+export function resourcesBetween(
+  segments: readonly RateSegment[],
   fromMs: number,
   toMs: number,
-): number {
-  if (!(toMs > fromMs)) return 0;
+): Resources {
+  const total = emptyResources();
+  if (!(toMs > fromMs)) return total;
 
-  // The rate only changes when a companion reaches a new stage.
+  // The rates only change at the boundaries of a segment.
   const breakpoints = new Set<number>([fromMs, toMs]);
-  for (const companion of companions) {
-    for (const stage of COMPANION_STAGES) {
-      const at = companion.birthOfflineMs + COMPANION_STAGE_AGE_MS[stage];
+  for (const segment of segments) {
+    for (const at of [segment.from, segment.to]) {
       if (at > fromMs && at < toMs) breakpoints.add(at);
     }
   }
   const points = [...breakpoints].sort((left, right) => left - right);
 
-  let particles = 0;
   for (let index = 0; index < points.length - 1; index += 1) {
     const start = points[index];
     const end = points[index + 1];
     const deliveries =
       Math.floor(end / OFFLINIUM_DELIVERY_INTERVAL) -
       Math.floor(start / OFFLINIUM_DELIVERY_INTERVAL);
-    if (deliveries > 0) particles += deliveries * harvestRateAt(companions, start);
+    if (deliveries <= 0) continue;
+    const rates = ratesAt(segments, start);
+    for (const type of RESOURCE_TYPES) total[type] += deliveries * rates[type];
   }
-  return particles;
+  return total;
 }

@@ -5,6 +5,16 @@ import { userRepository } from "../services/userRepository";
 import { MAX_BACKUP_FILE_BYTES } from "../utils/constants";
 import { downloadJson, getBackupFileName } from "../utils/download";
 
+/** Current saves keep a `resources` record, older ones a bare `offlinium`. */
+function hasResources(record: Record<string, unknown>): boolean {
+  const { resources, offlinium } = record;
+  if (typeof resources === "object" && resources !== null && !Array.isArray(resources)) {
+    const amount = (resources as Record<string, unknown>).offlinium;
+    return typeof amount === "number" && Number.isFinite(amount);
+  }
+  return typeof offlinium === "number" && Number.isFinite(offlinium);
+}
+
 export function useDataBackup() {
   const saveUser = useUser((state) => state.saveUser);
   const importFromSnapshot = useUser((state) => state.importFromSnapshot);
@@ -34,8 +44,7 @@ export function useDataBackup() {
       typeof record.name !== "string" ||
       typeof record.createdAt !== "number" ||
       !Number.isFinite(record.createdAt) ||
-      typeof record.offlinium !== "number" ||
-      !Number.isFinite(record.offlinium) ||
+      !hasResources(record) ||
       typeof periodList !== "object" ||
       periodList === null ||
       typeof village !== "object" ||
@@ -50,7 +59,8 @@ export function useDataBackup() {
     return (
       Array.isArray(periodRecord.days) &&
       Array.isArray(villageRecord.companions) &&
-      Array.isArray(villageRecord.houses) &&
+      (Array.isArray(villageRecord.buildings) ||
+        Array.isArray(villageRecord.houses)) &&
       Array.isArray(villageRecord.pendingElements)
     );
   }

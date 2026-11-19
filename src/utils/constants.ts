@@ -1,4 +1,4 @@
-export const OFFLINER_VERSION = 0.2;
+export const OFFLINER_VERSION = 0.3;
 
 export const OFFLINIUM_DELIVERY_INTERVAL = 10 * 1000;
 export const OFFLINE_CONFIRMATION_DELAY_MS = 5 * 1000;
@@ -18,11 +18,9 @@ export const COMPANION_STAGE_HARVEST_BONUS = {
   dead: 0,
 } as const;
 export const COMPANION_INVOCATION_OFFLINE_MS = 60 * 1000;
-export const HOUSE_CONSTRUCTION_COST = 120 * 6;
-export const TOWN_HALL_CONSTRUCTION_COST = 1800;
-export const HOUSE_CONSTRUCTION_OFFLINE_MS = 2 * 60 * 1000;
-export const TOWN_HALL_CONSTRUCTION_OFFLINE_MS = 5 * 60 * 1000;
+// Companions welcomed by each level of the house.
 export const COMPANIONS_PER_HOUSE = 4;
+// Building costs, durations and productions live in models/building.ts.
 
 // Time during which the app could not observe the device (background, closed,
 // device asleep) cannot be verified. Beyond this threshold, the player is asked

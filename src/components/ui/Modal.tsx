@@ -7,6 +7,8 @@ interface ModalProps {
   message: string;
   onClose: () => void;
   children: React.ReactNode;
+  /** "lg" leaves room for tables. */
+  size?: "md" | "lg";
 }
 
 export default function Modal({
@@ -15,6 +17,7 @@ export default function Modal({
   message,
   onClose,
   children,
+  size = "md",
 }: ModalProps) {
   const { titleId, messageId } = useModal(isOpen, onClose);
 
@@ -29,7 +32,7 @@ export default function Modal({
       }}
     >
       <div
-        className="w-[min(100%,380px)] max-h-[calc(100svh-48px)] overflow-y-auto p-6 border border-gray-100 rounded-[18px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.25)]"
+        className={`${size === "lg" ? "w-[min(100%,560px)]" : "w-[min(100%,380px)]"} max-h-[calc(100svh-48px)] overflow-y-auto p-6 border border-gray-100 rounded-[18px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.25)]`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

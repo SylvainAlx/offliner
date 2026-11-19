@@ -1,10 +1,7 @@
 import { create } from "zustand";
 import { User } from "../models/user";
-import {
-  COMPANION_INVOCATION_COST,
-  HOUSE_CONSTRUCTION_COST,
-  TOWN_HALL_CONSTRUCTION_COST,
-} from "../utils/constants";
+import type { BuildingType } from "../models/building";
+import { emptyResources } from "../models/resources";
 import { userRepository } from "../services/userRepository";
 import { sanitizeName } from "../utils/sanitize";
 
@@ -17,8 +14,7 @@ export interface UserStore {
   closeAnyOpenPeriod: (endTs: number) => void;
   resetPeriods: () => void;
   saveUser: () => Promise<void>;
-  buildHouse: (offlineMs: number) => boolean;
-  buildTownHall: (offlineMs: number) => boolean;
+  queueBuilding: (type: BuildingType, offlineMs: number) => boolean;
   invokeCompanion: (offlineMs: number) => boolean;
   updateCompanionStages: (offlineMs: number) => boolean;
   renameVillage: (name: string) => boolean;
@@ -96,27 +92,9 @@ export const useUser = create<UserStore>((set, get) => ({
 
   saveUser: () => persist(get().user),
 
-  buildHouse: (offlineMs) => {
+  queueBuilding: (type, offlineMs) => {
     const next = get().user.clone();
-    const spend = next.spendOfflinium(HOUSE_CONSTRUCTION_COST, offlineMs);
-    if (!spend) return false;
-
-    next.village.addPendingElement(
-      "house",
-      offlineMs,
-      spend.stored,
-      spend.openPeriod,
-    );
-    set({ user: next });
-    void persist(next);
-    return true;
-  },
-
-  buildTownHall: (offlineMs) => {
-    const next = get().user.clone();
-    if (!next.buildTownHall(offlineMs, TOWN_HALL_CONSTRUCTION_COST)) {
-      return false;
-    }
+    if (!next.queueBuilding(type, offlineMs)) return false;
 
     set({ user: next });
     void persist(next);
@@ -125,17 +103,8 @@ export const useUser = create<UserStore>((set, get) => ({
 
   invokeCompanion: (offlineMs) => {
     const next = get().user.clone();
-    if (!next.village.canInvokeCompanion()) return false;
+    if (!next.invokeCompanion(offlineMs)) return false;
 
-    const spend = next.spendOfflinium(COMPANION_INVOCATION_COST, offlineMs);
-    if (!spend) return false;
-
-    next.village.addPendingElement(
-      "companion",
-      offlineMs,
-      spend.stored,
-      spend.openPeriod,
-    );
     set({ user: next });
     void persist(next);
     return true;
@@ -197,7 +166,7 @@ export const useUser = create<UserStore>((set, get) => ({
     if (!get().user.village.hasCompletedPendingElements(offlineMs)) return;
 
     const next = get().user.clone();
-    if (next.village.completePendingElements(offlineMs) === 0) return;
+    if (next.completePendingElements(offlineMs) === 0) return;
 
     set({ user: next });
     void persist(next);
@@ -230,15 +199,9 @@ export const useUser = create<UserStore>((set, get) => ({
     const next = get().user.clone();
     const elapsedOfflineMs = next.periodList.computeTotalMs(Date.now());
     next.periodList.clearPeriods();
-    next.offlinium = 0;
+    next.resources = emptyResources();
     next.settledOfflineMs = 0;
-    next.village.shiftCompanionBirthTimes(elapsedOfflineMs);
-    next.village.pendingElements = next.village.pendingElements.map(
-      (pending) => ({
-        ...pending,
-        offlineMsAtStart: pending.offlineMsAtStart - elapsedOfflineMs,
-      }),
-    );
+    next.village.shiftOfflineTimes(elapsedOfflineMs);
     set({ user: next });
     void persist(next);
   },
