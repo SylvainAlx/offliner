@@ -36,11 +36,16 @@ function formatLength(ms: number): string {
 
 export function useUnobservedGapPrompt() {
   const gaps = useUser((state) => state.user.periodList.unconfirmedGaps);
-  const resolveUnconfirmedGaps = useUser((state) => state.resolveUnconfirmedGaps);
+  const resolveUnconfirmedGaps = useUser(
+    (state) => state.resolveUnconfirmedGaps,
+  );
   const refreshFromUser = useOnlineStatus((state) => state.refreshFromUser);
 
   const isOpen = gaps.length > 0;
   const since = isOpen ? Math.min(...gaps.map((gap) => gap.start)) : 0;
+  // A gap ends when the app notices it, so the latest end is when the prompt
+  // was raised: a pure stand-in for Date.now() that keeps render stable.
+  const detectedAt = isOpen ? Math.max(...gaps.map((gap) => gap.end)) : 0;
   const totalMs = gaps.reduce((total, gap) => total + (gap.end - gap.start), 0);
 
   function answer(stayedOffline: boolean) {
@@ -50,10 +55,12 @@ export function useUnobservedGapPrompt() {
 
   return {
     isOpen,
-    sinceLabel: isOpen ? formatSince(since, Date.now()) : "",
+    sinceLabel: isOpen ? formatSince(since, detectedAt) : "",
     durationLabel: formatLength(totalMs),
     capLabel: `${UNOBSERVED_OFFLINE_CREDIT_CAP_MS / HOUR_MS} h`,
-    isCapped: gaps.some((gap) => gap.end - gap.start > UNOBSERVED_OFFLINE_CREDIT_CAP_MS),
+    isCapped: gaps.some(
+      (gap) => gap.end - gap.start > UNOBSERVED_OFFLINE_CREDIT_CAP_MS,
+    ),
     answer,
   };
 }

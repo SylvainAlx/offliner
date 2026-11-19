@@ -1,108 +1,96 @@
-import { useVillageConstructions } from "../hooks/useVIllageConstructions";
+import { useCallback, useState } from "react";
 import {
-  COMPANION_INVOCATION_COST,
-  HOUSE_CONSTRUCTION_COST,
-  TOWN_HALL_CONSTRUCTION_COST,
-} from "../utils/constants";
+  useVillageConstructions,
+  type BuildingTileData,
+} from "../hooks/useVIllageConstructions";
+import { COMPANION_INVOCATION_OFFLINE_MS } from "../utils/constants";
+import { BUILDINGS, type BuildingType } from "../models/building";
+import { missingResources } from "../models/resources";
+import { formatDuration } from "../utils/format";
 import PendingElement from "./PendingElement";
 import VillageSection from "./VillageSection";
 import { CraftTile } from "./CraftTile";
+import ElementDetailModal, { type DetailTarget } from "./ElementDetailModal";
+
+function requirementLabel(type: BuildingType): string {
+  const [required] = Object.keys(BUILDINGS[type].requires ?? {}) as BuildingType[];
+  return required ? `🔒 ${BUILDINGS[required].label}` : "🔒 Verrouillé";
+}
+
+function buildingStatus(tile: BuildingTileData): string {
+  if (!tile.isUnlocked) return requirementLabel(tile.type);
+  return tile.level > 0 ? `Niveau ${tile.level}` : "Non construit";
+}
+
+function buildingAction(tile: BuildingTileData): string {
+  if (!tile.isUnlocked) return "Verrouillé";
+  if (tile.isMaxed) return tile.pendingElements.length > 0 ? "En cours" : "Max";
+  return tile.nextLevel === 1 ? "Construire" : `Niveau ${tile.nextLevel}`;
+}
 
 export default function VillageConstructions() {
   const {
-    houses,
-    townHall,
+    buildings,
     companions,
     companionCapacity,
-    canBuildHouse,
-    buildHouse,
-    canBuildTownHall,
-    buildTownHall,
+    companionCost,
     canInvoke,
+    houseLevel,
     invokeCompanion,
+    queueBuilding,
     pendingElements,
-    pendingHouses,
-    pendingTownHalls,
-    renderProgress,
     pendingCompanions,
+    renderProgress,
     totalOfflineMs,
-    liveOfflinium,
-    hasCompanionSlot,
+    available,
+    getLevel,
+    getPlannedLevel,
   } = useVillageConstructions();
+  const [detail, setDetail] = useState<DetailTarget | null>(null);
+  const closeDetail = useCallback(() => setDetail(null), []);
 
   return (
     <VillageSection
       title="À construire / invoquer"
       subtitle="Chaque élément avance pendant vos périodes hors ligne."
     >
-      <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
-        <CraftTile
-          elementName="Hôtel de ville"
-          icon="🏛️"
-          description="Débloque le nom du village et le renommage des compagnons."
-          count={townHall ? 1 : 0}
-          countLabel={townHall ? "Construit" : "Pas encore construit"}
-          canBuild={canBuildTownHall}
-          onClick={() => buildTownHall(totalOfflineMs)}
-          cost={TOWN_HALL_CONSTRUCTION_COST}
-          pendingElements={pendingTownHalls}
-          renderProgress={renderProgress}
-          liveOfflinium={liveOfflinium}
-          craftTime="5 min"
-          actionLabel="Construire"
-        >
-          {townHall
-            ? "Déjà construit"
-            : pendingTownHalls.length > 0
-              ? "Construction en cours"
-              : canBuildTownHall
-                ? "Construire"
-                : `Il vous manque ${TOWN_HALL_CONSTRUCTION_COST - liveOfflinium} ⬡`}
-        </CraftTile>
-
-        <CraftTile
-          elementName="Maison"
-          icon="🏠"
-          description="Augmente la capacité de population de 4."
-          count={houses.length}
-          countLabel={`maison${houses.length > 1 ? "s" : ""} construite${houses.length > 1 ? "s" : ""}`}
-          canBuild={canBuildHouse}
-          onClick={() => buildHouse(totalOfflineMs)}
-          cost={HOUSE_CONSTRUCTION_COST}
-          pendingElements={pendingHouses}
-          renderProgress={renderProgress}
-          liveOfflinium={liveOfflinium}
-          craftTime="2 min"
-          actionLabel="Construire"
-        >
-          {canBuildHouse
-            ? "Construire"
-            : `Il vous manque ${HOUSE_CONSTRUCTION_COST - liveOfflinium} ⬡`}
-        </CraftTile>
+      <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3">
+        {buildings.map((tile) => (
+          <CraftTile
+            key={tile.type}
+            elementName={tile.definition.label}
+            icon={tile.definition.icon}
+            status={buildingStatus(tile)}
+            cost={tile.isMaxed ? {} : tile.cost}
+            missing={tile.missing}
+            craftTime={tile.isMaxed ? "—" : formatDuration(tile.constructionOfflineMs)}
+            canBuild={tile.canQueue}
+            onClick={() => queueBuilding(tile.type, totalOfflineMs)}
+            actionLabel={buildingAction(tile)}
+            onDetail={() => setDetail(tile.type)}
+            pendingElements={tile.pendingElements}
+            renderProgress={renderProgress}
+          />
+        ))}
 
         <CraftTile
           elementName="Compagnon"
           icon="🐾"
-          description="Ajoute un compagnon qui peut évoluer."
-          count={companions.length}
-          countLabel={`compagnon${companions.length > 1 ? "s" : ""} sur ${companionCapacity} places`}
+          status={
+            houseLevel === 0
+              ? `🔒 ${BUILDINGS.house.label}`
+              : `${companions.length}/${companionCapacity} places`
+          }
+          cost={companionCost}
+          missing={missingResources(available, companionCost)}
+          craftTime={formatDuration(COMPANION_INVOCATION_OFFLINE_MS)}
           canBuild={canInvoke}
           onClick={() => invokeCompanion(totalOfflineMs)}
-          cost={COMPANION_INVOCATION_COST}
+          actionLabel="Invoquer"
+          onDetail={() => setDetail("companion")}
           pendingElements={pendingCompanions}
           renderProgress={renderProgress}
-          liveOfflinium={liveOfflinium}
-          craftTime="1 min"
-          actionLabel="Invoquer"
-        >
-          {houses.length === 0
-            ? "Construisez d'abord une maison"
-            : !hasCompanionSlot
-              ? "Quota atteint : construisez plus de maisons ou libérez un compagnon"
-              : canInvoke
-                ? "Invoquer"
-                : `Il vous manque ${COMPANION_INVOCATION_COST - liveOfflinium} ⬡`}
-        </CraftTile>
+        />
       </div>
       {pendingElements.length > 0 && (
         <div
@@ -114,6 +102,12 @@ export default function VillageConstructions() {
           ))}
         </div>
       )}
+      <ElementDetailModal
+        target={detail}
+        getLevel={getLevel}
+        getPlannedLevel={getPlannedLevel}
+        onClose={closeDetail}
+      />
     </VillageSection>
   );
 }

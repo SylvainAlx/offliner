@@ -30,12 +30,14 @@ import { User as UserModel } from "../../src/models/user";
 import { Companion } from "../../src/models/companion";
 import {
   COMPANION_STAGE_AGE_MS,
-  HOUSE_CONSTRUCTION_COST,
   OFFLINIUM_DELIVERY_INTERVAL as INTERVAL,
   OPEN_PERIOD_HEARTBEAT_MS,
   UNOBSERVED_OFFLINE_CREDIT_CAP_MS as CAP,
 } from "../../src/utils/constants";
+import { getBuildingCost } from "../../src/models/building";
 import { HOUR, local } from "../helpers/time";
+
+const HOUSE_CONSTRUCTION_COST = getBuildingCost("house", 1).offlinium!;
 
 const T0 = local(2026, 1, 10, 8);
 
@@ -149,7 +151,7 @@ describe("userStore", () => {
       await useUser.getState().resetAll();
 
       expect(useUser.getState().user.name).toBe("Joueur");
-      expect(lastSaved()).toMatchObject({ name: "Joueur", offlinium: 0 });
+      expect(lastSaved()).toMatchObject({ name: "Joueur", resources: { offlinium: 0, materials: 0 } });
     });
   });
 
@@ -192,13 +194,13 @@ describe("userStore", () => {
 
   describe("actions", () => {
     it("builds a house only with enough Offlinium", () => {
-      expect(useUser.getState().buildHouse(0)).toBe(false);
+      expect(useUser.getState().queueBuilding("house", 0)).toBe(false);
 
       const user = new UserModel();
       user.offlinium = HOUSE_CONSTRUCTION_COST;
       useUser.setState({ user });
 
-      expect(useUser.getState().buildHouse(0)).toBe(true);
+      expect(useUser.getState().queueBuilding("house", 0)).toBe(true);
       expect(useUser.getState().user.offlinium).toBe(0);
       expect(useUser.getState().user.village.pendingElements).toHaveLength(1);
       expect(user.offlinium).toBe(HOUSE_CONSTRUCTION_COST);
