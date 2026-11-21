@@ -7,6 +7,7 @@ export const BUILDING_TYPES = [
   "depot",
   "laboratory",
   "habitat",
+  "spaceport",
 ] as const;
 
 export type BuildingType = (typeof BUILDING_TYPES)[number];
@@ -109,6 +110,18 @@ export const BUILDINGS: Record<BuildingType, BuildingDefinition> = {
     energyConsumed: (level) => growing(5, level),
     staff: () => 0,
   },
+  spaceport: {
+    type: "spaceport",
+    label: "Spatioport",
+    icon: "🚀",
+    description:
+      "Ouvre l'accès au système planétaire. Il produira plus tard les vaisseaux des expéditions.",
+    cost: { metal: 400, offlinium: 200, factor: 2 },
+    production: () => ({}),
+    energyProduced: () => 0,
+    energyConsumed: (level) => growing(20, level),
+    staff: (level) => 5 * level,
+  },
 };
 
 /** Every level of every building carries solar panels. */
@@ -128,7 +141,15 @@ export function isBuildingType(value: unknown): value is BuildingType {
 }
 
 export function emptyLevels(): BuildingLevels {
-  return { metalMine: 0, farm: 0, reactor: 0, depot: 0, laboratory: 0, habitat: 0 };
+  return {
+    metalMine: 0,
+    farm: 0,
+    reactor: 0,
+    depot: 0,
+    laboratory: 0,
+    habitat: 0,
+    spaceport: 0,
+  };
 }
 
 /** What it costs to reach `level` (from level − 1). */

@@ -65,6 +65,11 @@ export default function Help() {
         jamais plafonné.
       </p>
       <p className={paragraph}>
+        Le spatioport ouvre l&apos;onglet Système, qui présente les planètes
+        voisines et leurs caractéristiques. C&apos;est de là que partiront les
+        futures expéditions.
+      </p>
+      <p className={paragraph}>
         L&apos;habitat loge les habitants : village, ville au niveau 6, puis
         mégalopole au niveau 11. Chaque habitant mange{" "}
         {FOOD_PER_INHABITANT_PER_HOUR} unité d&apos;alimentation par heure : sans

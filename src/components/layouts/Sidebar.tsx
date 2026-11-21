@@ -1,4 +1,5 @@
 import { useSideBar } from "../../hooks/useSideBar";
+import { useUser } from "../../stores/userStore";
 
 export type AppSection = "account" | "planet" | "system" | "achievements" | "help";
 
@@ -53,6 +54,8 @@ export default function Sidebar({
   onClose,
   onSelect,
 }: SidebarProps) {
+  // The star system opens once the spaceport is built.
+  const isSystemUnlocked = useUser((state) => state.user.planet.levels.spaceport > 0);
   const { closeButtonRef, handleSelect } = useSideBar(
     isOpen,
     onClose,
@@ -113,7 +116,11 @@ export default function Sidebar({
 
         {/* Nav items */}
         <nav className="grid gap-1.75">
-          {menuItems.map((item) => {
+          {menuItems.map((menuItem) => {
+            const isLocked = menuItem.id === "system" && !isSystemUnlocked;
+            const item = isLocked
+              ? { ...menuItem, icon: "🔒", description: "Construisez le spatioport" }
+              : menuItem;
             const isActive = activeSection === item.id;
             return (
               <button
@@ -122,12 +129,14 @@ export default function Sidebar({
                   "px-2.75 py-2.5 border rounded-[15px] bg-transparent",
                   "text-left cursor-pointer font-[inherit]",
                   "transition-[background-color,border-color,transform] duration-180 ease-[ease]",
+                  isLocked ? "opacity-60" : "",
                   isActive
                     ? "border-green-500/20 bg-(--green-bg) text-(--green-dark)"
                     : "border-transparent text-(--gray-700) hover:border-(--gray-200) hover:bg-(--gray-50) hover:translate-x-0.5",
                 ].join(" ")}
                 type="button"
                 aria-current={isActive ? "page" : undefined}
+                aria-label={isLocked ? `${item.label} : verrouillé, construisez le spatioport` : undefined}
                 key={item.id}
                 onClick={() => handleSelect(item.id)}
               >

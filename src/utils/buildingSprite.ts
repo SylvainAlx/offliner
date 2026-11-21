@@ -282,6 +282,39 @@ function drawHabitat(canvas: Canvas, tier: number): void {
   if (tier >= 2) canvas.dots([[9, 0], [9, -1]], "#f87171");
 }
 
+function drawSpaceport(canvas: Canvas, tier: number): void {
+  // A launch pad with a rocket ready to go.
+  canvas.rect(8, 15, 16, 2, "#64748b");
+  canvas.rect(8, 15, 16, 1, "#94a3b8");
+  canvas.dots([[10, 16], [14, 16], [18, 16], [22, 16]], "#fbbf24");
+  // The rocket.
+  canvas.wall(15, 5, 4, 10, "#f8fafc", "#e2e8f0", "#94a3b8");
+  canvas.rect(16, 3, 2, 2, "#ef4444");
+  canvas.rect(15, 4, 4, 1, "#ef4444");
+  canvas.rect(16, 7, 2, 1, "#60a5fa");
+  canvas.rect(14, 11, 1, 4, "#ef4444");
+  canvas.rect(19, 11, 1, 4, "#b91c1c");
+  // The launch tower and its arm.
+  canvas.rect(10, 3, 1, 12, "#475569");
+  canvas.rect(11, 6, 3, 1, "#64748b");
+  canvas.dots([[11, 9], [11, 12]], "#64748b");
+  canvas.dots([[10, 2]], "#f87171");
+  if (tier >= 1) {
+    // A hangar for the ships.
+    canvas.wall(24, 9, 7, 8, "#cbd5e1", "#94a3b8", "#64748b");
+    canvas.rect(24, 8, 7, 1, "#e2e8f0");
+    canvas.rect(26, 12, 3, 5, "#334155");
+  }
+  if (tier >= 2) {
+    // A radar dish and a second rocket.
+    canvas.rect(3, 11, 1, 6, "#64748b");
+    canvas.rect(1, 9, 5, 1, "#e2e8f0");
+    canvas.rect(2, 10, 3, 1, "#cbd5e1");
+    canvas.wall(6, 9, 2, 6, "#f8fafc", "#e2e8f0", "#94a3b8");
+    canvas.dots([[6, 8], [7, 8]], "#a855f7");
+  }
+}
+
 const DRAWERS: Record<BuildingType, (canvas: Canvas, tier: number) => void> = {
   metalMine: drawMine,
   farm: drawFarm,
@@ -289,6 +322,7 @@ const DRAWERS: Record<BuildingType, (canvas: Canvas, tier: number) => void> = {
   depot: drawDepot,
   laboratory: drawLaboratory,
   habitat: drawHabitat,
+  spaceport: drawSpaceport,
 };
 
 /** 0, 1 or 2: the look a building has at this level. */

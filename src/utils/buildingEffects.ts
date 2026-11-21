@@ -28,6 +28,8 @@ export function describeBuildingEffect(type: BuildingType, level: number): strin
       return `+${Math.round(LABORATORY_BONUS_PER_LEVEL * level * 100)} % ${RESOURCE_ICONS.offlinium}`;
     case "depot":
       return `${formatAmount(getStorageCapacity(level))} ${RESOURCE_ICONS.metal} et ${RESOURCE_ICONS.food} max`;
+    case "spaceport":
+      return level === 1 ? "Accès au système planétaire" : "Vaisseaux (bientôt)";
     case "habitat":
       return `${formatAmount(getPopulationMax(level))} ${POPULATION_ICON} max (${describeSettlement(level)})`;
   }

@@ -423,3 +423,23 @@ describe("star system", () => {
     expect(renamed.planets.map((planet) => planet.kind)).toEqual(system.planets.map((planet) => planet.kind));
   });
 });
+
+describe("spaceport", () => {
+  it("is a building like the others, needed to open the star system", () => {
+    expect(getBuildingCost("spaceport", 1)).toEqual({ metal: 400, offlinium: 200 });
+    const user = newUser();
+    expect(user.planet.levels.spaceport).toBe(0);
+    user.resources = { metal: 1000, food: 0, offlinium: 1000 };
+    expect(user.startConstruction("spaceport", T0)).toBe(true);
+    user.advance(T0 + getConstructionMs("spaceport", 1), 0);
+    expect(user.planet.levels.spaceport).toBe(1);
+
+    const restored = new User();
+    restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
+    expect(restored.planet.levels.spaceport).toBe(1);
+    // Saves from before the spaceport simply have none.
+    const legacy = new User();
+    legacy.loadFromSnapshot({ planet: { levels: { metalMine: 2 } } });
+    expect(legacy.planet.levels.spaceport).toBe(0);
+  });
+});
