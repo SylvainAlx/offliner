@@ -6,8 +6,11 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { useUser } from "./stores/userStore";
 import { setupServiceWorker } from "./services/serviceWorker";
 import { setupInstallTracking } from "./stores/installStore";
+import { setupTheme } from "./stores/themeStore";
 
 async function bootstrap() {
+  // First, so that even the loading and error screens use the right theme.
+  setupTheme();
   setupServiceWorker();
   // Before any await: the install prompt event can fire very early.
   setupInstallTracking();

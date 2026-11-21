@@ -32,7 +32,7 @@ export default function ConfirmModal({
         </button>
         <button
           type="button"
-          className="min-h-10 px-3.5 py-2 border border-transparent rounded-[10px] bg-(--red-bg) text-(--red-dark) text-[0.8rem] font-bold cursor-pointer hover:bg-[#fecaca] transition-colors focus-visible:outline-2 focus-visible:outline-(--accent) focus-visible:outline-offset-2"
+          className="min-h-10 px-3.5 py-2 border border-transparent rounded-[10px] bg-(--red-bg) text-(--red-dark) text-[0.8rem] font-bold cursor-pointer hover:bg-(--red-border) transition-colors focus-visible:outline-2 focus-visible:outline-(--accent) focus-visible:outline-offset-2"
           onClick={onConfirm}
         >
           {confirmLabel}

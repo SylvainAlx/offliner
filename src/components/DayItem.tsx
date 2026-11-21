@@ -7,7 +7,7 @@ export default function DayItem({ day }: { day: OfflineDay }) {
 
   return (
     <div className="flex w-full gap-3 border-b border-(--gray-100) py-3 last:border-b-0">
-      <div className="mt-1.5 size-2.5 shrink-0 rounded-full bg-(--gray-300,#d1d5db)" />
+      <div className="mt-1.5 size-2.5 shrink-0 rounded-full bg-(--gray-300)" />
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center justify-between gap-2">
           <span className="text-[0.82rem] font-medium text-(--gray-600)">

@@ -82,13 +82,13 @@ export default class ErrorBoundary extends Component<
               <>
                 <Button
                   onClick={() => void this.handleExportRawData()}
-                  color="var(--green-dark)"
+                  color="var(--green-solid)"
                 >
                   Exporter mes données brutes
                 </Button>
                 <Button
                   onClick={() => void this.handleReset()}
-                  color="var(--red-dark)"
+                  color="var(--red-solid)"
                 >
                   {this.state.isConfirmingReset
                     ? "Confirmer l'effacement définitif"

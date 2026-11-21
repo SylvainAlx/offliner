@@ -18,7 +18,7 @@ function Step({ index, children }: { index: number; children: ReactNode }) {
   return (
     <li className="flex items-start gap-3 rounded-[14px] border border-(--gray-100) bg-white p-3 text-[0.86rem] leading-normal text-(--gray-700)">
       <span
-        className="grid size-7 shrink-0 place-items-center rounded-full bg-(--accent) text-[0.8rem] font-extrabold text-white"
+        className="grid size-7 shrink-0 place-items-center rounded-full bg-(--accent-solid) text-[0.8rem] font-extrabold text-(--on-color)"
         aria-hidden="true"
       >
         {index}
@@ -131,7 +131,7 @@ export default function InstallSteps() {
             </Step>
             <Step index={3}>Suivez ensuite le guide d&apos;installation.</Step>
           </Steps>
-          <Button onClick={() => void copyLink()} color="var(--green-dark)" className="w-full">
+          <Button onClick={() => void copyLink()} color="var(--green-solid)" className="w-full">
             Copier le lien
           </Button>
         </>
@@ -152,7 +152,7 @@ export default function InstallSteps() {
               {appUrl}
             </p>
             {canPrompt && (
-              <Button onClick={() => void install()} color="var(--green-dark)">
+              <Button onClick={() => void install()} color="var(--green-solid)">
                 Installer aussi sur cet ordinateur
               </Button>
             )}
@@ -168,7 +168,7 @@ export default function InstallSteps() {
             faite dans le navigateur. Exportez-la maintenant, puis importez-la
             dans l&apos;app (Compte › Données du compte).
           </p>
-          <Button onClick={() => void exportProgress()} color="#92400e">
+          <Button onClick={() => void exportProgress()} color="var(--warning-solid)">
             Exporter ma progression
           </Button>
         </div>

@@ -1,33 +1,28 @@
 import { create } from "zustand";
 import { User } from "../models/user";
-import type { BuildingType } from "../models/building";
-import { emptyResources } from "../models/resources";
+import type { BuildingType } from "../models/buildings";
+import type { CompletedConstruction } from "../models/economy";
 import { userRepository } from "../services/userRepository";
+import { AUTOSAVE_INTERVAL_MS } from "../utils/constants";
 import { sanitizeName } from "../utils/sanitize";
 
 export interface UserStore {
   user: User;
   isHydrated: boolean;
+  /** Levels reached since the app was opened, newest last. */
+  completedConstructions: CompletedConstruction[];
   hydrate: () => Promise<User>;
   updateName: (name: string) => void;
+  renamePlanet: (name: string) => boolean;
+  /** Brings the game up to date with both clocks. Called every second. */
+  tick: (now: number) => void;
+  startConstruction: (type: BuildingType) => boolean;
+  cancelConstruction: () => boolean;
+  speedUpConstruction: (ms: number) => boolean;
   openPeriodIfNeeded: (startTs: number) => void;
-  dismissAbsenceReport: () => void;
   closeAnyOpenPeriod: (endTs: number) => void;
   resetPeriods: () => void;
   saveUser: () => Promise<void>;
-  queueBuilding: (type: BuildingType, offlineMs: number) => boolean;
-  invokeCompanion: (offlineMs: number) => boolean;
-  updateCompanionStages: (offlineMs: number) => boolean;
-  renameVillage: (name: string) => boolean;
-  renameCompanion: (companionId: string, name: string) => boolean;
-  releaseCompanionAndGetOfflinium: (
-    companionId: string,
-    offlineMs: number,
-  ) => boolean;
-  cancelCompanionInvocation: (companionId: string, offlineMs: number) => boolean;
-  completeCompanionInvocations: (offlineMs: number) => void;
-  completePendingElements: (offlineMs: number) => void;
-  cancelPendingElement: (elementId: string, offlineMs: number) => boolean;
   importFromSnapshot: (snapshot: unknown) => Promise<void>;
   resetAll: () => Promise<void>;
   touchOpenPeriod: (now: number) => boolean;
@@ -38,8 +33,10 @@ export interface UserStore {
 // Every write to the profile goes through this queue, in the order the state
 // changed, so an older state can never overwrite a newer one (import, reset).
 let writeQueue = Promise.resolve();
+let lastSavedAt = 0;
 
 function persist(user: User): Promise<void> {
+  lastSavedAt = Date.now();
   writeQueue = writeQueue
     .then(() => userRepository.save(user))
     .catch((error: unknown) => {
@@ -49,15 +46,22 @@ function persist(user: User): Promise<void> {
   return writeQueue;
 }
 
+/** Offline time credited so far, as the app can see it at `now`. */
+function totalOfflineAt(user: User, now: number): number {
+  return user.periodList.computeTotalMs(now);
+}
+
 /**
  * Records the time the app could not observe since the profile was saved (it
- * becomes a gap to confirm), then closes a period left open if the app starts
- * online.
+ * becomes a gap to confirm), closes a period left open if the app starts
+ * online, then catches up with the real time spent away.
  */
 function prepareLoadedUser(user: User, now: number, online: boolean): User {
   user.periodList.recordObservation(now);
-  // A confirmed period must be closed when the app starts online.
   if (online) user.closeOfflinePeriod(now);
+  const totalOfflineMs = totalOfflineAt(user, now);
+  user.settledOfflineMs = Math.min(user.settledOfflineMs, totalOfflineMs);
+  user.advance(now, totalOfflineMs);
   return user;
 }
 
@@ -65,209 +69,165 @@ function isNavigatorOnline(): boolean {
   return typeof navigator !== "undefined" ? navigator.onLine : true;
 }
 
-export const useUser = create<UserStore>((set, get) => ({
-  user: new User(),
-  isHydrated: false,
-
-  hydrate: async () => {
-    const user = prepareLoadedUser(
-      await userRepository.load(),
-      Date.now(),
-      isNavigatorOnline(),
-    );
-
-    set({ user, isHydrated: true });
-    await persist(user);
-    return user;
-  },
-
-  updateName: (name) => {
-    const sanitizedName = sanitizeName(name);
-    if (!sanitizedName) return;
-
+export const useUser = create<UserStore>((set, get) => {
+  /**
+   * Applies `change` to an up-to-date copy of the user, then saves. Returns
+   * what `change` returned; nothing is kept when it returns false.
+   */
+  function update(change: (user: User, now: number) => boolean): boolean {
+    const now = Date.now();
     const next = get().user.clone();
-    next.name = sanitizedName;
-    set({ user: next });
-    void persist(next);
-  },
-
-  saveUser: () => persist(get().user),
-
-  queueBuilding: (type, offlineMs) => {
-    const next = get().user.clone();
-    if (!next.queueBuilding(type, offlineMs)) return false;
-
-    set({ user: next });
-    void persist(next);
+    const completed = next.advance(now, totalOfflineAt(next, now));
+    if (!change(next, now)) {
+      if (completed.length > 0) commit(next, completed);
+      return false;
+    }
+    // A construction sped up to its end completes at once.
+    completed.push(...next.advance(now, totalOfflineAt(next, now)));
+    commit(next, completed);
     return true;
-  },
+  }
 
-  invokeCompanion: (offlineMs) => {
-    const next = get().user.clone();
-    if (!next.invokeCompanion(offlineMs)) return false;
-
-    set({ user: next });
+  function commit(next: User, completed: CompletedConstruction[]): void {
+    set({
+      user: next,
+      completedConstructions:
+        completed.length > 0
+          ? [...get().completedConstructions, ...completed]
+          : get().completedConstructions,
+    });
     void persist(next);
-    return true;
-  },
+  }
 
-  // Called every second: only clone and save when a stage actually changes.
-  updateCompanionStages: (offlineMs) => {
-    if (!get().user.village.hasPendingStageUpdates(offlineMs)) return false;
+  return {
+    user: new User(),
+    isHydrated: false,
+    completedConstructions: [],
 
-    const next = get().user.clone();
-    if (next.updateCompanionStages(offlineMs) === 0) return false;
+    hydrate: async () => {
+      const user = prepareLoadedUser(
+        await userRepository.load(),
+        Date.now(),
+        isNavigatorOnline(),
+      );
 
-    set({ user: next });
-    void persist(next);
-    return true;
-  },
+      set({ user, isHydrated: true });
+      await persist(user);
+      return user;
+    },
 
-  renameVillage: (name) => {
-    const next = get().user.clone();
-    if (!next.renameVillage(name)) return false;
+    updateName: (name) => {
+      const sanitizedName = sanitizeName(name);
+      if (!sanitizedName) return;
+      update((user) => {
+        user.name = sanitizedName;
+        return true;
+      });
+    },
 
-    set({ user: next });
-    void persist(next);
-    return true;
-  },
+    renamePlanet: (name) => update((user) => user.renamePlanet(name)),
 
-  renameCompanion: (companionId, name) => {
-    const next = get().user.clone();
-    if (!next.renameCompanion(companionId, name)) return false;
+    saveUser: () => persist(get().user),
 
-    set({ user: next });
-    void persist(next);
-    return true;
-  },
+    tick: (now) => {
+      const next = get().user.clone();
+      const completed = next.advance(now, totalOfflineAt(next, now));
+      set({
+        user: next,
+        completedConstructions:
+          completed.length > 0
+            ? [...get().completedConstructions, ...completed]
+            : get().completedConstructions,
+      });
+      if (completed.length > 0 || Date.now() - lastSavedAt >= AUTOSAVE_INTERVAL_MS) {
+        void persist(next);
+      }
+    },
 
-  releaseCompanionAndGetOfflinium: (companionId, offlineMs) => {
-    const next = get().user.clone();
-    if (!next.releaseCompanionAndGetOfflinium(companionId, offlineMs)) return false;
+    startConstruction: (type) =>
+      update((user, now) => user.startConstruction(type, now)),
 
-    set({ user: next });
-    void persist(next);
-    return true;
-  },
+    cancelConstruction: () => update((user) => user.cancelConstruction()),
 
-  cancelCompanionInvocation: (companionId, offlineMs) => {
-    const next = get().user.clone();
-    if (!next.cancelCompanionInvocation(companionId, offlineMs)) return false;
+    speedUpConstruction: (ms) =>
+      update((user, now) => user.speedUpConstruction(ms, now)),
 
-    set({ user: next });
-    void persist(next);
-    return true;
-  },
+    openPeriodIfNeeded: (startTs) => {
+      update((user) => {
+        user.openOfflinePeriod(startTs);
+        return true;
+      });
+    },
 
-  completeCompanionInvocations: (offlineMs) => {
-    get().completePendingElements(offlineMs);
-  },
+    closeAnyOpenPeriod: (endTs) => {
+      update((user) => {
+        user.closeOfflinePeriod(endTs);
+        return true;
+      });
+    },
 
-  completePendingElements: (offlineMs) => {
-    if (!get().user.village.hasCompletedPendingElements(offlineMs)) return;
+    // Starts the offline counter again; what it already produced is kept.
+    resetPeriods: () => {
+      update((user) => {
+        user.periodList.clearPeriods();
+        user.settledOfflineMs = 0;
+        return true;
+      });
+    },
 
-    const next = get().user.clone();
-    if (next.completePendingElements(offlineMs) === 0) return;
+    importFromSnapshot: async (snapshot) => {
+      const user = new User();
+      user.loadFromSnapshot(snapshot);
 
-    set({ user: next });
-    void persist(next);
-  },
+      // The time between the export and the import was not observed by this
+      // device: an exported open period ends at its last observation.
+      const lastSeen = user.periodList.openPeriodLastSeen;
+      if (lastSeen !== null) user.closeOfflinePeriod(lastSeen);
+      const now = Date.now();
+      user.settledOfflineMs = Math.min(user.settledOfflineMs, totalOfflineAt(user, now));
+      user.advance(now, totalOfflineAt(user, now));
 
-  cancelPendingElement: (elementId, offlineMs) => {
-    const next = get().user.clone();
-    if (!next.cancelPendingElement(elementId, offlineMs)) return false;
+      set({ user, isHydrated: true, completedConstructions: [] });
+      await persist(user);
+    },
 
-    set({ user: next });
-    void persist(next);
-    return true;
-  },
+    resetAll: async () => {
+      const user = new User();
+      set({ user, isHydrated: true, completedConstructions: [] });
+      await persist(user);
+    },
 
-  openPeriodIfNeeded: (startTs) => {
-    const next = get().user.clone();
-    next.openOfflinePeriod(startTs);
-    set({ user: next });
-    void persist(next);
-  },
+    // Records, at most every OPEN_PERIOD_HEARTBEAT_MS, that the device is still
+    // seen offline. A long silence between two records (device asleep with the
+    // app open) becomes a gap to confirm.
+    touchOpenPeriod: (now) => {
+      if (!get().user.periodList.needsHeartbeat(now)) return false;
 
-  dismissAbsenceReport: () => {
-    if (get().user.absence === null) return;
-    const next = get().user.clone();
-    next.dismissAbsenceReport();
-    set({ user: next });
-    void persist(next);
-  },
+      const next = get().user.clone();
+      if (!next.periodList.recordObservation(now)) return false;
+      set({ user: next });
+      void persist(next);
+      return true;
+    },
 
-  closeAnyOpenPeriod: (endTs) => {
-    const next = get().user.clone();
-    next.closeOfflinePeriod(endTs);
-    set({ user: next });
-    void persist(next);
-  },
+    // The player's answer to "did you stay offline while the app could not see it?".
+    resolveUnconfirmedGaps: (stayedOffline) => {
+      if (get().user.periodList.unconfirmedGaps.length === 0) return;
+      update((user) => {
+        user.periodList.resolveUnconfirmedGaps(stayedOffline);
+        return true;
+      });
+    },
 
-  resetPeriods: () => {
-    const next = get().user.clone();
-    const elapsedOfflineMs = next.periodList.computeTotalMs(Date.now());
-    next.periodList.clearPeriods();
-    next.resources = emptyResources();
-    next.absence = null;
-    next.settledOfflineMs = 0;
-    next.village.shiftOfflineTimes(elapsedOfflineMs);
-    set({ user: next });
-    void persist(next);
-  },
-
-  importFromSnapshot: async (snapshot) => {
-    const user = new User();
-    user.loadFromSnapshot(snapshot);
-
-    // The time between the export and the import was not observed by this
-    // device: an exported open period ends at its last observation.
-    const lastSeen = user.periodList.openPeriodLastSeen;
-    if (lastSeen !== null) user.closeOfflinePeriod(lastSeen);
-    // An absence lived on another device is not reported here.
-    user.dismissAbsenceReport();
-
-    set({ user, isHydrated: true });
-    await persist(user);
-  },
-
-  resetAll: async () => {
-    const user = new User();
-    set({ user, isHydrated: true });
-    await persist(user);
-  },
-
-  // Records, at most every OPEN_PERIOD_HEARTBEAT_MS, that the device is still
-  // seen offline. A long silence between two records (device asleep with the
-  // app open) becomes a gap to confirm.
-  touchOpenPeriod: (now) => {
-    if (!get().user.periodList.needsHeartbeat(now)) return false;
-
-    const next = get().user.clone();
-    if (!next.periodList.recordObservation(now)) return false;
-    set({ user: next });
-    void persist(next);
-    return true;
-  },
-
-  // The player's answer to "did you stay offline while the app could not see it?".
-  resolveUnconfirmedGaps: (stayedOffline) => {
-    if (get().user.periodList.unconfirmedGaps.length === 0) return;
-
-    const next = get().user.clone();
-    next.periodList.resolveUnconfirmedGaps(stayedOffline);
-    set({ user: next });
-    void persist(next);
-  },
-
-  // Kept as a compatibility name for the lifecycle store. The in-memory
-  // Zustand state is the source of truth; persistence is now asynchronous.
-  syncWithStorage: (online, now) => {
-    const user = get().user.clone();
-    user.periodList.recordObservation(now);
-    if (online) user.closeOfflinePeriod(now);
-    set({ user });
-    void persist(user);
-    return user;
-  },
-}));
+    // Called when the page is hidden or shown again.
+    syncWithStorage: (online, now) => {
+      const user = get().user.clone();
+      user.periodList.recordObservation(now);
+      if (online) user.closeOfflinePeriod(now);
+      user.advance(now, totalOfflineAt(user, now));
+      set({ user });
+      void persist(user);
+      return user;
+    },
+  };
+});

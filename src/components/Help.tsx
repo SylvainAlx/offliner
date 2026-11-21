@@ -1,13 +1,14 @@
 import {
-  COMPANIONS_PER_HOUSE,
-  COMPANION_STAGE_AGE_MS,
+  FOOD_PER_INHABITANT_PER_HOUR,
   OFFLINIUM_DELIVERY_INTERVAL,
+  PLANET_FIELDS,
+  SPEED_UP_MS_PER_OFFLINIUM,
   UNOBSERVED_GAP_THRESHOLD_MS,
   UNOBSERVED_OFFLINE_CREDIT_CAP_MS,
 } from "../utils/constants";
 import Card from "./ui/Card";
-import { BUILDINGS, getBuildingCost } from "../models/building";
-import { formatResources } from "../models/resources";
+
+const paragraph = "mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0";
 
 export default function Help() {
   return (
@@ -35,42 +36,33 @@ export default function Help() {
         temps n&apos;est compté que si vous répondez oui, dans la limite de{" "}
         {UNOBSERVED_OFFLINE_CREDIT_CAP_MS / 3600000} h par absence.
       </p>
-      <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
-        Les bâtiments ont des niveaux. Chaque niveau coûte plus cher et prend
-        plus de temps que le précédent, et tout se construit pendant votre
-        temps hors ligne, dans une seule file d&apos;attente.
+      <p className={paragraph}>
+        Le temps réel fait tourner la planète en permanence, application
+        ouverte ou fermée : constructions, production de métal et
+        d&apos;alimentation, croissance de la population. L&apos;Offlinium,
+        lui, ne se gagne qu&apos;hors ligne.
       </p>
-      <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
-        La maison (niveau 1 : {formatResources(getBuildingCost("house", 1))})
-        accueille {COMPANIONS_PER_HOUSE} compagnons par niveau. À partir du
-        niveau 3, elle demande aussi des matériaux.
+      <p className={paragraph}>
+        Une seule construction à la fois. Chaque niveau occupe une case de la
+        planète ({PLANET_FIELDS} cases) et coûte du métal et de
+        l&apos;Offlinium. La durée dépend du coût. Annuler rembourse tout.
       </p>
-      <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
-        L’hôtel de ville coûte {formatResources(getBuildingCost("townHall", 1))}{" "}
-        et ne se construit qu’une fois. Il débloque le nom du village, le
-        renommage des compagnons et les bâtiments de production :{" "}
-        {BUILDINGS.well.label.toLowerCase()}, qui ajoute de l&apos;Offlinium à
-        chaque récolte, et {BUILDINGS.quarry.label.toLowerCase()}, qui extrait
-        des matériaux.
+      <p className={paragraph}>
+        L&apos;Offlinium permet aussi de terminer une construction plus tôt :{" "}
+        1 ⬡ par {SPEED_UP_MS_PER_OFFLINIUM / 1000} secondes gagnées. Une heure
+        hors ligne au rythme de base paie donc une heure de construction.
       </p>
-      <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
-        Annuler une construction rembourse tout ce qu&apos;elle a coûté. Annuler
-        un niveau annule aussi les niveaux suivants du même bâtiment déjà en
-        file.
+      <p className={paragraph}>
+        Les bâtiments consomment de l&apos;énergie et ont besoin de personnel.
+        S&apos;il en manque, ils tournent au ralenti, dans la même proportion.
+        Le réacteur produit l&apos;énergie, et chaque niveau construit ajoute
+        des panneaux solaires.
       </p>
-      <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
-        Chaque compagnon commence enfant et évolue automatiquement selon son
-        temps de vie hors ligne : adolescent après{" "}
-        {COMPANION_STAGE_AGE_MS.adolescent / 3600000} h, adulte après{" "}
-        {COMPANION_STAGE_AGE_MS.adult / 3600000} h, puis sage après{" "}
-        {COMPANION_STAGE_AGE_MS.sage / 3600000} h. Il meurt après{" "}
-        {COMPANION_STAGE_AGE_MS.dead / 3600000} h hors ligne cumulées.
-      </p>
-      <p className="mb-2.5 text-[0.9rem] leading-normal text-(--gray-600) last:mb-0">
-        Les compagnons évolués accélèrent la récolte : un adolescent ajoute +1
-        ⬡, un adulte +2 ⬡ et un sage +3 ⬡ à chaque tranche de{" "}
-        {OFFLINIUM_DELIVERY_INTERVAL / 1000} secondes hors ligne, à partir du
-        moment où ils atteignent ce stade.
+      <p className={paragraph}>
+        L&apos;habitat loge les habitants : village, ville au niveau 6, puis
+        mégalopole au niveau 11. Chaque habitant mange{" "}
+        {FOOD_PER_INHABITANT_PER_HOUR} unité d&apos;alimentation par heure : sans
+        ferme suffisante, la population finit par diminuer.
       </p>
     </Card>
   );

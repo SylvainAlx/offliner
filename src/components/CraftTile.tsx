@@ -1,7 +1,7 @@
-import type { PendingElement } from "../models/village";
 import {
   RESOURCE_ICONS,
   RESOURCE_LABELS,
+  formatAmount,
   nonZeroResources,
   type ResourceAmounts,
 } from "../models/resources";
@@ -9,8 +9,9 @@ import Button from "./ui/Button";
 
 interface CraftTileProps {
   elementName: string;
-  icon: string;
-  /** Short line under the name: a level, a population count… */
+  /** The picture across the top of the tile. */
+  illustration: React.ReactNode;
+  /** Short line under the name: a level, a state… */
   status: React.ReactNode;
   cost: ResourceAmounts;
   /** Resources still missing: shown in red in the cost. */
@@ -20,24 +21,19 @@ interface CraftTileProps {
   onClick: () => void;
   actionLabel: string;
   onDetail: () => void;
-  pendingElements: PendingElement[];
-  renderProgress: (
-    pendingElement: PendingElement,
-    index: number,
-  ) => React.ReactNode;
 }
 
 function describeCost(cost: ResourceAmounts): string {
   const parts = nonZeroResources(cost).map(
-    ([type, value]) => `${value} ${RESOURCE_LABELS[type]}`,
+    ([type, value]) => `${formatAmount(value)} ${RESOURCE_LABELS[type]}`,
   );
   return parts.length > 0 ? parts.join(" et ") : "rien";
 }
 
-/** A compact tile: the details are in the modal opened by "Détail". */
+/** A compact tile: the details are in the modal opened by "?". */
 export function CraftTile({
   elementName,
-  icon,
+  illustration,
   status,
   cost,
   missing,
@@ -46,20 +42,13 @@ export function CraftTile({
   onClick,
   actionLabel,
   onDetail,
-  pendingElements,
-  renderProgress,
 }: CraftTileProps) {
   const costParts = nonZeroResources(cost);
 
   return (
     <div className="flex w-full flex-col gap-2 rounded-xl border border-dashed border-(--accent-border) bg-(--gray-50) p-2.5 text-left text-(--gray-900)">
+      {illustration}
       <div className="flex items-center gap-2">
-        <span
-          className="grid size-9 shrink-0 place-items-center rounded-lg bg-(--accent-bg) text-[1.15rem] shadow-(--shadow-sm)"
-          aria-hidden="true"
-        >
-          {icon}
-        </span>
         <div className="min-w-0">
           <strong className="block text-[0.8rem] leading-tight [overflow-wrap:anywhere] hyphens-auto sm:text-[0.85rem]">
             {elementName}
@@ -71,29 +60,17 @@ export function CraftTile({
       </div>
 
       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-(--mono) text-[0.7rem]">
-        {costParts.length > 0 ? (
-          costParts.map(([type, value]) => (
-            <span
-              key={type}
-              className={
-                missing[type] ? "text-(--red-dark)" : "text-(--accent)"
-              }
-              title={RESOURCE_LABELS[type]}
-            >
-              {value} {RESOURCE_ICONS[type]}
-            </span>
-          ))
-        ) : (
-          <span className="text-(--gray-500)">—</span>
-        )}
+        {costParts.map(([type, value]) => (
+          <span
+            key={type}
+            className={missing[type] ? "text-(--red-dark)" : "text-(--accent)"}
+            title={RESOURCE_LABELS[type]}
+          >
+            {formatAmount(value)} {RESOURCE_ICONS[type]}
+          </span>
+        ))}
         <span className="text-(--gray-500)">⏱️ {craftTime}</span>
       </div>
-
-      {pendingElements.length > 0 && (
-        <span className="flex flex-col gap-1 rounded-md bg-white/70 p-1.5">
-          {pendingElements.map(renderProgress)}
-        </span>
-      )}
 
       <div className="mt-auto flex gap-1.5">
         <button

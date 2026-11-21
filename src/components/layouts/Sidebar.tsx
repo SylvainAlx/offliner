@@ -1,6 +1,6 @@
 import { useSideBar } from "../../hooks/useSideBar";
 
-export type AppSection = "account" | "village" | "achievements" | "help";
+export type AppSection = "account" | "planet" | "achievements" | "help";
 
 const menuItems: Array<{
   id: AppSection;
@@ -9,10 +9,10 @@ const menuItems: Array<{
   icon: string;
 }> = [
   {
-    id: "village",
-    label: "Village",
-    description: "Compagnons et maisons",
-    icon: "🏫",
+    id: "planet",
+    label: "Planète",
+    description: "Bâtiments et habitants",
+    icon: "🪐",
   },
   {
     id: "account",
@@ -60,10 +60,12 @@ export default function Sidebar({
         className={[
           "hidden",
           // mobile
-          "max-md:block max-md:fixed max-md:inset-0 max-md:z-20 max-md:bg-gray-900/40 max-md:pointer-events-none max-md:transition-opacity max-md:duration-240 max-md:ease-[ease]",
+          "max-md:block max-md:fixed max-md:inset-0 max-md:z-20 max-md:bg-black/50 max-md:transition-opacity max-md:duration-240 max-md:ease-[ease]",
+          // Only one pointer-events class at a time: with both, the order of
+          // the generated CSS decides, and clicks went through the backdrop.
           isOpen
-            ? "max-md:opacity-100 max-md:pointer-events-auto"
-            : "max-md:opacity-0",
+            ? "max-md:opacity-100 max-md:pointer-events-auto max-md:cursor-pointer"
+            : "max-md:opacity-0 max-md:pointer-events-none",
         ].join(" ")}
         aria-hidden="true"
         onClick={onClose}
