@@ -20,7 +20,7 @@ export default function InstallGuide({ onContinue }: { onContinue: () => void })
   const justInstalled = useInstall((state) => state.justInstalled);
 
   return (
-    <main className="min-h-svh bg-[linear-gradient(180deg,#f4efff_0%,#ffffff_45%)] px-4 py-8 text-(--gray-900)">
+    <main className="min-h-svh bg-[linear-gradient(180deg,var(--accent-bg)_0%,var(--page-bg)_45%)] px-4 py-8 text-(--gray-900)">
       <div className="mx-auto grid w-full max-w-130 gap-6">
         <header className="grid justify-items-center gap-3 text-center">
           <img className="size-18 rounded-[18px] shadow-(--shadow-lg)" src="/icons/logo.svg" alt="" />
@@ -29,7 +29,7 @@ export default function InstallGuide({ onContinue }: { onContinue: () => void })
           </h1>
           <p className="m-0 max-w-110 text-[0.92rem] leading-normal text-(--gray-600)">
             Offliner est conçu pour être installé comme une application : votre
-            village vous accompagne chaque fois que vous posez votre téléphone.
+            planète vous accompagne chaque fois que vous posez votre téléphone.
           </p>
         </header>
 

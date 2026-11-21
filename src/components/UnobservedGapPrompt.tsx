@@ -25,7 +25,7 @@ export default function UnobservedGapPrompt() {
       <div className="mt-5 grid gap-2">
         <button
           type="button"
-          className="min-h-11 cursor-pointer rounded-[10px] border-0 bg-(--green-dark) px-3.5 text-[0.86rem] font-bold text-white"
+          className="min-h-11 cursor-pointer rounded-[10px] border-0 bg-(--green-solid) px-3.5 text-[0.86rem] font-bold text-(--on-color)"
           onClick={() => answer(true)}
         >
           Oui, je suis resté hors ligne

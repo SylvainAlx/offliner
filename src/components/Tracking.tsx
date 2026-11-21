@@ -40,7 +40,7 @@ export default function Tracking() {
     <Card
       ariaLabel="Historique des périodes hors ligne"
       title="Historique"
-      subtitle="Suivez vos périodes hors ligne et leur impact sur votre village."
+      subtitle="Suivez vos périodes hors ligne et l'Offlinium qu'elles rapportent."
     >
       <div className="mb-1 flex w-full items-center justify-between gap-3 border-b border-(--gray-100) pb-3">
         <p className="text-[0.82rem] font-medium text-(--gray-600)">

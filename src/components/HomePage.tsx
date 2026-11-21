@@ -20,7 +20,7 @@ export default function HomePage({ onPlay }: { onPlay: () => void }) {
   const { companionIds } = useHomePage();
 
   return (
-    <main className="relative min-h-svh overflow-hidden bg-[radial-gradient(circle_at_8%_12%,rgba(170,59,255,0.12),transparent_34%),radial-gradient(circle_at_92%_78%,rgba(34,197,94,0.12),transparent_35%),linear-gradient(145deg,#fcfbff_0%,#ffffff_52%,#f8fff9_100%)] p-6 text-(--gray-900) max-[760px]:px-4 max-[760px]:py-4.5">
+    <main className="relative min-h-svh overflow-hidden bg-[radial-gradient(circle_at_8%_12%,rgba(170,59,255,0.12),transparent_34%),radial-gradient(circle_at_92%_78%,rgba(34,197,94,0.12),transparent_35%),var(--page-bg)] p-6 text-(--gray-900) max-[760px]:px-4 max-[760px]:py-4.5">
       <div
         className="pointer-events-none absolute -top-52.5 left-1/4 size-80 rounded-full bg-[rgba(170,59,255,0.1)] opacity-[0.55] blur-xs"
         aria-hidden="true"
@@ -53,14 +53,14 @@ export default function HomePage({ onPlay }: { onPlay: () => void }) {
               Déconnectez,
               <br />
               <span className="text-(--green-dark)">
-                Faites grandir votre village.
+                Bâtissez votre planète.
               </span>
             </h1>
             <p className="max-w-130 text-[clamp(0.92rem,1.5vw,1.04rem)] leading-[1.6] text-(--gray-600)">
-              Offliner transforme votre temps hors-ligne en un village vivant,
-              avec des maisons et des compagnons à invoquer. Accordez-vous une
-              pause d'internet et regardez votre village prospérer pendant que
-              vous êtes déconnecté.
+              Offliner est un jeu de gestion de planète : mines, réacteur,
+              fermes et habitats se construisent en temps réel. Votre temps
+              hors-ligne produit l'Offlinium, la ressource qui fait tout
+              avancer plus vite. Accordez-vous une pause d'internet.
             </p>
             {/* <button type="button" className="home-page-play" onClick={onPlay}>
               Jouer <span aria-hidden="true">→</span>
@@ -107,7 +107,7 @@ export default function HomePage({ onPlay }: { onPlay: () => void }) {
           className="grid grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)] gap-3 max-[760px]:grid-cols-1"
           aria-label="À propos d'Offliner"
         >
-          <article className="flex items-start gap-3.25 rounded-[17px] border border-(--gray-100) bg-[rgba(255,255,255,0.74)] p-4.5 shadow-[0_8px_22px_rgba(17,24,39,0.045)]">
+          <article className="flex items-start gap-3.25 rounded-[17px] border border-(--gray-100) bg-(--surface)/75 p-4.5 shadow-[0_8px_22px_rgba(17,24,39,0.045)]">
             <span
               className="grid size-8.5 shrink-0 place-items-center rounded-[10px] bg-(--gray-50) text-[1.05rem]"
               aria-hidden="true"
@@ -119,13 +119,13 @@ export default function HomePage({ onPlay }: { onPlay: () => void }) {
                 Une pause qui compte
               </h2>
               <p className="text-[0.76rem] leading-normal text-(--gray-600)">
-                Chaque période sans écran vous rapproche d&apos;un village plus
-                vivant, avec des maisons et des compagnons à invoquer.
+                Chaque période sans écran rapporte de l&apos;Offlinium pour
+                construire et accélérer le développement de votre planète.
               </p>
             </div>
           </article>
 
-          <article className="flex items-start gap-3.25 rounded-[17px] border border-(--gray-100) bg-[rgba(255,255,255,0.74)] p-4.5 shadow-[0_8px_22px_rgba(17,24,39,0.045)]">
+          <article className="flex items-start gap-3.25 rounded-[17px] border border-(--gray-100) bg-(--surface)/75 p-4.5 shadow-[0_8px_22px_rgba(17,24,39,0.045)]">
             <span
               className="grid size-8.5 shrink-0 place-items-center rounded-[10px] bg-(--gray-50) text-[1.05rem]"
               aria-hidden="true"

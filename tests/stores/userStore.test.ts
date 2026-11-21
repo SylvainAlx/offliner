@@ -27,17 +27,15 @@ vi.mock("../../src/services/userRepository", () => ({
 import { useUser } from "../../src/stores/userStore";
 import { userRepository } from "../../src/services/userRepository";
 import { User as UserModel } from "../../src/models/user";
-import { Companion } from "../../src/models/companion";
 import {
-  COMPANION_STAGE_AGE_MS,
+  AUTOSAVE_INTERVAL_MS,
   OFFLINIUM_DELIVERY_INTERVAL as INTERVAL,
   OPEN_PERIOD_HEARTBEAT_MS,
+  STARTING_RESOURCES,
   UNOBSERVED_OFFLINE_CREDIT_CAP_MS as CAP,
 } from "../../src/utils/constants";
-import { getBuildingCost } from "../../src/models/building";
+import { getBuildingCost, getConstructionMs } from "../../src/models/buildings";
 import { HOUR, local } from "../helpers/time";
-
-const HOUSE_CONSTRUCTION_COST = getBuildingCost("house", 1).offlinium!;
 
 const T0 = local(2026, 1, 10, 8);
 
@@ -68,7 +66,7 @@ describe("userStore", () => {
       expect(user.periodList.openPeriodStart).toBeNull();
       expect(user.periodList.computeCompletedMs()).toBe(0);
       expect(user.periodList.unconfirmedGaps).toHaveLength(1);
-      expect(user.getAvailableOfflinium(0)).toBe(0);
+      expect(user.resources.offlinium).toBe(STARTING_RESOURCES.offlinium);
     });
 
     it("credits at most the cap when the player confirms", async () => {
@@ -84,7 +82,7 @@ describe("userStore", () => {
       const total = user.periodList.computeTotalMs();
 
       expect(total).toBe(CAP);
-      expect(user.getAvailableOfflinium(total)).toBe(CAP / INTERVAL);
+      expect(user.resources.offlinium).toBe(STARTING_RESOURCES.offlinium + CAP / INTERVAL);
       expect(user.periodList.unconfirmedGaps).toEqual([]);
     });
 
@@ -123,10 +121,12 @@ describe("userStore", () => {
     const snapshot = {
       name: "Importé",
       createdAt: 1,
-      offlinium: 10,
-      offliniumSpentDuringOpenPeriod: 0,
+      resources: { metal: 5, food: 6, offlinium: 10 },
+      settledOfflineMs: 0,
       periodList: { days: [], openPeriodStart: T0, openPeriodLastSeen: T0 + HOUR },
-      village: { companions: [], houses: [], pendingElements: [] },
+      planet: { name: "Testia I", levels: { metalMine: 2 } },
+      population: 10,
+      realTimeSettledAt: Date.now(),
     };
 
     it("replaces the profile and closes an exported period at its last observation", async () => {
@@ -134,8 +134,10 @@ describe("userStore", () => {
 
       const user = useUser.getState().user;
       expect(user.name).toBe("Importé");
+      expect(user.planet.name).toBe("Testia I");
+      expect(user.planet.levels.metalMine).toBe(2);
       expect(user.periodList.openPeriodStart).toBeNull();
-      expect(user.offlinium).toBe(10 + HOUR / INTERVAL);
+      expect(user.resources.offlinium).toBe(10 + HOUR / INTERVAL);
       expect(lastSaved()).toMatchObject({ name: "Importé" });
     });
 
@@ -151,33 +153,39 @@ describe("userStore", () => {
       await useUser.getState().resetAll();
 
       expect(useUser.getState().user.name).toBe("Joueur");
-      expect(lastSaved()).toMatchObject({ name: "Joueur", resources: { offlinium: 0, materials: 0 } });
+      expect(lastSaved()).toMatchObject({ name: "Joueur", resources: STARTING_RESOURCES });
     });
   });
 
   describe("per-second updates", () => {
-    it("keeps the same state and does not save when no companion evolves", () => {
-      const before = useUser.getState().user;
+    it("brings the economy up to date and saves only now and then", async () => {
+      const user = useUser.getState().user;
+      await useUser.getState().saveUser();
+      vi.mocked(userRepository.save).mockClear();
 
-      expect(useUser.getState().updateCompanionStages(0)).toBe(false);
-      useUser.getState().completePendingElements(0);
-
-      expect(useUser.getState().user).toBe(before);
+      useUser.getState().tick(user.realTimeSettledAt + HOUR);
+      expect(useUser.getState().user.resources.metal).toBeGreaterThan(user.resources.metal);
+      expect(user.resources.metal).toBe(STARTING_RESOURCES.metal);
+      // Just saved: the tick only updates the state.
+      await new Promise((resolve) => setTimeout(resolve, 5));
       expect(userRepository.save).not.toHaveBeenCalled();
+
+      vi.useFakeTimers({ now: Date.now() + AUTOSAVE_INTERVAL_MS, toFake: ["Date"] });
+      useUser.getState().tick(user.realTimeSettledAt + HOUR + 1000);
+      vi.useRealTimers();
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      expect(userRepository.save).toHaveBeenCalledTimes(1);
     });
 
-    it("saves when a companion evolves", async () => {
-      const user = new UserModel();
-      user.village.addCompanion(new Companion(0));
-      useUser.setState({ user });
+    it("completes a construction and keeps track of it", () => {
+      expect(useUser.getState().startConstruction("metalMine")).toBe(true);
+      const { endsAt } = useUser.getState().user.planet.construction!;
 
-      expect(useUser.getState().updateCompanionStages(COMPANION_STAGE_AGE_MS.adolescent)).toBe(true);
-      expect(useUser.getState().user).not.toBe(user);
-      expect(useUser.getState().user.village.companions[0].stage).toBe("adolescent");
-      expect(user.village.companions[0].stage).toBe("child");
-
-      await useUser.getState().saveUser();
-      expect(lastSaved()).toBeDefined();
+      useUser.getState().tick(endsAt);
+      expect(useUser.getState().user.planet.levels.metalMine).toBe(1);
+      expect(useUser.getState().completedConstructions).toEqual([
+        { type: "metalMine", level: 1, at: endsAt },
+      ]);
     });
 
     it("records a heartbeat only once the interval has elapsed", () => {
@@ -193,17 +201,27 @@ describe("userStore", () => {
   });
 
   describe("actions", () => {
-    it("builds a house only with enough Offlinium", () => {
-      expect(useUser.getState().queueBuilding("house", 0)).toBe(false);
+    it("starts a construction only with enough resources, without touching the old state", () => {
+      const poor = new UserModel();
+      poor.resources = { metal: 0, food: 0, offlinium: 0 };
+      useUser.setState({ user: poor });
+      expect(useUser.getState().startConstruction("metalMine")).toBe(false);
 
       const user = new UserModel();
-      user.offlinium = HOUSE_CONSTRUCTION_COST;
       useUser.setState({ user });
+      expect(useUser.getState().startConstruction("metalMine")).toBe(true);
+      const cost = getBuildingCost("metalMine", 1);
+      expect(Math.floor(useUser.getState().user.resources.offlinium)).toBe(
+        STARTING_RESOURCES.offlinium - cost.offlinium!,
+      );
+      expect(user.planet.construction).toBeNull();
+    });
 
-      expect(useUser.getState().queueBuilding("house", 0)).toBe(true);
-      expect(useUser.getState().user.offlinium).toBe(0);
-      expect(useUser.getState().user.village.pendingElements).toHaveLength(1);
-      expect(user.offlinium).toBe(HOUSE_CONSTRUCTION_COST);
+    it("finishes a construction at once when it is sped up to its end", () => {
+      useUser.getState().startConstruction("metalMine");
+      expect(useUser.getState().speedUpConstruction(getConstructionMs("metalMine", 1))).toBe(true);
+      expect(useUser.getState().user.planet.levels.metalMine).toBe(1);
+      expect(useUser.getState().user.planet.construction).toBeNull();
     });
 
     it("ignores blank names", () => {

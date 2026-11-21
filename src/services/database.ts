@@ -7,24 +7,29 @@ export interface StoredProfile {
   data: unknown;
 }
 
+/** The database of the planet game (v1). */
+const DATABASE_NAME = "offliner-v1";
+/** The village game's database, abandoned with v1: deleted on first launch. */
+const LEGACY_DATABASE_NAME = "offliner";
+
 class OfflinerDatabase extends Dexie {
   profiles!: Table<StoredProfile, string>;
 
   constructor() {
-    super("offliner");
-
-    this.version(1).stores({
-      profiles: "id",
-      meta: "key",
-    });
-
-    // Remove the metadata store used only by the one-time localStorage
-    // migration. The profile data itself remains untouched.
-    this.version(2).stores({
-      profiles: "id",
-      meta: null,
-    });
+    super(DATABASE_NAME);
+    this.version(1).stores({ profiles: "id" });
   }
 }
 
 export const db = new OfflinerDatabase();
+
+/** Removes the saves of the village game, if any. Never blocks the start. */
+export async function deleteLegacyDatabase(): Promise<void> {
+  try {
+    if (await Dexie.exists(LEGACY_DATABASE_NAME)) {
+      await Dexie.delete(LEGACY_DATABASE_NAME);
+    }
+  } catch (error) {
+    console.warn("Unable to delete the previous Offliner data:", error);
+  }
+}

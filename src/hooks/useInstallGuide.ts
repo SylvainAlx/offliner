@@ -14,11 +14,10 @@ export function useInstallGuide() {
   const hasProgress = useUser((state) => {
     const { user } = state;
     return (
-      user.offlinium > 0 ||
-      user.resources.materials > 0 ||
+      user.planet.totalLevels > 0 ||
+      user.planet.construction !== null ||
       user.periodList.days.length > 0 ||
-      user.periodList.openPeriodStart !== null ||
-      user.village.buildings.length > 0
+      user.periodList.openPeriodStart !== null
     );
   });
   const [feedback, setFeedback] = useState<InstallFeedback | null>(null);

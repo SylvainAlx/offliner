@@ -1,430 +1,307 @@
 import { describe, expect, it } from "vitest";
 import { User } from "../../src/models/user";
-import { Companion } from "../../src/models/companion";
+import { Planet, generatePlanetName } from "../../src/models/planet";
+import { advanceRealTime, computeEconomy } from "../../src/models/economy";
 import {
-  Building,
-  getBuildingConstructionMs,
+  BUILDINGS,
+  describeSettlement,
+  emptyLevels,
   getBuildingCost,
-  getBuildingProduction,
-} from "../../src/models/building";
+  getConstructionMs,
+  getPopulationMax,
+} from "../../src/models/buildings";
 import {
-  COMPANION_INVOCATION_COST,
-  COMPANION_STAGE_AGE_MS,
-  MAX_NAME_LENGTH,
+  BASE_FOOD_PER_HOUR,
+  BASE_METAL_PER_HOUR,
   OFFLINIUM_DELIVERY_INTERVAL as INTERVAL,
+  PLANET_FIELDS,
+  STARTING_POPULATION,
+  STARTING_RESOURCES,
 } from "../../src/utils/constants";
-import { HOUR, local } from "../helpers/time";
-import { observeOffline } from "../helpers/periods";
+import { HOUR } from "../helpers/time";
 
-const T0 = local(2026, 1, 10, 8);
-const HOUSE_CONSTRUCTION_COST = getBuildingCost("house", 1).offlinium!;
+const T0 = 1_800_000_000_000;
 
-/** A user observed offline from T0 for `particles` delivery intervals. */
-function userWithOpenPeriod(particles: number): { user: User; now: number } {
-  const user = new User();
-  const now = T0 + particles * INTERVAL;
-  observeOffline(user.periodList, T0, now);
-  user.periodList.recordObservation(now);
-  return { user, now };
+function newUser(): User {
+  return new User("Joueur", T0);
 }
 
-function companionBornAt(birthOfflineMs: number): Companion {
-  const companion = new Companion(0);
-  companion.birthOfflineMs = birthOfflineMs;
-  companion.updateStage(Math.max(0, -birthOfflineMs));
-  return companion;
-}
-
-describe("User", () => {
-  describe("Offlinium", () => {
-    it("delivers one particle per full interval of offline time", () => {
-      const { user, now } = userWithOpenPeriod(10);
-      const total = user.periodList.computeTotalMs(now + INTERVAL / 2);
-      expect(user.getAvailableOfflinium(total)).toBe(10);
-    });
-
-    it("keeps what was harvested once the period is closed", () => {
-      const { user, now } = userWithOpenPeriod(10);
-      user.closeOfflinePeriod(now);
-      expect(user.getAvailableOfflinium(user.periodList.computeTotalMs(now))).toBe(10);
-    });
-
-    it("adds the bonus of companions that are already evolved", () => {
-      const user = new User();
-      user.village.addCompanion(companionBornAt(-COMPANION_STAGE_AGE_MS.adolescent));
-      expect(user.getAvailableOfflinium(10 * INTERVAL)).toBe(20);
-    });
-
-    it("applies a companion's bonus only from the moment it evolves", () => {
-      // The bug this guards against: 12 h credited at once turned every
-      // companion into a sage and paid the whole 12 h at the sage rate.
-      const user = new User();
-      user.village.addCompanion(new Companion(0));
-      const deliveries = (ms: number) => ms / INTERVAL;
-
-      expect(user.getAvailableOfflinium(12 * HOUR)).toBe(
-        deliveries(1 * HOUR) * 1 + // child
-          deliveries(2 * HOUR) * 2 + // adolescent
-          deliveries(4 * HOUR) * 3 + // adult
-          deliveries(5 * HOUR) * 4, // sage
-      );
-    });
-
-    it("never loses what was harvested when a companion dies", () => {
-      const user = new User();
-      user.village.addCompanion(new Companion(0));
-      const atDeath = user.getAvailableOfflinium(COMPANION_STAGE_AGE_MS.dead);
-      const anHourLater = user.getAvailableOfflinium(COMPANION_STAGE_AGE_MS.dead + HOUR);
-      // A dead companion stops helping, but what it harvested stays.
-      expect(anHourLater).toBe(atDeath + HOUR / INTERVAL);
-    });
-
-    it("counts the particles of the open period as available", () => {
-      const { user, now } = userWithOpenPeriod(12);
-      user.offlinium = 5;
-      expect(user.getAvailableOfflinium(user.periodList.computeTotalMs(now))).toBe(17);
-    });
-
-    it("settles the harvest before spending", () => {
-      const { user, now } = userWithOpenPeriod(10);
-      user.offlinium = 5;
-      const total = user.periodList.computeTotalMs(now);
-
-      expect(user.spendOfflinium(8, total)).toBe(true);
-      expect(user.offlinium).toBe(7);
-      expect(user.settledOfflineMs).toBe(total);
-      expect(user.getAvailableOfflinium(total)).toBe(7);
-
-      user.closeOfflinePeriod(now);
-      expect(user.getAvailableOfflinium(user.periodList.computeTotalMs(now))).toBe(7);
-    });
-
-    it("refuses to spend more than available", () => {
-      const user = new User();
-      user.offlinium = 3;
-      expect(user.spendOfflinium(4, 0)).toBe(false);
-      expect(user.offlinium).toBe(3);
-    });
-
-    it("rejects negative amounts", () => {
-      expect(() => new User().spendOfflinium(-1, 0)).toThrow();
-    });
-
-    it("refunds a cancelled construction", () => {
-      const { user, now } = userWithOpenPeriod(HOUSE_CONSTRUCTION_COST);
-      const total = user.periodList.computeTotalMs(now);
-      expect(user.queueBuilding("house", total)).toBe(true);
-      user.closeOfflinePeriod(now);
-      expect(user.getAvailableOfflinium(total)).toBe(0);
-
-      expect(user.cancelPendingElement(user.village.pendingElements[0].id, total)).toBe(true);
-      expect(user.getAvailableOfflinium(total)).toBe(HOUSE_CONSTRUCTION_COST);
-    });
-
-    it("refunds both parts of a cost saved by an older version", () => {
-      const user = new User();
-      user.loadFromSnapshot({
-        offlinium: 0,
-        settledOfflineMs: 0,
-        village: {
-          pendingElements: [{
-            id: "p", type: "house", startedAt: 1, offlineMsAtStart: 0,
-            storedOffliniumCost: 100, openPeriodOffliniumCost: 20,
-          }],
-        },
-      });
-      expect(user.cancelPendingElement("p", 0)).toBe(true);
-      expect(user.offlinium).toBe(120);
-    });
-
-    it("gives back the invocation cost and keeps what a released companion harvested", () => {
-      const user = new User();
-      const sage = companionBornAt(-COMPANION_STAGE_AGE_MS.sage);
-      user.village.addCompanion(sage);
-      const harvested = user.getAvailableOfflinium(HOUR);
-
-      expect(user.releaseCompanionAndGetOfflinium(sage.id, HOUR)).toBe(true);
-      expect(user.getAvailableOfflinium(HOUR)).toBe(harvested + COMPANION_INVOCATION_COST);
-      expect(user.releaseCompanionAndGetOfflinium(sage.id, HOUR)).toBe(false);
-    });
-
-    it("cannot build a second town hall", () => {
-      const user = new User();
-      user.offlinium = 1_000_000;
-      expect(user.buildTownHall(0)).toBe(true);
-      expect(user.buildTownHall(0)).toBe(false);
-    });
+describe("buildings", () => {
+  it("follows the cost curves of the design document", () => {
+    expect(getBuildingCost("metalMine", 1)).toEqual({ metal: 60, offlinium: 15 });
+    expect(getBuildingCost("metalMine", 3)).toEqual({ metal: 135, offlinium: 33 });
+    expect(getBuildingCost("laboratory", 2)).toEqual({ metal: 400, offlinium: 800 });
   });
 
-  describe("loading a save", () => {
-    it("neutralises a malicious save", () => {
-      const save = JSON.parse(`{
-        "name": {"x": 1},
-        "offlinium": -5,
-        "periodList": {"days": [], "openPeriodStart": null},
-        "village": {
-          "name": "${"a".repeat(500)}",
-          "townHall": {"__proto__": {"x": 1}, "id": "t", "builtAt": 1},
-          "companions": [
-            {"__proto__": {"evil": 1}, "name": {"a": 1}, "stage": "god", "id": 5},
-            "not a companion",
-            null
-          ],
-          "houses": [{"__proto__": {}, "id": "h", "builtAt": 2, "extra": "x"}, {"id": 3}],
-          "pendingElements": [{
-            "id": "p", "type": "house", "startedAt": 1, "offlineMsAtStart": 0,
-            "constructionOfflineMs": -1, "storedOffliniumCost": -9
-          }]
-        }
-      }`);
-      const user = new User();
-      user.loadFromSnapshot(save);
+  it("takes real time in proportion to the cost", () => {
+    // (60 + 15) / 2500 h = 1.8 min
+    expect(getConstructionMs("metalMine", 1)).toBe(108_000);
+  });
 
-      expect(user.name).toBe("Joueur");
-      expect(user.offlinium).toBe(0);
-      expect(user.village.name).toHaveLength(MAX_NAME_LENGTH);
+  it("turns the habitat into a village, a city, then a megalopolis", () => {
+    expect(describeSettlement(0)).toBe("Campement");
+    expect(describeSettlement(3)).toBe("Village niv. 3");
+    expect(describeSettlement(6)).toBe("Ville niv. 1");
+    expect(describeSettlement(11)).toBe("Mégalopole niv. 1");
+    expect(getPopulationMax(0)).toBe(STARTING_POPULATION);
+    expect(getPopulationMax(5)).toBe(110);
+    expect(getPopulationMax(6)).toBeGreaterThan(getPopulationMax(5));
+  });
+});
 
-      const [companion] = user.village.companions;
-      expect(user.village.companions).toHaveLength(1);
-      expect(Object.getPrototypeOf(companion)).toBe(Companion.prototype);
-      expect(typeof companion.name).toBe("string");
-      expect(typeof companion.id).toBe("string");
-      expect(companion.stage).toBe("child");
-      expect(companion.harvestBonus).toBe(0);
+describe("planet", () => {
+  it("starts empty, with a generated name and 163 fields", () => {
+    const planet = new Planet();
+    expect(planet.fields).toBe(PLANET_FIELDS);
+    expect(planet.usedFields).toBe(0);
+    expect(generatePlanetName(() => 0)).toBe("Velora I");
+  });
 
-      expect(user.village.getBuildingLevel("house")).toBe(1);
-      const house = user.village.getBuilding("house")!;
-      expect(Object.getPrototypeOf(house)).toBe(Building.prototype);
-      expect(house).not.toHaveProperty("extra");
-      expect(Object.getPrototypeOf(user.village.townHall)).toBe(Building.prototype);
+  it("counts one field per level, the one being built included", () => {
+    const planet = new Planet("Test");
+    planet.levels.metalMine = 3;
+    planet.levels.farm = 2;
+    planet.construction = {
+      type: "farm", targetLevel: 3, startedAt: 0, endsAt: 1, cost: {},
+    };
+    expect(planet.usedFields).toBe(6);
+  });
+});
 
-      const [pending] = user.village.pendingElements;
-      expect(pending.constructionOfflineMs).toBeGreaterThan(0);
-      expect(pending.targetLevel).toBe(2);
-      expect(pending.cost).toEqual(getBuildingCost("house", 2));
-      expect(Object.keys(pending).sort()).toEqual([
-        "constructionOfflineMs",
-        "cost",
-        "id",
-        "offlineMsAtStart",
-        "startedAt",
-        "targetLevel",
-        "type",
-      ]);
-    });
-
-    it("settles a save made before the continuous harvest", () => {
-      const user = new User();
-      user.loadFromSnapshot({
-        offlinium: 100,
-        offliniumSpentDuringOpenPeriod: 30,
-        periodList: {
-          days: [{ dayStart: 0, durationMs: HOUR, periodCount: 1, firstStart: 0, lastEnd: HOUR }],
-          openPeriodStart: T0,
-          openPeriodLastSeen: T0 + 60 * INTERVAL,
-        },
-        village: { companions: [], houses: [], pendingElements: [] },
-      });
-
-      expect(user.offlinium).toBe(100 + 60 - 30);
-      expect(user.settledOfflineMs).toBe(HOUR + 60 * INTERVAL);
-    });
-
-    it("trims and limits the player name", () => {
-      const user = new User();
-      user.loadFromSnapshot({ name: `  ${"b".repeat(100)}  ` });
-      expect(user.name).toBe("b".repeat(MAX_NAME_LENGTH));
-    });
-
-    it.each([["text"], [42], [null], [undefined], [true]])(
-      "keeps a fresh profile for an unusable save %#",
-      (save) => {
-        const user = new User();
-        user.loadFromSnapshot(save);
-        expect(user.name).toBe("Joueur");
-        expect(user.offlinium).toBe(0);
-        expect(user.village.companions).toEqual([]);
-      },
+describe("economy", () => {
+  it("runs the buildings slower when energy is short", () => {
+    const levels = { ...emptyLevels(), metalMine: 5 };
+    const economy = computeEconomy(levels, 100);
+    // 5 levels of solar panels against the mine's consumption.
+    expect(economy.energyProduced).toBe(10);
+    expect(economy.energyFactor).toBeCloseTo(10 / BUILDINGS.metalMine.energyConsumed(5));
+    expect(economy.metalPerHour).toBeCloseTo(
+      BASE_METAL_PER_HOUR + BUILDINGS.metalMine.production(5).metal! * economy.energyFactor,
     );
-
-    it("gives legacy companions without birth time the age of their stage", () => {
-      const user = new User();
-      user.loadFromSnapshot({
-        periodList: { days: [{ dayStart: 0, durationMs: 10 * HOUR, periodCount: 1, firstStart: 0, lastEnd: 1 }] },
-        village: { companions: [{ id: "c", name: "Léo", stage: "adult" }] },
-      });
-
-      const [companion] = user.village.companions;
-      expect(companion.stage).toBe("adult");
-      expect(companion.getAgeOfflineMs(10 * HOUR)).toBe(COMPANION_STAGE_AGE_MS.adult);
-    });
-
-    it("round-trips through JSON", () => {
-      const user = new User("Alex");
-      user.offlinium = 42;
-      user.resources.materials = 7;
-      user.village.setBuildingLevel("house", 2, 1000);
-      user.village.addPendingElement("quarry", 0, { offlinium: 600 });
-      user.village.addCompanion(new Companion(0));
-      user.periodList.openPeriodIfNeeded(T0);
-
-      const restored = new User();
-      restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
-
-      expect(JSON.parse(JSON.stringify(restored))).toEqual(JSON.parse(JSON.stringify(user)));
-    });
   });
 
-  describe("buildings and resources", () => {
-    it("turns the separate houses of an older save into one house level per house", () => {
-      const user = new User();
-      user.loadFromSnapshot({
-        offlinium: 50,
-        settledOfflineMs: 0,
-        village: {
-          houses: [
-            { id: "h1", builtAt: 20 },
-            { id: "h2", builtAt: 10 },
-            { id: "h3", builtAt: 30 },
-          ],
-          townHall: { id: "t", builtAt: 5 },
-          pendingElements: [
-            { id: "p", type: "house", startedAt: 1, offlineMsAtStart: 0, storedOffliniumCost: 720, openPeriodOffliniumCost: 0 },
-          ],
-        },
-      });
-
-      expect(user.resources).toEqual({ offlinium: 50, materials: 0 });
-      expect(user.village.getBuildingLevel("house")).toBe(3);
-      expect(user.village.getBuilding("house")!.builtAt).toBe(10);
-      expect(user.village.companionCapacity).toBe(12);
-      expect(user.village.townHall?.level).toBe(1);
-
-      // A house paid at the old flat price keeps its price and its duration.
-      const [pending] = user.village.pendingElements;
-      expect(pending).toMatchObject({ targetLevel: 4, cost: { offlinium: 720 } });
-      expect(pending.constructionOfflineMs).toBe(getBuildingConstructionMs("house", 1));
-    });
-
-    it("needs the town hall before the production buildings", () => {
-      const user = new User();
-      user.resources = { offlinium: 1_000_000, materials: 1_000_000 };
-      expect(user.queueBuilding("quarry", 0)).toBe(false);
-
-      user.village.addTownHall();
-      expect(user.queueBuilding("quarry", 0)).toBe(true);
-      expect(user.offlinium).toBe(1_000_000 - getBuildingCost("quarry", 1).offlinium!);
-    });
-
-    it("charges every resource of a level and refuses when one is missing", () => {
-      const user = new User();
-      user.village.setBuildingLevel("house", 2);
-      const cost = getBuildingCost("house", 3);
-      expect(cost.materials).toBeGreaterThan(0);
-
-      user.resources = { offlinium: cost.offlinium!, materials: cost.materials! - 1 };
-      expect(user.queueBuilding("house", 0)).toBe(false);
-
-      user.resources.materials += 1;
-      expect(user.queueBuilding("house", 0)).toBe(true);
-      expect(user.resources).toEqual({ offlinium: 0, materials: 0 });
-    });
-
-    it("produces from the moment a building level completes, not before", () => {
-      const user = new User();
-      user.village.addTownHall();
-      user.offlinium = getBuildingCost("quarry", 1).offlinium!;
-      expect(user.queueBuilding("quarry", 0)).toBe(true);
-
-      const done = getBuildingConstructionMs("quarry", 1);
-      const perDelivery = getBuildingProduction("quarry", 1).materials!;
-      // Nothing is extracted while the quarry is being built...
-      expect(user.getAvailableResources(done).materials).toBe(0);
-      // ...and it extracts once per delivery afterwards, even before the app
-      // processes the completion.
-      expect(user.getAvailableResources(done + HOUR).materials).toBe((HOUR / INTERVAL) * perDelivery);
-
-      user.completePendingElements(done + HOUR);
-      expect(user.village.getBuildingLevel("quarry")).toBe(1);
-      expect(user.getAvailableResources(done + 2 * HOUR).materials).toBe((2 * HOUR / INTERVAL) * perDelivery);
-    });
-
-    it("applies an upgrade only to the deliveries made after it", () => {
-      const user = new User();
-      user.village.addTownHall();
-      user.village.setBuildingLevel("well", 1);
-      user.resources = { offlinium: 0, materials: 0 };
-      const level1 = getBuildingProduction("well", 1).offlinium!;
-      const level2 = getBuildingProduction("well", 2).offlinium!;
-      expect(level2).toBeGreaterThan(level1);
-
-      user.village.addPendingElement("well", 0, {});
-      const done = user.village.pendingElements[0].constructionOfflineMs;
-      const end = done + HOUR;
-
-      const expected =
-        (done / INTERVAL) * (1 + level1) + (HOUR / INTERVAL) * (1 + level2);
-      expect(user.getAvailableOfflinium(end)).toBe(expected);
-      user.completePendingElements(end);
-      expect(user.getAvailableOfflinium(end)).toBe(expected);
-      expect(user.getHarvestRates(end)).toEqual({ offlinium: 1 + level2, materials: 0 });
-    });
-
-    it("refunds every resource of a cancelled level", () => {
-      const user = new User();
-      user.village.setBuildingLevel("house", 2);
-      user.resources = { offlinium: 10_000, materials: 10_000 };
-      expect(user.queueBuilding("house", 0)).toBe(true);
-
-      expect(user.cancelPendingElement(user.village.pendingElements[0].id, 0)).toBe(true);
-      expect(user.resources).toEqual({ offlinium: 10_000, materials: 10_000 });
-    });
-
-    it("cannot cancel an element that is already finished", () => {
-      const user = new User();
-      user.offlinium = HOUSE_CONSTRUCTION_COST;
-      expect(user.queueBuilding("house", 0)).toBe(true);
-      const id = user.village.pendingElements[0].id;
-
-      expect(user.cancelPendingElement(id, getBuildingConstructionMs("house", 1))).toBe(false);
-      expect(user.village.getBuildingLevel("house")).toBe(1);
-    });
+  it("runs the buildings slower when staff is short", () => {
+    const levels = { ...emptyLevels(), farm: 3, reactor: 5 };
+    const economy = computeEconomy(levels, 8);
+    expect(economy.energyFactor).toBe(1);
+    expect(economy.staffRequired).toBe(16);
+    expect(economy.staffFactor).toBe(0.5);
+    expect(economy.productionFactor).toBe(0.5);
   });
 
-  describe("clone", () => {
-    it("copies everything without sharing mutable state", () => {
-      const user = new User("Alex");
-      const companion = new Companion(0);
-      user.village.addCompanion(companion);
-      user.village.setBuildingLevel("house", 1);
-      user.village.addTownHall();
-      user.periodList.openPeriodIfNeeded(T0);
+  it("keeps the base production whatever happens", () => {
+    const economy = computeEconomy(emptyLevels(), 0);
+    expect(economy.metalPerHour).toBe(BASE_METAL_PER_HOUR);
+    expect(economy.foodPerHour).toBe(BASE_FOOD_PER_HOUR);
+  });
 
-      const copy = user.clone();
-      copy.village.companions[0].name = "Changed";
-      copy.periodList.closeAnyOpenPeriod(T0 + HOUR);
-      copy.village.pendingElements.push({
-        id: "x",
-        type: "house",
-        startedAt: 0,
-        offlineMsAtStart: 0,
-        constructionOfflineMs: 1,
-        cost: {},
-      });
-      copy.village.getBuilding("house")!.level = 9;
-      copy.resources.materials = 99;
+  it("feeds the starting colons with the base food production", () => {
+    const user = newUser();
+    advanceRealTime(user, T0, T0 + 10 * HOUR);
+    expect(user.resources.food).toBeCloseTo(STARTING_RESOURCES.food);
+    expect(user.population).toBe(STARTING_POPULATION);
+    expect(user.resources.metal).toBeCloseTo(STARTING_RESOURCES.metal + 10 * BASE_METAL_PER_HOUR);
+  });
 
-      expect(companion.name).not.toBe("Changed");
-      expect(user.periodList.openPeriodStart).toBe(T0);
-      expect(user.village.pendingElements).toEqual([]);
+  it("lets the population starve once the food runs out", () => {
+    const user = newUser();
+    user.planet.levels.habitat = 5;
+    user.population = 100;
+    user.resources.food = 0;
+    advanceRealTime(user, T0, T0 + HOUR);
+    expect(user.resources.food).toBe(0);
+    expect(user.population).toBeLessThan(100);
+    expect(user.population).toBeGreaterThan(97);
+  });
 
-      const [clonedCompanion] = copy.village.companions;
-      expect(clonedCompanion).toBeInstanceOf(Companion);
-      expect(clonedCompanion.id).toBe(companion.id);
-      expect(user.village.getBuildingLevel("house")).toBe(1);
-      expect(user.resources.materials).toBe(0);
-      expect(copy.village.getBuilding("house")).toBeInstanceOf(Building);
-      expect(copy.village.townHall).toBeInstanceOf(Building);
+  it("grows the population towards the habitat's maximum", () => {
+    const user = newUser();
+    user.planet.levels.habitat = 2;
+    user.planet.levels.reactor = 1;
+    user.resources.food = 10_000;
+    advanceRealTime(user, T0, T0 + 100 * HOUR);
+    expect(user.population).toBe(getPopulationMax(2));
+  });
+});
+
+describe("user", () => {
+  it("starts with the planned resources and population", () => {
+    const user = newUser();
+    expect(user.resources).toEqual(STARTING_RESOURCES);
+    expect(user.population).toBe(STARTING_POPULATION);
+  });
+
+  it("builds in real time, and the level counts from its exact end", () => {
+    const user = newUser();
+    expect(user.startConstruction("metalMine", T0)).toBe(true);
+    const endsAt = T0 + getConstructionMs("metalMine", 1);
+
+    expect(user.advance(endsAt - 1, 0)).toEqual([]);
+    expect(user.planet.levels.metalMine).toBe(0);
+
+    expect(user.advance(endsAt + HOUR, 0)).toEqual([
+      { type: "metalMine", level: 1, at: endsAt },
+    ]);
+    expect(user.planet.levels.metalMine).toBe(1);
+    expect(user.planet.construction).toBeNull();
+  });
+
+  it("refuses a second construction, a full planet or missing resources", () => {
+    const user = newUser();
+    user.startConstruction("farm", T0);
+    expect(user.getConstructionBlocker("metalMine")).toBe("busy");
+
+    const full = newUser();
+    full.planet.levels.metalMine = PLANET_FIELDS;
+    expect(full.getConstructionBlocker("farm")).toBe("noField");
+
+    const poor = newUser();
+    poor.resources.offlinium = 0;
+    expect(poor.getConstructionBlocker("farm")).toBe("resources");
+    expect(poor.startConstruction("farm", T0)).toBe(false);
+  });
+
+  it("refunds everything when a construction is cancelled", () => {
+    const user = newUser();
+    user.startConstruction("laboratory", T0);
+    expect(user.startConstruction("laboratory", T0)).toBe(false);
+
+    const rich = newUser();
+    rich.resources = { metal: 1000, food: 0, offlinium: 1000 };
+    rich.startConstruction("laboratory", T0);
+    expect(rich.cancelConstruction()).toBe(true);
+    expect(rich.resources).toEqual({ metal: 1000, food: 0, offlinium: 1000 });
+    expect(rich.planet.usedFields).toBe(0);
+  });
+
+  it("buys construction time with Offlinium: 1 per 10 s", () => {
+    const user = newUser();
+    user.resources.metal = 10_000;
+    user.startConstruction("reactor", T0);
+    const before = user.planet.construction!.endsAt;
+    const offlinium = user.resources.offlinium;
+
+    expect(user.speedUpConstruction(60_000, T0)).toBe(true);
+    expect(user.planet.construction!.endsAt).toBe(before - 60_000);
+    expect(user.resources.offlinium).toBe(offlinium - 6);
+
+    // Finishing it completes it at the next update.
+    expect(user.speedUpConstruction(Number.MAX_SAFE_INTEGER, T0)).toBe(true);
+    expect(user.advance(T0, 0)).toHaveLength(1);
+    expect(user.planet.levels.reactor).toBe(1);
+  });
+
+  it("earns Offlinium from offline time only, boosted by the laboratory", () => {
+    const user = newUser();
+    user.advance(T0 + HOUR, 0);
+    expect(user.resources.offlinium).toBe(STARTING_RESOURCES.offlinium);
+
+    user.advance(T0 + HOUR, HOUR);
+    expect(user.resources.offlinium).toBe(STARTING_RESOURCES.offlinium + HOUR / INTERVAL);
+
+    user.planet.levels.laboratory = 2;
+    user.planet.levels.reactor = 10;
+    user.population = 100;
+    user.advance(T0 + HOUR, 2 * HOUR);
+    expect(user.resources.offlinium).toBeCloseTo(
+      STARTING_RESOURCES.offlinium + HOUR / INTERVAL + (HOUR / INTERVAL) * 1.2,
+    );
+  });
+
+  it("ignores a clock that went back", () => {
+    const user = newUser();
+    user.advance(T0 + HOUR, 0);
+    const metal = user.resources.metal;
+    expect(user.advance(T0, 0)).toEqual([]);
+    expect(user.resources.metal).toBe(metal);
+    expect(user.realTimeSettledAt).toBe(T0 + HOUR);
+  });
+
+  it("survives a save and a clone", () => {
+    const user = newUser();
+    user.startConstruction("farm", T0);
+    user.planet.levels.habitat = 3;
+    user.population = 42.5;
+
+    const restored = new User();
+    restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
+    expect(restored.planet.name).toBe(user.planet.name);
+    expect(restored.planet.levels).toEqual(user.planet.levels);
+    expect(restored.planet.construction).toEqual(user.planet.construction);
+    expect(restored.resources).toEqual(user.resources);
+    expect(restored.population).toBe(42.5);
+    expect(restored.realTimeSettledAt).toBe(T0);
+
+    const copy = user.clone();
+    copy.planet.levels.habitat = 9;
+    copy.planet.construction!.cost.metal = 0;
+    expect(user.planet.levels.habitat).toBe(3);
+    expect(user.planet.construction!.cost.metal).toBe(getBuildingCost("farm", 1).metal);
+  });
+
+  it("ignores unknown or malformed data", () => {
+    const user = new User();
+    user.loadFromSnapshot({
+      planet: { levels: { metalMine: -2, unknown: 5, farm: 2.7 }, construction: { type: "x" } },
+      resources: { metal: "a", food: 3 },
+      population: -1,
+      __proto__: { admin: true },
     });
+    expect(user.planet.levels.metalMine).toBe(0);
+    expect(user.planet.levels.farm).toBe(2);
+    expect(user.planet.construction).toBeNull();
+    expect(user.resources).toEqual({ metal: 0, food: 3, offlinium: 0 });
+    expect(user.population).toBe(STARTING_POPULATION);
+  });
+});
+
+describe("planet sprite", () => {
+  it("always draws the same planet for a seed, inside its grid", async () => {
+    const { generatePlanetSprite } = await import("../../src/utils/planetSprite");
+    const first = generatePlanetSprite("velora");
+    expect(generatePlanetSprite("velora")).toEqual(first);
+    expect(first.runs.length).toBeGreaterThan(20);
+    for (const run of first.runs) {
+      expect(run.x).toBeGreaterThanOrEqual(0);
+      expect(run.x + run.width).toBeLessThanOrEqual(first.size);
+      expect(run.y).toBeLessThan(first.size);
+    }
+  });
+
+  it("varies from one seed to another", async () => {
+    const { generatePlanetSprite } = await import("../../src/utils/planetSprite");
+    const looks = new Set(
+      Array.from({ length: 12 }, (_, index) => JSON.stringify(generatePlanetSprite(`seed-${index}`).runs)),
+    );
+    expect(looks.size).toBe(12);
+  });
+
+  it("keeps its seed through a save, and old saves fall back on the name", () => {
+    const user = new User();
+    const restored = new User();
+    restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
+    expect(restored.planet.seed).toBe(user.planet.seed);
+    expect(user.clone().planet.seed).toBe(user.planet.seed);
+
+    const legacy = new User();
+    legacy.loadFromSnapshot({ planet: { name: "Velora IV" } });
+    expect(legacy.planet.seed).toBe("Velora IV");
+  });
+});
+
+describe("building sprites", () => {
+  it("get richer with the level and stand on their planet's ground", async () => {
+    const { generateBuildingSprite, getBuildingTier } = await import("../../src/utils/buildingSprite");
+    expect([1, 4, 5, 9, 10].map((level) => getBuildingTier("metalMine", level))).toEqual([0, 0, 1, 1, 2]);
+    expect([5, 6, 10, 11].map((level) => getBuildingTier("habitat", level))).toEqual([0, 1, 1, 2]);
+
+    const levels = [1, 5, 10].map((level) =>
+      JSON.stringify(generateBuildingSprite("reactor", level, "ocean").runs),
+    );
+    expect(new Set(levels).size).toBe(3);
+
+    const groundColor = (kind: "ocean" | "ice") =>
+      generateBuildingSprite("farm", 1, kind).runs.find((run) => run.y === 19)?.color;
+    expect(groundColor("ocean")).not.toBe(groundColor("ice"));
   });
 });

@@ -33,7 +33,7 @@ export default function InstallBanner() {
         </p>
         <button
           type="button"
-          className="min-h-11 shrink-0 cursor-pointer rounded-[10px] border-0 bg-(--accent) px-3.5 text-[0.82rem] font-bold text-white"
+          className="min-h-11 shrink-0 cursor-pointer rounded-[10px] border-0 bg-(--accent-solid) px-3.5 text-[0.82rem] font-bold text-(--on-color)"
           onClick={() => setIsOpen(true)}
         >
           {isDesktop ? "Ouvrir sur mobile" : "Installer"}

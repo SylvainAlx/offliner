@@ -1,398 +1,209 @@
-import {
-  COMPANION_INVOCATION_COST,
-  OFFLINIUM_DELIVERY_INTERVAL,
-} from "../utils/constants";
 import { PeriodList } from "./periodList";
-import { Village } from "./village";
-import { ratesAt, resourcesBetween } from "./harvest";
-import type { BuildingType } from "./building";
+import { Planet } from "./planet";
 import {
-  RESOURCE_TYPES,
+  advanceRealTime,
+  computeEconomy,
+  type CompletedConstruction,
+  type Economy,
+} from "./economy";
+import {
+  getBuildingCost,
+  getConstructionMs,
+  type BuildingType,
+} from "./buildings";
+import {
   addResources,
-  emptyResources,
   hasResources,
   sanitizeResources,
   subtractResources,
   type ResourceAmounts,
   type Resources,
 } from "./resources";
-import { getVillageEvents, type VillageEvent } from "./timeline";
+import {
+  OFFLINIUM_DELIVERY_INTERVAL,
+  SPEED_UP_MS_PER_OFFLINIUM,
+  STARTING_POPULATION,
+  STARTING_RESOURCES,
+} from "../utils/constants";
 import { isFiniteNumber, isRecord, sanitizeName } from "../utils/sanitize";
 
+/** Why a building level cannot be started right now. */
+export type ConstructionBlocker = "busy" | "noField" | "resources" | null;
+
 /**
- * The time since the player last read a report. It starts when an offline
- * period opens and keeps going across several periods until the report of
- * the absence is dismissed.
+ * The player and their game. Two clocks drive it:
+ * - real time (`realTimeSettledAt`): constructions, metal, food, population;
+ * - offline time (`periodList`, `settledOfflineMs`): Offlinium.
  */
-export interface Absence {
-  startedAt: number;
-  /** Cumulative offline time when the absence started. */
-  offlineMsAtStart: number;
-  /** Everything ever harvested, when the absence started. */
-  harvestedAtStart: Resources;
-  /** When the player came back online; null while still offline. */
-  endedAt: number | null;
-}
-
-export interface AbsenceReport {
-  startedAt: number;
-  endedAt: number;
-  /** Offline time credited during the absence. */
-  offlineMs: number;
-  /** What was harvested during the absence (before spending). */
-  gains: Resources;
-  events: VillageEvent[];
-}
-
-function loadAbsence(value: unknown): Absence | null {
-  if (!isRecord(value)) return null;
-  if (!isFiniteNumber(value.startedAt) || !isFiniteNumber(value.offlineMsAtStart)) {
-    return null;
-  }
-  return {
-    startedAt: value.startedAt,
-    offlineMsAtStart: value.offlineMsAtStart,
-    harvestedAtStart: sanitizeResources(value.harvestedAtStart),
-    endedAt: isFiniteNumber(value.endedAt) ? value.endedAt : null,
-  };
-}
-
-function cloneInstance<T extends object>(instance: T): T {
-  return Object.assign(
-    Object.create(Object.getPrototypeOf(instance) as object) as T,
-    instance,
-  );
-}
-
 export class User {
   name: string;
-  /**
-   * Settled balance: everything harvested up to `settledOfflineMs` (cumulative
-   * offline time), minus what was spent. What was harvested since is computed
-   * on demand, with the rates in force at each moment.
-   */
-  resources: Resources;
-  /** Everything harvested up to `settledOfflineMs`, spending aside. */
-  harvested: Resources;
-  absence: Absence | null;
-  settledOfflineMs: number;
-  periodList: PeriodList;
-  village: Village;
   createdAt: number;
+  periodList: PeriodList;
+  planet: Planet;
+  /** Balances, fractions included; only whole units are spent or shown. */
+  resources: Resources;
+  /** Inhabitants, fractions included while the population grows or shrinks. */
+  population: number;
+  /** Real time up to which the economy has been computed. */
+  realTimeSettledAt: number;
+  /** Offline time already turned into Offlinium. */
+  settledOfflineMs: number;
 
-  constructor(name: string = "Joueur") {
+  constructor(name = "Joueur", now = Date.now()) {
     this.name = name;
-    this.resources = emptyResources();
-    this.harvested = emptyResources();
-    this.absence = null;
-    this.settledOfflineMs = 0;
+    this.createdAt = now;
     this.periodList = new PeriodList();
-    this.village = new Village();
-    this.createdAt = Date.now();
+    this.planet = new Planet();
+    this.resources = { ...STARTING_RESOURCES };
+    this.population = STARTING_POPULATION;
+    this.realTimeSettledAt = now;
+    this.settledOfflineMs = 0;
   }
 
-  /** Settled Offlinium, kept as a shortcut for the main resource. */
-  get offlinium(): number {
-    return this.resources.offlinium;
+  get economy(): Economy {
+    return computeEconomy(this.planet.levels, this.population);
   }
 
-  set offlinium(value: number) {
-    this.resources.offlinium = value;
+  // --- Clocks -------------------------------------------------------------
+
+  /**
+   * Brings the game up to date: Offlinium for the offline time gained since
+   * the last settlement, then the real-time economy. A clock that went back
+   * changes nothing until it catches up again. Returns the levels reached.
+   */
+  advance(now: number, totalOfflineMs: number): CompletedConstruction[] {
+    this.settleOfflinium(totalOfflineMs);
+    // A clock that went back only completes what is already due.
+    const to = Math.max(now, this.realTimeSettledAt);
+    const completed = advanceRealTime(this, this.realTimeSettledAt, to);
+    this.realTimeSettledAt = to;
+    return completed;
   }
 
-  loadFromSnapshot(parsed: unknown): void {
-    try {
-      if (!parsed) return;
-
-      if (Array.isArray(parsed)) {
-        this.periodList.loadPeriods(parsed);
-        this.settledOfflineMs = 0;
-        return;
-      }
-
-      if (!isRecord(parsed)) return;
-
-      this.name = sanitizeName(parsed.name) ?? this.name;
-      if (isFiniteNumber(parsed.createdAt)) this.createdAt = parsed.createdAt;
-
-      if (parsed.periodList !== undefined && parsed.periodList !== null) {
-        this.periodList.loadPeriods(parsed.periodList);
-      }
-      // Offline time the app actually observed: an open period counts up to
-      // its last observation, the rest is checked when the app starts.
-      const totalOfflineMs = this.periodList.computeTotalMs(
-        this.periodList.openPeriodLastSeen ?? Date.now(),
-      );
-      if (parsed.village !== undefined && parsed.village !== null) {
-        this.village.loadVillage(parsed.village, totalOfflineMs);
-      }
-
-      // Saves made before several resources only know their Offlinium.
-      const storedResources = isRecord(parsed.resources)
-        ? sanitizeResources(parsed.resources)
-        : sanitizeResources({
-            offlinium: isFiniteNumber(parsed.offlinium)
-              ? Math.max(0, parsed.offlinium)
-              : 0,
-          });
-
-      // Saves made before the lifetime counter start counting from now.
-      this.harvested = sanitizeResources(parsed.harvested);
-      this.absence = loadAbsence(parsed.absence);
-
-      if (isFiniteNumber(parsed.settledOfflineMs)) {
-        this.resources = storedResources;
-        this.settledOfflineMs = Math.min(
-          Math.max(0, parsed.settledOfflineMs),
-          totalOfflineMs,
-        );
-      } else {
-        // Saves made before the continuous harvest: closed periods were
-        // already paid into `offlinium`, the open one was paid at the current
-        // rate minus what was spent during it. Settle all of it now.
-        const completedMs = this.periodList.computeCompletedMs();
-        const openPeriodParticles =
-          Math.floor((totalOfflineMs - completedMs) / OFFLINIUM_DELIVERY_INTERVAL) *
-          (1 + this.village.offliniumHarvestBonus);
-        const spentDuringOpenPeriod = isFiniteNumber(parsed.offliniumSpentDuringOpenPeriod)
-          ? Math.max(0, Math.floor(parsed.offliniumSpentDuringOpenPeriod))
-          : 0;
-        this.resources = storedResources;
-        this.resources.offlinium = Math.max(
-          0,
-          storedResources.offlinium + openPeriodParticles - spentDuringOpenPeriod,
-        );
-        this.settledOfflineMs = totalOfflineMs;
-      }
-    } catch (e) {
-      console.error("Error loading user data:", e);
-      return;
-    }
-  }
-
-  clone(): User {
-    const copy = new User(this.name);
-    copy.resources = { ...this.resources };
-    copy.harvested = { ...this.harvested };
-    copy.absence = this.absence
-      ? { ...this.absence, harvestedAtStart: { ...this.absence.harvestedAtStart } }
-      : null;
-    copy.settledOfflineMs = this.settledOfflineMs;
-    copy.createdAt = this.createdAt;
-    copy.periodList = this.periodList.clone();
-    copy.village = new Village();
-    // Instances are copied without running their constructors, which would
-    // generate a random name and UUID for every clone.
-    copy.village.companions = this.village.companions.map((companion) =>
-      cloneInstance(companion),
-    );
-    copy.village.buildings = this.village.buildings.map((building) =>
-      cloneInstance(building),
-    );
-    copy.village.name = this.village.name;
-    copy.village.pendingElements = this.village.pendingElements.map(
-      (pending) => ({ ...pending, cost: { ...pending.cost } }),
-    );
-    return copy;
-  }
-
-  // --- Harvest ------------------------------------------------------------
-
-  /** What every delivery brings at this moment, for display. */
-  getHarvestRates(totalOfflineMs: number): Resources {
-    return ratesAt(this.village.getRateSegments(), totalOfflineMs);
-  }
-
-  /** Resources harvested since the balance was last settled. */
-  getUnsettledResources(totalOfflineMs: number): Resources {
-    return resourcesBetween(
-      this.village.getRateSegments(),
-      this.settledOfflineMs,
-      totalOfflineMs,
-    );
-  }
-
-  getAvailableResources(totalOfflineMs: number): Resources {
-    const available = { ...this.resources };
-    addResources(available, this.getUnsettledResources(totalOfflineMs));
-    for (const type of RESOURCE_TYPES) available[type] = Math.max(0, available[type]);
-    return available;
-  }
-
-  getAvailableOfflinium(totalOfflineMs: number): number {
-    return this.getAvailableResources(totalOfflineMs).offlinium;
-  }
-
-  /** Moves the harvest up to `totalOfflineMs` into the settled balance. */
-  settleHarvest(totalOfflineMs: number): void {
+  /**
+   * One Offlinium per OFFLINIUM_DELIVERY_INTERVAL of offline time, times the
+   * laboratory bonus in force when it is settled.
+   */
+  settleOfflinium(totalOfflineMs: number): void {
     if (totalOfflineMs <= this.settledOfflineMs) return;
-    const unsettled = this.getUnsettledResources(totalOfflineMs);
-    addResources(this.resources, unsettled);
-    addResources(this.harvested, unsettled);
+    const deliveries =
+      Math.floor(totalOfflineMs / OFFLINIUM_DELIVERY_INTERVAL) -
+      Math.floor(this.settledOfflineMs / OFFLINIUM_DELIVERY_INTERVAL);
+    this.resources.offlinium += deliveries * this.economy.offliniumMultiplier;
     this.settledOfflineMs = totalOfflineMs;
   }
 
-  canAfford(cost: ResourceAmounts, totalOfflineMs: number): boolean {
-    return hasResources(this.getAvailableResources(totalOfflineMs), cost);
+  // --- Constructions ------------------------------------------------------
+
+  getNextLevel(type: BuildingType): number {
+    return this.planet.levels[type] + 1;
   }
 
-  spendResources(cost: ResourceAmounts, totalOfflineMs: number): boolean {
-    if (RESOURCE_TYPES.some((type) => (cost[type] ?? 0) < 0)) {
-      throw new Error("Le montant à retirer doit être supérieur à 0.");
-    }
-    if (!this.canAfford(cost, totalOfflineMs)) return false;
+  getNextCost(type: BuildingType): ResourceAmounts {
+    return getBuildingCost(type, this.getNextLevel(type));
+  }
 
-    this.settleHarvest(totalOfflineMs);
+  getConstructionBlocker(type: BuildingType): ConstructionBlocker {
+    if (this.planet.construction) return "busy";
+    if (this.planet.freeFields <= 0) return "noField";
+    if (!hasResources(this.resources, this.getNextCost(type))) return "resources";
+    return null;
+  }
+
+  /** Pays for and starts the next level of a building. Call advance() first. */
+  startConstruction(type: BuildingType, now: number): boolean {
+    if (this.getConstructionBlocker(type) !== null) return false;
+    const targetLevel = this.getNextLevel(type);
+    const cost = this.getNextCost(type);
     subtractResources(this.resources, cost);
-    return true;
-  }
-
-  spendOfflinium(amount: number, totalOfflineMs: number): boolean {
-    return this.spendResources({ offlinium: amount }, totalOfflineMs);
-  }
-
-  refund(cost: ResourceAmounts): void {
-    addResources(this.resources, cost);
-  }
-
-  /** Everything ever harvested up to `totalOfflineMs`, spending aside. */
-  getHarvestedTotal(totalOfflineMs: number): Resources {
-    const total = { ...this.harvested };
-    addResources(total, this.getUnsettledResources(totalOfflineMs));
-    return total;
-  }
-
-  // --- Offline periods and absence report ---------------------------------
-
-  /** Opens an offline period, and starts an absence unless one is running. */
-  openOfflinePeriod(startTs: number): void {
-    if (this.periodList.openPeriodStart !== null) return;
-
-    const offlineMsAtStart = this.periodList.computeTotalMs(startTs);
-    this.periodList.openPeriodIfNeeded(startTs);
-    if (this.absence) {
-      // The previous report was not read yet: it now covers this period too.
-      this.absence.endedAt = null;
-      return;
-    }
-    this.absence = {
-      startedAt: startTs,
-      offlineMsAtStart,
-      harvestedAtStart: this.getHarvestedTotal(offlineMsAtStart),
-      endedAt: null,
+    this.planet.construction = {
+      type,
+      targetLevel,
+      startedAt: now,
+      endsAt: now + getConstructionMs(type, targetLevel),
+      cost,
     };
-  }
-
-  closeOfflinePeriod(endTs: number): number | undefined {
-    const credited = this.periodList.closeAnyOpenPeriod(endTs);
-    if (credited !== undefined && this.absence) this.absence.endedAt = endTs;
-    return credited;
-  }
-
-  /** What happened during the absence, once the player is back online. */
-  getAbsenceReport(totalOfflineMs: number): AbsenceReport | null {
-    const absence = this.absence;
-    if (!absence || absence.endedAt === null) return null;
-
-    const from = absence.offlineMsAtStart;
-    const to = Math.max(from, totalOfflineMs);
-    const gains = this.getHarvestedTotal(to);
-    for (const type of RESOURCE_TYPES) {
-      gains[type] = Math.max(0, gains[type] - absence.harvestedAtStart[type]);
-    }
-    return {
-      startedAt: absence.startedAt,
-      endedAt: absence.endedAt,
-      offlineMs: to - from,
-      gains,
-      events: getVillageEvents(this.village, from, to),
-    };
-  }
-
-  dismissAbsenceReport(): void {
-    this.absence = null;
-  }
-
-  // --- Village ------------------------------------------------------------
-
-  /** Pays for and queues the next level of a building. */
-  queueBuilding(type: BuildingType, totalOfflineMs: number): boolean {
-    if (!this.village.canQueueBuilding(type)) return false;
-    const cost = this.village.getNextBuildingCost(type);
-    if (!this.spendResources(cost, totalOfflineMs)) return false;
-    this.village.addPendingElement(type, totalOfflineMs, cost);
     return true;
   }
 
-  buildTownHall(totalOfflineMs: number): boolean {
-    return this.queueBuilding("townHall", totalOfflineMs);
+  cancelConstruction(): boolean {
+    const construction = this.planet.construction;
+    if (!construction) return false;
+    addResources(this.resources, construction.cost);
+    this.planet.construction = null;
+    return true;
   }
 
-  invokeCompanion(totalOfflineMs: number): boolean {
-    if (!this.village.canInvokeCompanion()) return false;
-    const cost = { offlinium: COMPANION_INVOCATION_COST };
-    if (!this.spendResources(cost, totalOfflineMs)) return false;
-    this.village.addPendingElement("companion", totalOfflineMs, cost);
-    return true;
+  /** Offlinium needed to skip `ms` of the construction in progress. */
+  static getSpeedUpCost(ms: number): number {
+    return Math.ceil(Math.max(0, ms) / SPEED_UP_MS_PER_OFFLINIUM);
   }
 
   /**
-   * Completes what the queue finished. The harvest is settled first, with
-   * the rates scheduled by the queue, so that a building's new level never
-   * applies to deliveries made before it was reached.
+   * Spends Offlinium to bring the end of the construction closer by up to
+   * `ms`. Call advance() before and after, so that a construction brought to
+   * its end completes at once.
    */
-  completePendingElements(totalOfflineMs: number): number {
-    if (!this.village.hasCompletedPendingElements(totalOfflineMs)) return 0;
-    this.settleHarvest(totalOfflineMs);
-    return this.village.completePendingElements(totalOfflineMs);
-  }
-
-  releaseCompanionAndGetOfflinium(
-    companionId: string,
-    totalOfflineMs: number,
-  ): boolean {
-    if (!this.village.getCompanion(companionId)) return false;
-
-    // What the companion helped harvest so far stays earned.
-    this.settleHarvest(totalOfflineMs);
-    this.village.releaseCompanion(companionId);
-    this.resources.offlinium += COMPANION_INVOCATION_COST;
+  speedUpConstruction(ms: number, now: number): boolean {
+    const construction = this.planet.construction;
+    if (!construction || ms <= 0) return false;
+    const skipped = Math.min(ms, Math.max(0, construction.endsAt - now));
+    if (skipped <= 0) return false;
+    const cost = User.getSpeedUpCost(skipped);
+    if (Math.floor(this.resources.offlinium) < cost) return false;
+    this.resources.offlinium -= cost;
+    construction.endsAt -= skipped;
     return true;
   }
 
-  updateCompanionStages(totalOfflineMs: number): number {
-    return this.village.updateCompanionStages(totalOfflineMs);
+  renamePlanet(name: string): boolean {
+    const sanitized = sanitizeName(name);
+    if (!sanitized) return false;
+    this.planet.name = sanitized;
+    return true;
   }
 
-  renameVillage(name: string): boolean {
-    return this.village.rename(name);
+  // --- Offline periods ----------------------------------------------------
+
+  openOfflinePeriod(startTs: number): void {
+    this.periodList.openPeriodIfNeeded(startTs);
   }
 
-  renameCompanion(companionId: string, name: string): boolean {
-    return this.village.renameCompanion(companionId, name);
+  closeOfflinePeriod(endTs: number): number | undefined {
+    return this.periodList.closeAnyOpenPeriod(endTs);
   }
 
-  cancelCompanionInvocation(
-    companionId: string,
-    currentOfflineMs: number,
-  ): boolean {
-    // An element that is already finished can no longer be cancelled.
-    this.completePendingElements(currentOfflineMs);
-    const cancelled = this.village.cancelPendingCompanion(
-      companionId,
-      currentOfflineMs,
-    );
-    cancelled.forEach((pending) => this.refund(pending.cost));
-    return cancelled.length > 0;
+  // --- Copy and save ------------------------------------------------------
+
+  clone(): User {
+    const copy = new User(this.name, this.createdAt);
+    copy.periodList = this.periodList.clone();
+    copy.planet = this.planet.clone();
+    copy.resources = { ...this.resources };
+    copy.population = this.population;
+    copy.realTimeSettledAt = this.realTimeSettledAt;
+    copy.settledOfflineMs = this.settledOfflineMs;
+    return copy;
   }
 
-  cancelPendingElement(elementId: string, currentOfflineMs: number): boolean {
-    this.completePendingElements(currentOfflineMs);
-    const cancelled = this.village.cancelPendingElement(
-      elementId,
-      currentOfflineMs,
-    );
-    cancelled.forEach((pending) => this.refund(pending.cost));
-    return cancelled.length > 0;
+  /** Imported data is validated field by field, never assigned wholesale. */
+  loadFromSnapshot(parsed: unknown): void {
+    if (!isRecord(parsed)) return;
+    this.name = sanitizeName(parsed.name) ?? this.name;
+    if (isFiniteNumber(parsed.createdAt)) this.createdAt = parsed.createdAt;
+    if (parsed.periodList !== undefined && parsed.periodList !== null) {
+      this.periodList.loadPeriods(parsed.periodList);
+    }
+    this.planet.load(parsed.planet);
+    if (isRecord(parsed.resources)) this.resources = sanitizeResources(parsed.resources);
+    if (isFiniteNumber(parsed.population) && parsed.population >= 0) {
+      this.population = parsed.population;
+    }
+    if (isFiniteNumber(parsed.realTimeSettledAt)) {
+      this.realTimeSettledAt = parsed.realTimeSettledAt;
+    }
+    if (isFiniteNumber(parsed.settledOfflineMs) && parsed.settledOfflineMs >= 0) {
+      this.settledOfflineMs = parsed.settledOfflineMs;
+    }
   }
 }

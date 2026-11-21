@@ -8,7 +8,7 @@ import Card from "./ui/Card";
 const CATEGORY_CLASSES: Record<AchievementCategory, string> = {
   "Temps hors ligne": "bg-blue-50 text-blue-700",
   "Régularité": "bg-orange-50 text-orange-700",
-  Village: "bg-green-50 text-green-700",
+  "Planète": "bg-green-50 text-green-700",
 };
 
 export default function Achievements() {
