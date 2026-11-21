@@ -17,7 +17,7 @@ export default function Card({
 }: CardProps) {
   return (
     <section
-      className={`bg-(--bg) rounded-[20px] px-6 py-8 shadow-lg flex flex-col items-center gap-6 border border-(--green-dark) ${className}`.trim()}
+      className={`bg-(--bg) rounded-[20px] px-6 py-8 shadow-lg flex flex-col items-center gap-6 ${className}`.trim()}
       aria-label={ariaLabel}
     >
       <CardHeader title={title} subtitle={subtitle} />

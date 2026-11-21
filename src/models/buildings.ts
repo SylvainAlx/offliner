@@ -4,6 +4,7 @@ export const BUILDING_TYPES = [
   "metalMine",
   "farm",
   "reactor",
+  "depot",
   "laboratory",
   "habitat",
 ] as const;
@@ -62,6 +63,18 @@ export const BUILDINGS: Record<BuildingType, BuildingDefinition> = {
     energyConsumed: (level) => growing(8, level),
     staff: (level) => 2 * level,
   },
+  depot: {
+    type: "depot",
+    label: "Dépôt",
+    icon: "📦",
+    description:
+      "Stocke le métal et l'alimentation. Au-delà de sa capacité, ce qui est produit est perdu. L'Offlinium n'est jamais plafonné.",
+    cost: { metal: 200, offlinium: 20, factor: 1.8 },
+    production: () => ({}),
+    energyProduced: () => 0,
+    energyConsumed: () => 0,
+    staff: (level) => level,
+  },
   reactor: {
     type: "reactor",
     label: "Réacteur",
@@ -115,7 +128,7 @@ export function isBuildingType(value: unknown): value is BuildingType {
 }
 
 export function emptyLevels(): BuildingLevels {
-  return { metalMine: 0, farm: 0, reactor: 0, laboratory: 0, habitat: 0 };
+  return { metalMine: 0, farm: 0, reactor: 0, depot: 0, laboratory: 0, habitat: 0 };
 }
 
 /** What it costs to reach `level` (from level − 1). */
@@ -133,6 +146,18 @@ export function getConstructionMs(type: BuildingType, level: number): number {
   const cost = getBuildingCost(type, level);
   const hours = ((cost.metal ?? 0) + (cost.offlinium ?? 0)) / CONSTRUCTION_COST_PER_HOUR;
   return Math.max(1000, Math.round(hours * HOUR_MS));
+}
+
+// --- Depot ---------------------------------------------------------------
+
+/** Metal and food each fit up to this amount without a depot. */
+export const BASE_STORAGE_CAPACITY = 1000;
+/** Each depot level multiplies the capacity by this factor. */
+export const STORAGE_CAPACITY_FACTOR = 1.8;
+
+/** How much metal, and how much food, the planet can hold. */
+export function getStorageCapacity(depotLevel: number): number {
+  return Math.floor(BASE_STORAGE_CAPACITY * STORAGE_CAPACITY_FACTOR ** Math.max(0, depotLevel));
 }
 
 // --- Habitat ---------------------------------------------------------------

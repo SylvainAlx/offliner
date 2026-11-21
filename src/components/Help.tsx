@@ -59,6 +59,12 @@ export default function Help() {
         des panneaux solaires.
       </p>
       <p className={paragraph}>
+        Le métal et l&apos;alimentation sont stockés dans le dépôt : sans lui,
+        chacun plafonne à 1 000, et chaque niveau multiplie la capacité par
+        1,8. Au-delà, ce qui est produit est perdu. L&apos;Offlinium n&apos;est
+        jamais plafonné.
+      </p>
+      <p className={paragraph}>
         L&apos;habitat loge les habitants : village, ville au niveau 6, puis
         mégalopole au niveau 11. Chaque habitant mange{" "}
         {FOOD_PER_INHABITANT_PER_HOUR} unité d&apos;alimentation par heure : sans

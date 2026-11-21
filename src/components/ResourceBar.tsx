@@ -24,21 +24,37 @@ export default function ResourceBar() {
       className="flex flex-wrap justify-start gap-1.5"
       aria-label="Ressources"
     >
-      {RESOURCE_TYPES.map((type) => (
-        <span
-          key={type}
-          className={`${chipClass} ${
-            type === "offlinium" && !isOnline
-              ? "border-(--accent-border) bg-(--accent-bg) shadow-[0_0_12px_rgba(170,59,255,0.2)]"
-              : ""
-          }`}
-          title={RESOURCE_LABELS[type]}
-          aria-label={`${formatAmount(user.resources[type])} ${RESOURCE_LABELS[type]}`}
-        >
-          <span aria-hidden="true">{RESOURCE_ICONS[type]}</span>
-          {formatAmount(user.resources[type])}
-        </span>
-      ))}
+      {RESOURCE_TYPES.map((type) => {
+        // Offlinium is never capped; metal and food stop at the depot's capacity.
+        const capped = type !== "offlinium";
+        const isFull = capped && user.resources[type] >= economy.storageCapacity;
+        const amount = formatAmount(user.resources[type]);
+        const capacity = formatAmount(economy.storageCapacity);
+        return (
+          <span
+            key={type}
+            className={`${chipClass} ${
+              type === "offlinium" && !isOnline
+                ? "border-(--accent-border) bg-(--accent-bg) shadow-[0_0_12px_rgba(170,59,255,0.2)]"
+                : ""
+            } ${isFull ? "border-(--warning-border) bg-(--warning-bg) text-(--warning-text)" : ""}`}
+            title={
+              capped
+                ? `${RESOURCE_LABELS[type]} : ${amount} / ${capacity}${isFull ? " (dépôt plein)" : ""}`
+                : RESOURCE_LABELS[type]
+            }
+            aria-label={
+              capped
+                ? `${amount} ${RESOURCE_LABELS[type]} sur ${capacity}${isFull ? ", dépôt plein" : ""}`
+                : `${amount} ${RESOURCE_LABELS[type]}`
+            }
+          >
+            <span aria-hidden="true">{RESOURCE_ICONS[type]}</span>
+            {amount}
+            {isFull && <span aria-hidden="true">·max</span>}
+          </span>
+        );
+      })}
       <span
         className={`${chipClass} ${energyBalance < 0 ? "text-(--red-dark)" : ""}`}
         title="Énergie disponible (produite − consommée)"

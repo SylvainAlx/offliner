@@ -4,6 +4,7 @@ import {
   LABORATORY_BONUS_PER_LEVEL,
   SOLAR_ENERGY_PER_LEVEL,
   getPopulationMax,
+  getStorageCapacity,
   type BuildingLevels,
   type BuildingType,
 } from "./buildings";
@@ -35,6 +36,8 @@ export interface Economy {
   foodPerHour: number;
   foodEatenPerHour: number;
   populationMax: number;
+  /** Metal and food each stop accumulating at this amount (depot). */
+  storageCapacity: number;
   /** Multiplier of the base Offlinium rate (laboratory bonus). */
   offliniumMultiplier: number;
 }
@@ -78,6 +81,7 @@ export function computeEconomy(levels: BuildingLevels, population: number): Econ
     foodPerHour: BASE_FOOD_PER_HOUR + food * productionFactor,
     foodEatenPerHour: population * FOOD_PER_INHABITANT_PER_HOUR,
     populationMax: getPopulationMax(levels.habitat),
+    storageCapacity: getStorageCapacity(levels.depot),
     offliniumMultiplier:
       1 + LABORATORY_BONUS_PER_LEVEL * levels.laboratory * productionFactor,
   };
@@ -146,14 +150,80 @@ function finish(state: RealTimeState, completed: CompletedConstruction[]): void 
   });
 }
 
+/**
+ * Adds a gain to a stock without going over the capacity. A stock already
+ * above it (a refund, for instance) is kept, but does not grow.
+ */
+function store(stock: number, change: number, capacity: number): number {
+  if (change <= 0) return stock + change;
+  if (stock >= capacity) return stock;
+  return Math.min(capacity, stock + change);
+}
+
+export type PopulationStatus = "growing" | "full" | "starving";
+
+export interface PopulationTrend {
+  status: PopulationStatus;
+  /** Inhabitants gained (or lost) per hour at this moment. */
+  perHour: number;
+  /** Growth per hour with all the energy needed. */
+  fullEnergyPerHour: number;
+  /** Time until the maximum is reached, at the current pace. */
+  timeToFullMs: number | null;
+  /** Time until the food stock runs out, when the planet eats more than it grows. */
+  foodRunsOutInMs: number | null;
+}
+
+/**
+ * Where the population is heading: it grows by POPULATION_GROWTH_PER_HOUR of
+ * the maximum per hour (at least 1), slowed down by a lack of energy, up to
+ * the habitat's maximum; it shrinks while the planet starves.
+ */
+export function getPopulationTrend(
+  economy: Economy,
+  population: number,
+  food: number,
+): PopulationTrend {
+  const foodDeficit = economy.foodEatenPerHour - economy.foodPerHour;
+  const foodRunsOutInMs =
+    foodDeficit > 0 && food > 0 ? (food / foodDeficit) * HOUR_MS : null;
+
+  if (food <= 0 && foodDeficit > 0) {
+    return {
+      status: "starving",
+      perHour: -population * STARVATION_LOSS_PER_HOUR,
+      fullEnergyPerHour: 0,
+      timeToFullMs: null,
+      foodRunsOutInMs: null,
+    };
+  }
+  const fullEnergyPerHour = Math.max(1, POPULATION_GROWTH_PER_HOUR * economy.populationMax);
+  if (population >= economy.populationMax) {
+    return { status: "full", perHour: 0, fullEnergyPerHour, timeToFullMs: null, foodRunsOutInMs };
+  }
+  const perHour = fullEnergyPerHour * economy.energyFactor;
+  return {
+    status: "growing",
+    perHour,
+    fullEnergyPerHour,
+    timeToFullMs:
+      perHour > 0 ? ((economy.populationMax - population) / perHour) * HOUR_MS : null,
+    foodRunsOutInMs,
+  };
+}
+
 function applyStep(state: RealTimeState, hours: number): void {
   if (hours <= 0) return;
   const economy = computeEconomy(state.planet.levels, state.population);
+  const capacity = economy.storageCapacity;
 
-  state.resources.metal += economy.metalPerHour * hours;
+  state.resources.metal = store(state.resources.metal, economy.metalPerHour * hours, capacity);
 
-  const food =
-    state.resources.food + (economy.foodPerHour - economy.foodEatenPerHour) * hours;
+  const food = store(
+    state.resources.food,
+    (economy.foodPerHour - economy.foodEatenPerHour) * hours,
+    capacity,
+  );
   const starving = food <= 0 && economy.foodPerHour < economy.foodEatenPerHour;
   state.resources.food = Math.max(0, food);
 
@@ -163,10 +233,10 @@ function applyStep(state: RealTimeState, hours: number): void {
       state.population * (1 - STARVATION_LOSS_PER_HOUR * hours),
     );
   } else if (state.population < economy.populationMax) {
-    const growthPerHour = Math.max(1, POPULATION_GROWTH_PER_HOUR * economy.populationMax);
+    const trend = getPopulationTrend(economy, state.population, state.resources.food);
     state.population = Math.min(
       economy.populationMax,
-      state.population + growthPerHour * economy.energyFactor * hours,
+      state.population + trend.perHour * hours,
     );
   }
 }

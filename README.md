@@ -5,52 +5,93 @@
 </p>
 
 <p align="center">
-  <strong>Déconnectez-vous. Faites grandir votre village.</strong>
+  <strong>Déconnectez-vous. Bâtissez votre planète.</strong>
 </p>
 
-Offliner est une progressive web app (PWA) qui transforme le temps passé hors
-ligne en progression ludique. Chaque période sans connexion permet de gagner
-de l’Offlinium, de construire des maisons et d’invoquer des compagnons pour
-faire grandir son village.
+Offliner est un jeu de gestion de planète en solo, inspiré des jeux par
+navigateur comme OGame, sous forme de progressive web app (PWA). Les bâtiments
+se construisent et produisent en temps réel, tandis que l’Offlinium, la
+ressource qui fait tout avancer plus vite, ne se gagne qu’en restant hors
+ligne.
 
-Le projet est actuellement un prototype fonctionnel, conçu pour une expérience
-prioritairement mobile, mais également utilisable sur ordinateur.
+Le jeu est pensé d’abord pour le mobile, où il s’installe comme une
+application, et reste utilisable sur ordinateur. Tout fonctionne sur
+l’appareil : pas de serveur, pas de compte, pas de classement.
 
-## Origine du projet
+## Le jeu en bref
 
-Offliner v2 est la seconde version du projet. Une première implémentation avait
-initialement été développée en React Native avec Expo dans le dépôt
-[offliner](https://github.com/SylvainAlx/offliner-v2).
+Chaque partie commence sur une planète vierge de 163 cases, avec un nom et
+une apparence générés au hasard, 10 colons et quelques ressources.
 
-Cette version explore une approche web installable (PWA), tout en conservant
-l’idée centrale de transformer le temps hors ligne en progression dans un
-village.
+- **Deux horloges.** Le temps réel fait tourner la planète en permanence,
+  application ouverte ou fermée : constructions, production, population. Le
+  temps hors ligne, lui, ne produit que de l’Offlinium.
+- **Ressources.** Le métal et l’alimentation sont produits en temps réel et
+  plafonnés par le dépôt. L’Offlinium (360 par heure hors ligne au rythme de
+  base) n’est jamais plafonné. L’énergie est un bilan : produite moins
+  consommée.
+- **Bâtiments.** Mine de métal, ferme, réacteur, dépôt, laboratoire et habitat.
+  Chaque niveau coûte plus cher que le précédent, occupe une case et prend un
+  temps réel proportionnel à son coût. Une seule construction à la fois.
+- **Accélération.** L’Offlinium permet de terminer une construction plus tôt,
+  à raison d’1 Offlinium pour 10 secondes gagnées.
+- **Énergie et personnel.** Les bâtiments consomment de l’énergie et ont
+  besoin d’habitants pour tourner. S’il en manque, ils tournent au ralenti,
+  dans la même proportion, comme dans OGame.
+- **Population.** L’habitat fixe le maximum d’habitants (campement, village,
+  ville, puis mégalopole). La population grandit en temps réel, mange de
+  l’alimentation, et diminue en cas de famine.
+
+Les règles chiffrées sont regroupées dans `src/models/buildings.ts` et
+`src/utils/constants.ts`.
 
 ## Fonctionnalités
 
-- suivi automatique du temps passé hors ligne grâce au statut réseau du navigateur ;
-- génération d’une particule d’Offlinium toutes les 10 secondes hors ligne ;
-- construction de maisons et gestion d’une file d’attente de constructions ;
-- invocation, aperçu, interaction et libération de compagnons ;
-- évolution des compagnons, de l’enfance jusqu’au stade de sage, puis mort après leur durée de vie hors ligne ;
-- tableau des succès liés au temps hors ligne, à la régularité et aux étapes du village ;
-- profil local avec historique des périodes hors ligne ;
+- suivi automatique du temps passé hors ligne grâce au statut réseau du
+  navigateur, avec confirmation des absences que l’application n’a pas pu
+  observer (plafonnées à 12 h) ;
+- économie en temps réel rattrapée à chaque ouverture, minute par minute ;
+- six bâtiments à niveaux, avec tableau détaillé des prochains niveaux ;
+- accélération et annulation (remboursement complet) de la construction en
+  cours ;
+- bilan de la planète et explications sur la population, avec alertes en clair
+  (énergie, personnel, famine, dépôt plein) ;
+- planète et bâtiments en pixel art générés en code : la planète dépend d’une
+  graine aléatoire, et les bâtiments changent d’apparence avec leur niveau et
+  le type de planète ;
+- succès regroupés par catégorie : planète, temps hors ligne, régularité ;
+- historique des périodes hors ligne ;
+- thème clair, sombre ou automatique (suit le réglage de l’appareil) ;
 - sauvegarde, export et import des données au format JSON ;
-- fonctionnement hors ligne avec installation possible sur l’écran d’accueil ;
-- interface responsive et navigation adaptée au mobile.
+- fonctionnement hors ligne et installation sur l’écran d’accueil.
 
 ## Fonctionnement des données
 
-Offliner ne dépend actuellement d’aucun serveur ni compte distant. La
-progression est enregistrée dans une base IndexedDB locale, gérée par
-[Dexie](https://dexie.org/). Le profil courant est stocké dans la base
-`offliner`, dans l’enregistrement `profiles/current`.
+La progression est enregistrée dans une base IndexedDB locale, gérée par
+[Dexie](https://dexie.org/) : la base `offliner-v1`, enregistrement
+`profiles/current`. L’ancienne base `offliner`, celle de la version
+« village », est supprimée au premier lancement.
+
+L’application enregistre la partie toutes les 30 secondes lorsqu’elle est
+ouverte, à chaque action et à chaque construction terminée. Le choix du thème
+est une préférence d’affichage : il est gardé dans le `localStorage` de
+l’appareil, hors de la sauvegarde de partie.
 
 La section **Données du compte** permet d’exporter la progression dans un
-fichier JSON afin de la conserver ou de la transférer sur un autre appareil.
-Ce fichier peut contenir les données de jeu du profil local : conservez-le dans
-un emplacement sûr et ne le partagez pas si vous ne souhaitez pas divulguer
-votre progression.
+fichier JSON, pour la conserver ou la transférer sur un autre appareil. Ce
+fichier contient vos données de jeu : conservez-le dans un endroit sûr.
+
+## Origine du projet
+
+Offliner a d’abord été développé en React Native avec Expo, dans le dépôt
+[offliner](https://github.com/SylvainAlx/offliner-v2). Une deuxième version a
+exploré une approche web installable (PWA) autour d’un village et de
+compagnons à faire évoluer.
+
+La version actuelle (v1 du jeu de planète) repart de cette base technique,
+notamment le suivi du temps hors ligne, et la transforme en jeu de gestion à
+la manière d’OGame. Le document de conception décrit les règles et les
+étapes de développement.
 
 ## Prérequis
 
@@ -71,15 +112,15 @@ L’application est ensuite accessible à l’adresse indiquée par Vite, en gé
 
 ## Scripts disponibles
 
-| Commande       | Description                                                                   |
-| -------------- | ----------------------------------------------------------------------------- |
-| `pnpm dev`     | Lance le serveur de développement Vite.                                       |
-| `pnpm build`   | Vérifie les types TypeScript et génère la version de production dans `dist/`. |
-| `pnpm preview` | Sert localement la version générée dans `dist/`.                              |
-| `pnpm lint`    | Analyse le code avec Oxlint.                                                  |
-| `pnpm test`    | Lance une fois la suite de tests Vitest.                                      |
-| `pnpm test:watch` | Relance les tests à chaque modification.                                   |
-| `pnpm check`   | Enchaîne lint, tests et build : à lancer avant de pousser.                    |
+| Commande          | Description                                                                   |
+| ----------------- | ----------------------------------------------------------------------------- |
+| `pnpm dev`        | Lance le serveur de développement Vite.                                       |
+| `pnpm build`      | Vérifie les types TypeScript et génère la version de production dans `dist/`. |
+| `pnpm preview`    | Sert localement la version générée dans `dist/`.                              |
+| `pnpm lint`       | Analyse le code avec Oxlint.                                                  |
+| `pnpm test`       | Lance une fois la suite de tests Vitest.                                      |
+| `pnpm test:watch` | Relance les tests à chaque modification.                                      |
+| `pnpm check`      | Enchaîne lint, tests et build : à lancer avant de pousser.                    |
 
 ## Tests
 
@@ -90,11 +131,12 @@ changements de jour et d’heure d’été soient vérifiés de façon reproduct
 Tous les tests sont rassemblés dans `tests/`, qui reprend l’organisation de
 `src/` :
 
-- `tests/models/` : logique de jeu (périodes hors ligne et plafond du temps non
-  observé, Offlinium, file de constructions, compagnons, succès, validation des
-  sauvegardes) ;
-- `tests/stores/` : store utilisateur (ordre des écritures, import,
-  réinitialisation) ;
+- `tests/models/` : logique de jeu. Périodes hors ligne et plafond du temps non
+  observé, bâtiments et leurs courbes, économie (énergie, personnel,
+  alimentation, dépôt, population), constructions et accélération, Offlinium,
+  dessins de la planète et des bâtiments, succès, validation des sauvegardes ;
+- `tests/stores/` : store utilisateur (mise à jour chaque seconde,
+  enregistrements, ordre des écritures, import, réinitialisation) ;
 - `tests/pwa/` : service worker (`public/sw.js`) exécuté dans un environnement
   simulé, et plugin de build `vite-plugins/offlinerServiceWorker.ts` ;
 - `tests/services/` et `tests/stores/installStore.test.ts` : détection de
@@ -113,42 +155,42 @@ mise en ligne. Ce fichier définit aussi les en-têtes HTTP de sécurité
 et la mise en cache : fichiers de `assets/` conservés indéfiniment (leur nom
 change à chaque build), `sw.js` jamais mis en cache.
 
-Avant de publier une version, il est recommandé d’exécuter :
-
-```bash
-pnpm lint
-pnpm build
-```
+La Content-Security-Policy interdit les scripts écrits directement dans
+`index.html` : tout code doit passer par les modules de `src/`.
 
 ## Stack technique
 
-- [React](https://react.dev/) ;
+- [React](https://react.dev/) 19, avec le React Compiler ;
 - [TypeScript](https://www.typescriptlang.org/) ;
 - [Vite](https://vite.dev/) ;
+- [Tailwind CSS](https://tailwindcss.com/) 4, avec des variables CSS pour les
+  couleurs : le thème sombre redéfinit ces variables dans
+  `src/styles/index.css` ;
 - [Zustand](https://zustand.docs.pmnd.rs/) pour l’état applicatif ;
-- CSS natif ;
 - [Dexie](https://dexie.org/) pour la persistance locale IndexedDB ;
-- Service worker et Web App Manifest pour le fonctionnement PWA.
+- service worker et Web App Manifest pour le fonctionnement PWA.
 
 ## Structure du projet
 
 ```text
 src/
 ├── components/   Composants React et mise en page
+│   └── planet/   Écran de la planète : bâtiments, construction, population, bilan
 ├── hooks/        Logique réutilisable des écrans et interactions
-├── models/       Modèles métier : utilisateur, village, compagnons...
+├── models/       Logique de jeu : joueur, planète, bâtiments, économie, périodes hors ligne, succès
 ├── services/     Persistance locale
-├── stores/       État global Zustand
-├── styles/       Feuilles de style de l’application
-└── utils/        Constantes et fonctions utilitaires
+├── stores/       État global Zustand (partie, connexion, installation, thème)
+├── styles/       Feuille de style et variables de thème
+└── utils/        Constantes, dessins pixel art, thème et fonctions utilitaires
 public/           Service worker, manifeste et ressources statiques
+tests/            Tests Vitest, organisés comme src/
 ```
 
 ## Statut du projet
 
-Le dépôt est public pour permettre la consultation du code et le partage du
-projet. Les contributions externes, pull requests et collaborations ne sont
-pas ouvertes pour le moment.
+Le projet est en développement actif. Le dépôt est public pour permettre la
+consultation du code et le partage du projet. Les contributions externes, pull
+requests et collaborations ne sont pas ouvertes pour le moment.
 
 ## Licence
 

@@ -3,6 +3,7 @@ import {
   LABORATORY_BONUS_PER_LEVEL,
   describeSettlement,
   getPopulationMax,
+  getStorageCapacity,
   type BuildingType,
 } from "../models/buildings";
 import {
@@ -14,7 +15,7 @@ import {
 
 /** What a building gives at a level, at full production. */
 export function describeBuildingEffect(type: BuildingType, level: number): string {
-  if (level <= 0 && type !== "habitat") return "—";
+  if (level <= 0 && type !== "habitat" && type !== "depot") return "—";
   const definition = BUILDINGS[type];
   switch (type) {
     case "metalMine":
@@ -25,6 +26,8 @@ export function describeBuildingEffect(type: BuildingType, level: number): strin
       return `+${formatAmount(definition.energyProduced(level))} ${ENERGY_ICON}`;
     case "laboratory":
       return `+${Math.round(LABORATORY_BONUS_PER_LEVEL * level * 100)} % ${RESOURCE_ICONS.offlinium}`;
+    case "depot":
+      return `${formatAmount(getStorageCapacity(level))} ${RESOURCE_ICONS.metal} et ${RESOURCE_ICONS.food} max`;
     case "habitat":
       return `${formatAmount(getPopulationMax(level))} ${POPULATION_ICON} max (${describeSettlement(level)})`;
   }

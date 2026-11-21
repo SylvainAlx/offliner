@@ -305,3 +305,85 @@ describe("building sprites", () => {
     expect(groundColor("ocean")).not.toBe(groundColor("ice"));
   });
 });
+
+describe("depot and population trend", () => {
+  it("caps metal and food at the depot's capacity, never Offlinium", async () => {
+    const { getStorageCapacity } = await import("../../src/models/buildings");
+    expect(getStorageCapacity(0)).toBe(1000);
+    expect(getStorageCapacity(1)).toBe(1800);
+
+    const user = newUser();
+    user.resources = { metal: 990, food: 990, offlinium: 5000 };
+    user.planet.levels.farm = 5;
+    user.planet.levels.reactor = 5;
+    user.population = 10;
+    advanceRealTime(user, T0, T0 + 10 * HOUR);
+    expect(user.resources.metal).toBe(1000);
+    expect(user.resources.food).toBe(1000);
+
+    // A refund above the capacity is kept, but does not grow.
+    user.resources.metal = 1500;
+    advanceRealTime(user, T0 + 10 * HOUR, T0 + 11 * HOUR);
+    expect(user.resources.metal).toBe(1500);
+    user.advance(T0 + 11 * HOUR, 100 * HOUR);
+    expect(user.resources.offlinium).toBeGreaterThan(5000 + 1000);
+  });
+
+  it("tells where the population is heading", async () => {
+    const { getPopulationTrend } = await import("../../src/models/economy");
+    const levels = { ...emptyLevels(), habitat: 2, reactor: 3 };
+    const growing = getPopulationTrend(computeEconomy(levels, 20), 20, 500);
+    expect(growing.status).toBe("growing");
+    expect(growing.perHour).toBe(2.5); // 5 % of 50
+    expect(growing.timeToFullMs).toBe(12 * HOUR);
+
+    expect(getPopulationTrend(computeEconomy(levels, 50), 50, 500).status).toBe("full");
+
+    const hungry = getPopulationTrend(computeEconomy(levels, 50), 50, 0);
+    expect(hungry.status).toBe("starving");
+    expect(hungry.perHour).toBe(-1);
+
+    const deficit = getPopulationTrend(computeEconomy(levels, 40), 40, 60);
+    expect(deficit.foodRunsOutInMs).toBe(2 * HOUR); // eats 40, produces 10
+  });
+});
+
+describe("planetary leader", () => {
+  it("is there from the first day, and the player can rename them", () => {
+    const user = newUser();
+    expect(user.notables).toHaveLength(1);
+    const leader = user.leader!;
+    expect(leader.role).toBe("leader");
+    expect(leader.title).toBe("Chef planétaire");
+    expect(leader.description).toContain(user.planet.name);
+
+    expect(user.updateNotable(leader.id, { name: "Ada Prax", title: "Gouverneure", description: "  Fondatrice.  " })).toBe(true);
+    expect(user.leader).toMatchObject({ name: "Ada Prax", title: "Gouverneure", description: "Fondatrice." });
+    expect(user.updateNotable(leader.id, { name: "  ", title: "X", description: "" })).toBe(false);
+    expect(user.updateNotable("missing", { name: "A", title: "B", description: "" })).toBe(false);
+  });
+
+  it("speaks proper French about the planet", async () => {
+    const { createLeader } = await import("../../src/models/notable");
+    expect(createLeader("Arays III", 0).description).toContain("colonie d'Arays III");
+    expect(createLeader("Velora IV", 0).description).toContain("colonie de Velora IV");
+  });
+
+  it("survives a save and a clone, and older saves get one", () => {
+    const user = newUser();
+    user.updateNotable(user.leader!.id, { name: "Ada Prax", title: "Gouverneure", description: "" });
+
+    const restored = new User();
+    restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
+    expect(restored.notables).toEqual(user.notables);
+
+    const copy = user.clone();
+    copy.leader!.name = "Autre";
+    expect(user.leader!.name).toBe("Ada Prax");
+
+    const legacy = new User();
+    legacy.loadFromSnapshot({ createdAt: 42, planet: { name: "Velora IV" } });
+    expect(legacy.leader).toMatchObject({ role: "leader", featuredAt: 42 });
+    expect(legacy.leader!.description).toContain("Velora IV");
+  });
+});

@@ -139,20 +139,10 @@ export default function Sidebar({
                     {item.description}
                   </small>
                 </span>
-                <span
-                  className="ml-auto text-(--gray-600) text-[1.05rem]"
-                  aria-hidden="true"
-                >
-                  →
-                </span>
               </button>
             );
           })}
         </nav>
-
-        <p className="mt-auto mx-2 mb-0 pt-6 text-(--gray-600) text-[0.7rem] leading-[1.45]">
-          Choisissez une section pour continuer.
-        </p>
       </aside>
     </>
   );

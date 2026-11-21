@@ -1,4 +1,11 @@
 import { PeriodList } from "./periodList";
+import {
+  applyNotableChanges,
+  createLeader,
+  loadNotables,
+  type Notable,
+  type NotableChanges,
+} from "./notable";
 import { Planet } from "./planet";
 import {
   advanceRealTime,
@@ -44,6 +51,8 @@ export class User {
   resources: Resources;
   /** Inhabitants, fractions included while the population grows or shrinks. */
   population: number;
+  /** Inhabitants in the spotlight, the planetary leader first. */
+  notables: Notable[];
   /** Real time up to which the economy has been computed. */
   realTimeSettledAt: number;
   /** Offline time already turned into Offlinium. */
@@ -56,6 +65,7 @@ export class User {
     this.planet = new Planet();
     this.resources = { ...STARTING_RESOURCES };
     this.population = STARTING_POPULATION;
+    this.notables = [createLeader(this.planet.name, now)];
     this.realTimeSettledAt = now;
     this.settledOfflineMs = 0;
   }
@@ -156,6 +166,15 @@ export class User {
     return true;
   }
 
+  get leader(): Notable | undefined {
+    return this.notables.find((notable) => notable.role === "leader");
+  }
+
+  updateNotable(id: string, changes: NotableChanges): boolean {
+    const notable = this.notables.find((item) => item.id === id);
+    return notable ? applyNotableChanges(notable, changes) : false;
+  }
+
   renamePlanet(name: string): boolean {
     const sanitized = sanitizeName(name);
     if (!sanitized) return false;
@@ -181,6 +200,7 @@ export class User {
     copy.planet = this.planet.clone();
     copy.resources = { ...this.resources };
     copy.population = this.population;
+    copy.notables = this.notables.map((notable) => ({ ...notable }));
     copy.realTimeSettledAt = this.realTimeSettledAt;
     copy.settledOfflineMs = this.settledOfflineMs;
     return copy;
@@ -199,6 +219,11 @@ export class User {
     if (isFiniteNumber(parsed.population) && parsed.population >= 0) {
       this.population = parsed.population;
     }
+    // Every planet has a leader, saves from before leaders included.
+    const notables = loadNotables(parsed.notables);
+    this.notables = notables.some((notable) => notable.role === "leader")
+      ? notables
+      : [createLeader(this.planet.name, this.createdAt), ...notables];
     if (isFiniteNumber(parsed.realTimeSettledAt)) {
       this.realTimeSettledAt = parsed.realTimeSettledAt;
     }
