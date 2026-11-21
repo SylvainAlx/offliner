@@ -305,3 +305,141 @@ describe("building sprites", () => {
     expect(groundColor("ocean")).not.toBe(groundColor("ice"));
   });
 });
+
+describe("depot and population trend", () => {
+  it("caps metal and food at the depot's capacity, never Offlinium", async () => {
+    const { getStorageCapacity } = await import("../../src/models/buildings");
+    expect(getStorageCapacity(0)).toBe(1000);
+    expect(getStorageCapacity(1)).toBe(1800);
+
+    const user = newUser();
+    user.resources = { metal: 990, food: 990, offlinium: 5000 };
+    user.planet.levels.farm = 5;
+    user.planet.levels.reactor = 5;
+    user.population = 10;
+    advanceRealTime(user, T0, T0 + 10 * HOUR);
+    expect(user.resources.metal).toBe(1000);
+    expect(user.resources.food).toBe(1000);
+
+    // A refund above the capacity is kept, but does not grow.
+    user.resources.metal = 1500;
+    advanceRealTime(user, T0 + 10 * HOUR, T0 + 11 * HOUR);
+    expect(user.resources.metal).toBe(1500);
+    user.advance(T0 + 11 * HOUR, 100 * HOUR);
+    expect(user.resources.offlinium).toBeGreaterThan(5000 + 1000);
+  });
+
+  it("tells where the population is heading", async () => {
+    const { getPopulationTrend } = await import("../../src/models/economy");
+    const levels = { ...emptyLevels(), habitat: 2, reactor: 3 };
+    const growing = getPopulationTrend(computeEconomy(levels, 20), 20, 500);
+    expect(growing.status).toBe("growing");
+    expect(growing.perHour).toBe(2.5); // 5 % of 50
+    expect(growing.timeToFullMs).toBe(12 * HOUR);
+
+    expect(getPopulationTrend(computeEconomy(levels, 50), 50, 500).status).toBe("full");
+
+    const hungry = getPopulationTrend(computeEconomy(levels, 50), 50, 0);
+    expect(hungry.status).toBe("starving");
+    expect(hungry.perHour).toBe(-1);
+
+    const deficit = getPopulationTrend(computeEconomy(levels, 40), 40, 60);
+    expect(deficit.foodRunsOutInMs).toBe(2 * HOUR); // eats 40, produces 10
+  });
+});
+
+describe("planetary leader", () => {
+  it("is there from the first day, and the player can rename them", () => {
+    const user = newUser();
+    expect(user.notables).toHaveLength(1);
+    const leader = user.leader!;
+    expect(leader.role).toBe("leader");
+    expect(leader.title).toBe("Chef planétaire");
+    expect(leader.description).toContain(user.planet.name);
+
+    expect(user.updateNotable(leader.id, { name: "Ada Prax", title: "Gouverneure", description: "  Fondatrice.  " })).toBe(true);
+    expect(user.leader).toMatchObject({ name: "Ada Prax", title: "Gouverneure", description: "Fondatrice." });
+    expect(user.updateNotable(leader.id, { name: "  ", title: "X", description: "" })).toBe(false);
+    expect(user.updateNotable("missing", { name: "A", title: "B", description: "" })).toBe(false);
+  });
+
+  it("speaks proper French about the planet", async () => {
+    const { createLeader } = await import("../../src/models/notable");
+    expect(createLeader("Arays III", 0).description).toContain("colonie d'Arays III");
+    expect(createLeader("Velora IV", 0).description).toContain("colonie de Velora IV");
+  });
+
+  it("survives a save and a clone, and older saves get one", () => {
+    const user = newUser();
+    user.updateNotable(user.leader!.id, { name: "Ada Prax", title: "Gouverneure", description: "" });
+
+    const restored = new User();
+    restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
+    expect(restored.notables).toEqual(user.notables);
+
+    const copy = user.clone();
+    copy.leader!.name = "Autre";
+    expect(user.leader!.name).toBe("Ada Prax");
+
+    const legacy = new User();
+    legacy.loadFromSnapshot({ createdAt: 42, planet: { name: "Velora IV" } });
+    expect(legacy.leader).toMatchObject({ role: "leader", featuredAt: 42 });
+    expect(legacy.leader!.description).toContain("Velora IV");
+  });
+});
+
+describe("star system", () => {
+  it("always gives the same system for a planet, with 3 to 6 planets around a star", async () => {
+    const { generateStarSystem, MIN_PLANETS, MAX_PLANETS } = await import("../../src/models/starSystem");
+    const home = { seed: "velora", name: "Velora IV", fields: 163 };
+    const system = generateStarSystem(home);
+    expect(generateStarSystem(home)).toEqual(system);
+
+    const counts = new Set<number>();
+    for (let index = 0; index < 60; index += 1) {
+      const other = generateStarSystem({ seed: `seed-${index}`, name: "X", fields: 163 });
+      counts.add(other.planets.length);
+      expect(other.planets.filter((planet) => planet.isHome)).toHaveLength(1);
+      other.planets.forEach((planet, orbit) => {
+        expect(planet.orbit).toBe(orbit);
+        if (!planet.isColonizable) expect(planet.kind).toBe("gas");
+        if (planet.temperatureC > 100 || planet.temperatureC < -60) expect(planet.fertility).toBe(0);
+      });
+    }
+    expect(Math.min(...counts)).toBe(MIN_PLANETS);
+    expect(Math.max(...counts)).toBe(MAX_PLANETS);
+  });
+
+  it("puts the player's own planet in it, as it is", async () => {
+    const { generateStarSystem } = await import("../../src/models/starSystem");
+    const { generatePlanetSprite } = await import("../../src/utils/planetSprite");
+    const system = generateStarSystem({ seed: "velora", name: "Velora IV", fields: 163 });
+    const home = system.planets.find((planet) => planet.isHome)!;
+    expect(home).toMatchObject({ name: "Velora IV", seed: "velora", fields: 163, distanceFromHomeAu: 0 });
+    expect(home.kind).toBe(generatePlanetSprite("velora").kind);
+    // Renaming the planet does not move it or change the system.
+    const renamed = generateStarSystem({ seed: "velora", name: "Nouveau nom", fields: 163 });
+    expect(renamed.star).toEqual(system.star);
+    expect(renamed.planets.map((planet) => planet.kind)).toEqual(system.planets.map((planet) => planet.kind));
+  });
+});
+
+describe("spaceport", () => {
+  it("is a building like the others, needed to open the star system", () => {
+    expect(getBuildingCost("spaceport", 1)).toEqual({ metal: 400, offlinium: 200 });
+    const user = newUser();
+    expect(user.planet.levels.spaceport).toBe(0);
+    user.resources = { metal: 1000, food: 0, offlinium: 1000 };
+    expect(user.startConstruction("spaceport", T0)).toBe(true);
+    user.advance(T0 + getConstructionMs("spaceport", 1), 0);
+    expect(user.planet.levels.spaceport).toBe(1);
+
+    const restored = new User();
+    restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
+    expect(restored.planet.levels.spaceport).toBe(1);
+    // Saves from before the spaceport simply have none.
+    const legacy = new User();
+    legacy.loadFromSnapshot({ planet: { levels: { metalMine: 2 } } });
+    expect(legacy.planet.levels.spaceport).toBe(0);
+  });
+});

@@ -7,6 +7,8 @@ import PlanetSprite from "./PlanetSprite";
 import ConstructionInProgress from "./planet/ConstructionInProgress";
 import BuildingGrid from "./planet/BuildingGrid";
 import PlanetBalance from "./planet/PlanetBalance";
+import PopulationPanel from "./planet/PopulationPanel";
+import PlanetLeader from "./planet/PlanetLeader";
 import PlanetIdentity from "./planet/PlanetIdentity";
 
 export default function Planet() {
@@ -25,8 +27,10 @@ export default function Planet() {
           className="block size-36 animate-[planet-float_6s_ease-in-out_infinite] [image-rendering:pixelated] [shape-rendering:crispEdges] motion-reduce:animate-none sm:size-44"
         />
       </div>
+      <PlanetLeader />
       <ConstructionInProgress />
       <BuildingGrid />
+      <PopulationPanel />
       <PlanetBalance />
       <PlanetIdentity />
     </Card>

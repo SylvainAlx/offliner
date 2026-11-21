@@ -1,9 +1,8 @@
 import { useUser } from "../../stores/userStore";
-import { describeSettlement } from "../../models/buildings";
 import {
   ENERGY_ICON,
-  POPULATION_ICON,
   RESOURCE_ICONS,
+  RESOURCE_LABELS,
   formatAmount,
 } from "../../models/resources";
 import { OFFLINIUM_DELIVERY_INTERVAL } from "../../utils/constants";
@@ -15,7 +14,7 @@ function percent(value: number): string {
   return `${Math.round(value * 100)} %`;
 }
 
-/** How the planet is doing: production, energy, staff, food. */
+/** How the planet is doing: production, storage, energy, staff. */
 export default function PlanetBalance() {
   const user = useUser((state) => state.user);
   const economy = user.economy;
@@ -32,18 +31,22 @@ export default function PlanetBalance() {
       `Personnel insuffisant : ${population} habitants pour ${economy.staffRequired} postes. Agrandissez l'habitat.`,
     );
   }
-  if (foodBalance < 0) {
+  // Food and growth are explained in the Population section.
+  const full = (["metal", "food"] as const).filter(
+    (type) => user.resources[type] >= economy.storageCapacity,
+  );
+  if (full.length > 0) {
     warnings.push(
-      user.resources.food < 1
-        ? "Famine : la population diminue. Construisez ou améliorez la ferme."
-        : "Les habitants mangent plus que la ferme ne produit : le stock d'alimentation baisse.",
+      `Dépôt plein (${full.map((type) => RESOURCE_LABELS[type].toLowerCase()).join(" et ")}) : ce qui est produit en plus est perdu. Améliorez le dépôt.`,
     );
   }
 
   const rows: Array<[string, string]> = [
-    ["Habitat", describeSettlement(user.planet.levels.habitat)],
-    ["Population", `${population} / ${formatAmount(economy.populationMax)} ${POPULATION_ICON}`],
     ["Cases", `${user.planet.usedFields} / ${user.planet.fields}`],
+    [
+      "Dépôt",
+      `${formatAmount(economy.storageCapacity)} ${RESOURCE_ICONS.metal} et ${formatAmount(economy.storageCapacity)} ${RESOURCE_ICONS.food} max`,
+    ],
     ["Métal", `+${formatAmount(economy.metalPerHour)} ${RESOURCE_ICONS.metal}/h`],
     [
       "Alimentation",

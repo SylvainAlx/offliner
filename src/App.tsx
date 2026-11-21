@@ -9,6 +9,9 @@ import ThemeSettings from "./components/ThemeSettings";
 import Tracking from "./components/Tracking";
 import Status from "./components/Status";
 import Planet from "./components/Planet";
+import StarSystemView from "./components/system/StarSystemView";
+import SystemLocked from "./components/system/SystemLocked";
+import { useUser } from "./stores/userStore";
 import DataBackup from "./components/DataBackup";
 import Achievements from "./components/Achievements";
 import Sidebar, { type AppSection } from "./components/layouts/Sidebar";
@@ -21,6 +24,7 @@ function AppContent() {
   const isOnline = useOnlineStatus((state) => state.isOnline);
   const [activeSection, setActiveSection] = useState<AppSection>("planet");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const isSystemUnlocked = useUser((state) => state.user.planet.levels.spaceport > 0);
 
   useEffect(() => useOnlineStatus.getState().initialize(), []);
 
@@ -35,6 +39,12 @@ function AppContent() {
     switch (activeSection) {
       case "planet":
         return <Planet />;
+      case "system":
+        return isSystemUnlocked ? (
+          <StarSystemView />
+        ) : (
+          <SystemLocked onGoToPlanet={() => setActiveSection("planet")} />
+        );
       case "help":
         return <Help />;
       case "account":

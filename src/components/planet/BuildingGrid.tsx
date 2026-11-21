@@ -8,10 +8,11 @@ import BuildingDetailModal from "./BuildingDetailModal";
 import BuildingSprite from "../BuildingSprite";
 
 function actionLabel(tile: BuildingTileData): string {
+  // Short labels: the button shares a narrow tile with the "?" button.
   if (tile.isUnderConstruction) return "En cours";
-  if (tile.blocker === "busy") return "Chantier occupé";
-  if (tile.blocker === "noField") return "Plus de place";
-  return tile.level === 0 ? "Construire" : `Niveau ${tile.nextLevel}`;
+  if (tile.blocker === "busy") return "Occupé";
+  if (tile.blocker === "noField") return "Complet";
+  return tile.level === 0 ? "Bâtir" : `Niv. ${tile.nextLevel}`;
 }
 
 export default function BuildingGrid() {

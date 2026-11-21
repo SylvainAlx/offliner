@@ -1,6 +1,7 @@
 import { useSideBar } from "../../hooks/useSideBar";
+import { useUser } from "../../stores/userStore";
 
-export type AppSection = "account" | "planet" | "achievements" | "help";
+export type AppSection = "account" | "planet" | "system" | "achievements" | "help";
 
 const menuItems: Array<{
   id: AppSection;
@@ -13,6 +14,12 @@ const menuItems: Array<{
     label: "Planète",
     description: "Bâtiments et habitants",
     icon: "🪐",
+  },
+  {
+    id: "system",
+    label: "Système",
+    description: "Les planètes voisines",
+    icon: "☀️",
   },
   {
     id: "account",
@@ -47,6 +54,8 @@ export default function Sidebar({
   onClose,
   onSelect,
 }: SidebarProps) {
+  // The star system opens once the spaceport is built.
+  const isSystemUnlocked = useUser((state) => state.user.planet.levels.spaceport > 0);
   const { closeButtonRef, handleSelect } = useSideBar(
     isOpen,
     onClose,
@@ -107,7 +116,11 @@ export default function Sidebar({
 
         {/* Nav items */}
         <nav className="grid gap-1.75">
-          {menuItems.map((item) => {
+          {menuItems.map((menuItem) => {
+            const isLocked = menuItem.id === "system" && !isSystemUnlocked;
+            const item = isLocked
+              ? { ...menuItem, icon: "🔒", description: "Construisez le spatioport" }
+              : menuItem;
             const isActive = activeSection === item.id;
             return (
               <button
@@ -116,12 +129,14 @@ export default function Sidebar({
                   "px-2.75 py-2.5 border rounded-[15px] bg-transparent",
                   "text-left cursor-pointer font-[inherit]",
                   "transition-[background-color,border-color,transform] duration-180 ease-[ease]",
+                  isLocked ? "opacity-60" : "",
                   isActive
                     ? "border-green-500/20 bg-(--green-bg) text-(--green-dark)"
                     : "border-transparent text-(--gray-700) hover:border-(--gray-200) hover:bg-(--gray-50) hover:translate-x-0.5",
                 ].join(" ")}
                 type="button"
                 aria-current={isActive ? "page" : undefined}
+                aria-label={isLocked ? `${item.label} : verrouillé, construisez le spatioport` : undefined}
                 key={item.id}
                 onClick={() => handleSelect(item.id)}
               >
@@ -139,20 +154,10 @@ export default function Sidebar({
                     {item.description}
                   </small>
                 </span>
-                <span
-                  className="ml-auto text-(--gray-600) text-[1.05rem]"
-                  aria-hidden="true"
-                >
-                  →
-                </span>
               </button>
             );
           })}
         </nav>
-
-        <p className="mt-auto mx-2 mb-0 pt-6 text-(--gray-600) text-[0.7rem] leading-[1.45]">
-          Choisissez une section pour continuer.
-        </p>
       </aside>
     </>
   );

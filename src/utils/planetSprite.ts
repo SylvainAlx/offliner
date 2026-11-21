@@ -76,7 +76,7 @@ function normalize(vector: [number, number, number]): [number, number, number] {
   return [vector[0] / length, vector[1] / length, vector[2] / length];
 }
 
-function hashSeed(seed: string): number {
+export function hashSeed(seed: string): number {
   let hash = 2166136261;
   for (let index = 0; index < seed.length; index += 1) {
     hash ^= seed.charCodeAt(index);
@@ -85,7 +85,7 @@ function hashSeed(seed: string): number {
   return hash >>> 0;
 }
 
-function createRandom(seed: number): () => number {
+export function createRandom(seed: number): () => number {
   let state = seed >>> 0;
   return () => {
     state = (Math.imul(state, 1664525) + 1013904223) >>> 0;

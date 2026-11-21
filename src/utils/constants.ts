@@ -40,4 +40,5 @@ export const POPULATION_GROWTH_PER_HOUR = 0.05;
 export const STARVATION_LOSS_PER_HOUR = 0.02;
 
 export const MAX_NAME_LENGTH = 40;
+export const MAX_DESCRIPTION_LENGTH = 200;
 export const MAX_BACKUP_FILE_BYTES = 5 * 1024 * 1024;

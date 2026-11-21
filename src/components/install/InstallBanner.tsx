@@ -21,11 +21,15 @@ export default function InstallBanner() {
   return (
     <>
       <div
-        className="mx-auto flex w-[min(calc(100%-32px),1080px)] items-center gap-3 rounded-[14px] border border-[rgba(170,59,255,0.25)] bg-white/90 px-3.5 py-2.5 text-[0.84rem] text-(--gray-700) shadow-(--shadow-sm)"
+        className="mx-auto mb-4 flex w-[min(calc(100%-32px),1080px)] items-center gap-3 rounded-[14px] border border-[rgba(170,59,255,0.25)] bg-white/90 px-3.5 py-2.5 text-[0.84rem] text-(--gray-700) shadow-(--shadow-sm)"
         role="region"
         aria-label="Installer Offliner"
       >
-        <img className="size-8 shrink-0 rounded-lg" src="/icons/logo.svg" alt="" />
+        <img
+          className="size-8 shrink-0 rounded-lg"
+          src="/icons/logo.svg"
+          alt=""
+        />
         <p className="m-0 flex-1">
           {isDesktop
             ? "Offliner est fait pour votre téléphone."
@@ -52,7 +56,11 @@ export default function InstallBanner() {
       </div>
       <Modal
         isOpen={isOpen}
-        title={isDesktop ? "Ouvrir Offliner sur votre téléphone" : "Installer Offliner"}
+        title={
+          isDesktop
+            ? "Ouvrir Offliner sur votre téléphone"
+            : "Installer Offliner"
+        }
         message="Quelques secondes suffisent."
         onClose={() => setIsOpen(false)}
       >

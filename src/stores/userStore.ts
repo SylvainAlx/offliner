@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { User } from "../models/user";
 import type { BuildingType } from "../models/buildings";
 import type { CompletedConstruction } from "../models/economy";
+import type { NotableChanges } from "../models/notable";
 import { userRepository } from "../services/userRepository";
 import { AUTOSAVE_INTERVAL_MS } from "../utils/constants";
 import { sanitizeName } from "../utils/sanitize";
@@ -14,6 +15,7 @@ export interface UserStore {
   hydrate: () => Promise<User>;
   updateName: (name: string) => void;
   renamePlanet: (name: string) => boolean;
+  updateNotable: (id: string, changes: NotableChanges) => boolean;
   /** Brings the game up to date with both clocks. Called every second. */
   tick: (now: number) => void;
   startConstruction: (type: BuildingType) => boolean;
@@ -126,6 +128,8 @@ export const useUser = create<UserStore>((set, get) => {
     },
 
     renamePlanet: (name) => update((user) => user.renamePlanet(name)),
+
+    updateNotable: (id, changes) => update((user) => user.updateNotable(id, changes)),
 
     saveUser: () => persist(get().user),
 

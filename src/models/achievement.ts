@@ -111,6 +111,15 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     getProgress: (user) => user.planet.levels.metalMine,
   },
   {
+    id: "spaceport",
+    title: "Vers les étoiles",
+    description: "Construisez le spatioport et découvrez votre système planétaire.",
+    category: "Planète",
+    icon: "🚀",
+    target: 1,
+    getProgress: (user) => user.planet.levels.spaceport,
+  },
+  {
     id: "laboratory",
     title: "Esprit scientifique",
     description: "Construisez le laboratoire.",

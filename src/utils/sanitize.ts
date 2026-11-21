@@ -24,3 +24,9 @@ export function sanitizeId(value: unknown): string | null {
     ? value
     : null;
 }
+
+/** Returns a trimmed text of at most `maxLength` characters; empty is allowed. */
+export function sanitizeText(value: unknown, maxLength: number): string | null {
+  if (typeof value !== "string") return null;
+  return value.trim().slice(0, maxLength).trim();
+}
