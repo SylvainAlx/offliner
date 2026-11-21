@@ -1,10 +1,6 @@
 import type { User } from "./user";
-import {
-  COMPANIONS_PER_HOUSE,
-  COMPANION_STAGE_AGE_MS,
-} from "../utils/constants";
 
-export type AchievementCategory = "Temps hors ligne" | "Régularité" | "Village";
+export type AchievementCategory = "Temps hors ligne" | "Régularité" | "Planète";
 
 export interface AchievementDefinition {
   id: string;
@@ -70,56 +66,58 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     getProgress: (user) => getLongestOfflineStreak(user),
   },
   {
-    id: "first-companion",
-    title: "Premier compagnon",
-    description: "Accueillez votre premier compagnon dans le village.",
-    category: "Village",
-    icon: "🐾",
+    id: "first-building",
+    title: "Premières fondations",
+    description: "Terminez votre premier bâtiment.",
+    category: "Planète",
+    icon: "🏗️",
     target: 1,
-    getProgress: (user) => user.village.companions.length,
+    getProgress: (user) => user.planet.totalLevels,
   },
   {
-    id: "first-house",
-    title: "Un toit pour chacun",
-    description: "Construisez votre première maison.",
-    category: "Village",
-    icon: "🏠",
+    id: "village",
+    title: "Un village",
+    description: "Construisez l'habitat : vos colons fondent un village.",
+    category: "Planète",
+    icon: "🏘️",
     target: 1,
-    getProgress: (user) => user.village.getBuildingLevel("house"),
+    getProgress: (user) => user.planet.levels.habitat,
   },
   {
-    id: "full-house",
-    title: "Maison animée",
-    description: `Accueillez ${COMPANIONS_PER_HOUSE} compagnons dans le village.`,
-    category: "Village",
-    icon: "🏡",
-    target: COMPANIONS_PER_HOUSE,
-    getProgress: (user) => user.village.companions.length,
+    id: "city",
+    title: "La ville",
+    description: "Faites passer l'habitat au niveau 6 : le village devient une ville.",
+    category: "Planète",
+    icon: "🏙️",
+    target: 6,
+    getProgress: (user) => user.planet.levels.habitat,
   },
   {
-    id: "town-hall",
-    title: "Cœur du village",
-    description: "Construisez l’hôtel de ville.",
-    category: "Village",
-    icon: "🏛️",
-    target: 1,
-    getProgress: (user) => (user.village.townHall ? 1 : 0),
+    id: "population-hundred",
+    title: "Centaine",
+    description: "Atteignez 100 habitants.",
+    category: "Planète",
+    icon: "👥",
+    target: 100,
+    getProgress: (user) => Math.floor(user.population),
   },
   {
-    id: "sage-companion",
-    title: "La sagesse",
-    description: "Faites évoluer un compagnon jusqu’au stade de sage.",
-    category: "Village",
-    icon: "🧙",
+    id: "mine-ten",
+    title: "Filon profond",
+    description: "Montez la mine de métal au niveau 10.",
+    category: "Planète",
+    icon: "⛏️",
+    target: 10,
+    getProgress: (user) => user.planet.levels.metalMine,
+  },
+  {
+    id: "laboratory",
+    title: "Esprit scientifique",
+    description: "Construisez le laboratoire.",
+    category: "Planète",
+    icon: "🔬",
     target: 1,
-    getProgress: (user, totalOfflineMs) =>
-      user.village.companions.some(
-        (companion) =>
-          companion.getAgeOfflineMs(totalOfflineMs) >=
-          COMPANION_STAGE_AGE_MS.sage,
-      )
-        ? 1
-        : 0,
+    getProgress: (user) => user.planet.levels.laboratory,
   },
 ];
 

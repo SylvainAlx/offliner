@@ -1,5 +1,8 @@
 import { create } from "zustand";
-import { OFFLINE_CONFIRMATION_DELAY_MS } from "../utils/constants";
+import {
+  OFFLINE_CONFIRMATION_DELAY_MS,
+  REAL_TIME_TICK_MS,
+} from "../utils/constants";
 import { useUser } from "./userStore";
 
 export interface OnlineStatusStore {
@@ -22,13 +25,13 @@ function getInitialOnline(): boolean {
 }
 
 /**
- * Brings the companions up to date with the offline time at `now` and returns
- * the values the UI derives from it.
+ * Brings the game up to date with both clocks at `now` and returns the values
+ * the UI derives from it.
  */
 function syncTotals(now: number): Pick<OnlineStatusStore, "totalOfflineMs" | "lastChecked"> {
   const userStore = useUser.getState();
-  const totalOfflineMs = userStore.user.periodList.computeTotalMs(now);
-  userStore.updateCompanionStages(totalOfflineMs);
+  userStore.tick(now);
+  const totalOfflineMs = useUser.getState().user.periodList.computeTotalMs(now);
   return { totalOfflineMs, lastChecked: new Date(now) };
 }
 
@@ -62,6 +65,7 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
 
   initialize: () => {
     let tick: number | null = null;
+    let realTimeTick: number | null = null;
     let countdownTick: number | null = null;
     let pendingOfflineStart: number | null = null;
 
@@ -69,6 +73,23 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
       if (tick !== null) {
         window.clearInterval(tick);
         tick = null;
+      }
+    };
+
+    // The real-time clock runs whether online or offline. While offline, the
+    // offline tick already brings everything up to date every second.
+    const startRealTimeTick = () => {
+      stopRealTimeTick();
+      realTimeTick = window.setInterval(() => {
+        if (tick !== null) return;
+        set(syncTotals(Date.now()));
+      }, REAL_TIME_TICK_MS);
+    };
+
+    const stopRealTimeTick = () => {
+      if (realTimeTick !== null) {
+        window.clearInterval(realTimeTick);
+        realTimeTick = null;
       }
     };
 
@@ -176,9 +197,12 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
       if (document.visibilityState === "hidden") {
         persistOnHide();
         stopTick();
+        stopRealTimeTick();
         stopCountdownTimer();
         return;
       }
+
+      startRealTimeTick();
 
       const now = Date.now();
       const online = navigator.onLine;
@@ -203,6 +227,8 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
       ensureOfflineTracking(Date.now());
     }
 
+    startRealTimeTick();
+
     // "pagehide" and "visibilitychange" cover closing the page; "beforeunload"
     // is not used because it prevents the back/forward cache in some browsers.
     window.addEventListener("online", goOnline);
@@ -216,6 +242,7 @@ export const useOnlineStatus = create<OnlineStatusStore>((set, get) => ({
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("pagehide", persistOnHide);
       stopTick();
+      stopRealTimeTick();
       cancelCountdown();
     };
   },

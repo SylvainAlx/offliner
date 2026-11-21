@@ -1,4 +1,4 @@
-export default function VillageSection({
+export default function PlanetSection({
   title,
   subtitle,
   children,

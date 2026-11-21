@@ -1,4 +1,4 @@
-import { db } from "./database";
+import { db, deleteLegacyDatabase } from "./database";
 import { User } from "../models/user";
 
 function serializeUser(user: User): Record<string, unknown> {
@@ -7,6 +7,7 @@ function serializeUser(user: User): Record<string, unknown> {
 
 export const userRepository = {
   async load(): Promise<User> {
+    await deleteLegacyDatabase();
     const stored = await db.profiles.get("current");
     const user = new User();
 

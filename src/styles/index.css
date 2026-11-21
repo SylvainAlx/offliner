@@ -144,3 +144,13 @@ code {
     transform: translateY(-8px) scale(1.08);
   }
 }
+
+@keyframes planet-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}

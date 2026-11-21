@@ -29,7 +29,7 @@ export default function InstallGuide({ onContinue }: { onContinue: () => void })
           </h1>
           <p className="m-0 max-w-110 text-[0.92rem] leading-normal text-(--gray-600)">
             Offliner est conçu pour être installé comme une application : votre
-            village vous accompagne chaque fois que vous posez votre téléphone.
+            planète vous accompagne chaque fois que vous posez votre téléphone.
           </p>
         </header>
 

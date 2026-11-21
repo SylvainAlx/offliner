@@ -53,14 +53,14 @@ export default function HomePage({ onPlay }: { onPlay: () => void }) {
               Déconnectez,
               <br />
               <span className="text-(--green-dark)">
-                Faites grandir votre village.
+                Bâtissez votre planète.
               </span>
             </h1>
             <p className="max-w-130 text-[clamp(0.92rem,1.5vw,1.04rem)] leading-[1.6] text-(--gray-600)">
-              Offliner transforme votre temps hors-ligne en un village vivant,
-              avec des maisons et des compagnons à invoquer. Accordez-vous une
-              pause d'internet et regardez votre village prospérer pendant que
-              vous êtes déconnecté.
+              Offliner est un jeu de gestion de planète : mines, réacteur,
+              fermes et habitats se construisent en temps réel. Votre temps
+              hors-ligne produit l'Offlinium, la ressource qui fait tout
+              avancer plus vite. Accordez-vous une pause d'internet.
             </p>
             {/* <button type="button" className="home-page-play" onClick={onPlay}>
               Jouer <span aria-hidden="true">→</span>
@@ -119,8 +119,8 @@ export default function HomePage({ onPlay }: { onPlay: () => void }) {
                 Une pause qui compte
               </h2>
               <p className="text-[0.76rem] leading-normal text-(--gray-600)">
-                Chaque période sans écran vous rapproche d&apos;un village plus
-                vivant, avec des maisons et des compagnons à invoquer.
+                Chaque période sans écran rapporte de l&apos;Offlinium pour
+                construire et accélérer le développement de votre planète.
               </p>
             </div>
           </article>

@@ -7,19 +7,18 @@ import Help from "./components/Help";
 import Profile from "./components/Profile";
 import Tracking from "./components/Tracking";
 import Status from "./components/Status";
-import Village from "./components/Village";
+import Planet from "./components/Planet";
 import DataBackup from "./components/DataBackup";
 import Achievements from "./components/Achievements";
 import Sidebar, { type AppSection } from "./components/layouts/Sidebar";
 import InstallGuide from "./components/install/InstallGuide";
 import InstallBanner from "./components/install/InstallBanner";
 import UnobservedGapPrompt from "./components/UnobservedGapPrompt";
-import AbsenceReport from "./components/report/AbsenceReport";
 import { useInstall } from "./stores/installStore";
 
 function AppContent() {
   const isOnline = useOnlineStatus((state) => state.isOnline);
-  const [activeSection, setActiveSection] = useState<AppSection>("village");
+  const [activeSection, setActiveSection] = useState<AppSection>("planet");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => useOnlineStatus.getState().initialize(), []);
@@ -33,8 +32,8 @@ function AppContent() {
 
   const renderSection = () => {
     switch (activeSection) {
-      case "village":
-        return <Village />;
+      case "planet":
+        return <Planet />;
       case "help":
         return <Help />;
       case "account":
@@ -75,7 +74,6 @@ function AppContent() {
       </div>
       <Footer />
       <UnobservedGapPrompt />
-      <AbsenceReport />
     </div>
   );
 }
