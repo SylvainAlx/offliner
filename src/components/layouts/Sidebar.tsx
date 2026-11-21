@@ -1,6 +1,6 @@
 import { useSideBar } from "../../hooks/useSideBar";
 
-export type AppSection = "account" | "planet" | "achievements" | "help";
+export type AppSection = "account" | "planet" | "system" | "achievements" | "help";
 
 const menuItems: Array<{
   id: AppSection;
@@ -13,6 +13,12 @@ const menuItems: Array<{
     label: "Planète",
     description: "Bâtiments et habitants",
     icon: "🪐",
+  },
+  {
+    id: "system",
+    label: "Système",
+    description: "Les planètes voisines",
+    icon: "☀️",
   },
   {
     id: "account",

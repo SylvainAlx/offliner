@@ -9,6 +9,7 @@ import ThemeSettings from "./components/ThemeSettings";
 import Tracking from "./components/Tracking";
 import Status from "./components/Status";
 import Planet from "./components/Planet";
+import StarSystemView from "./components/system/StarSystemView";
 import DataBackup from "./components/DataBackup";
 import Achievements from "./components/Achievements";
 import Sidebar, { type AppSection } from "./components/layouts/Sidebar";
@@ -35,6 +36,8 @@ function AppContent() {
     switch (activeSection) {
       case "planet":
         return <Planet />;
+      case "system":
+        return <StarSystemView />;
       case "help":
         return <Help />;
       case "account":

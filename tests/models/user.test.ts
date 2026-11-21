@@ -387,3 +387,39 @@ describe("planetary leader", () => {
     expect(legacy.leader!.description).toContain("Velora IV");
   });
 });
+
+describe("star system", () => {
+  it("always gives the same system for a planet, with 3 to 6 planets around a star", async () => {
+    const { generateStarSystem, MIN_PLANETS, MAX_PLANETS } = await import("../../src/models/starSystem");
+    const home = { seed: "velora", name: "Velora IV", fields: 163 };
+    const system = generateStarSystem(home);
+    expect(generateStarSystem(home)).toEqual(system);
+
+    const counts = new Set<number>();
+    for (let index = 0; index < 60; index += 1) {
+      const other = generateStarSystem({ seed: `seed-${index}`, name: "X", fields: 163 });
+      counts.add(other.planets.length);
+      expect(other.planets.filter((planet) => planet.isHome)).toHaveLength(1);
+      other.planets.forEach((planet, orbit) => {
+        expect(planet.orbit).toBe(orbit);
+        if (!planet.isColonizable) expect(planet.kind).toBe("gas");
+        if (planet.temperatureC > 100 || planet.temperatureC < -60) expect(planet.fertility).toBe(0);
+      });
+    }
+    expect(Math.min(...counts)).toBe(MIN_PLANETS);
+    expect(Math.max(...counts)).toBe(MAX_PLANETS);
+  });
+
+  it("puts the player's own planet in it, as it is", async () => {
+    const { generateStarSystem } = await import("../../src/models/starSystem");
+    const { generatePlanetSprite } = await import("../../src/utils/planetSprite");
+    const system = generateStarSystem({ seed: "velora", name: "Velora IV", fields: 163 });
+    const home = system.planets.find((planet) => planet.isHome)!;
+    expect(home).toMatchObject({ name: "Velora IV", seed: "velora", fields: 163, distanceFromHomeAu: 0 });
+    expect(home.kind).toBe(generatePlanetSprite("velora").kind);
+    // Renaming the planet does not move it or change the system.
+    const renamed = generateStarSystem({ seed: "velora", name: "Nouveau nom", fields: 163 });
+    expect(renamed.star).toEqual(system.star);
+    expect(renamed.planets.map((planet) => planet.kind)).toEqual(system.planets.map((planet) => planet.kind));
+  });
+});
