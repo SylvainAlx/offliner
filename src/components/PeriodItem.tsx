@@ -21,7 +21,7 @@ export default function PeriodItem({ isOpen, now, period }: PeriodItemProps) {
         className={`mt-1.5 size-2.5 shrink-0 rounded-full ${
           isOpen
             ? "bg-(--red-primary) shadow-[0_0_0_3px_rgba(239,68,68,0.25)] animate-[dotBlink_1.4s_ease-in-out_infinite]"
-            : "bg-(--gray-300,#d1d5db)"
+            : "bg-(--gray-300)"
         }`}
       />
       <div className="min-w-0 flex-1">

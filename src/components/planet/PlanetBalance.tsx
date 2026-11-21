@@ -68,7 +68,7 @@ export default function PlanetBalance() {
           {warnings.map((warning) => (
             <li
               key={warning}
-              className="rounded-lg border border-[#fde68a] bg-[#fffbeb] px-2.5 py-2 text-[0.74rem] text-[#92400e]"
+              className="rounded-lg border border-(--warning-border) bg-(--warning-bg) px-2.5 py-2 text-[0.74rem] text-(--warning-text)"
             >
               ⚠️ {warning}
             </li>

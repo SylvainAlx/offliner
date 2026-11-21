@@ -68,7 +68,7 @@ export default function ConstructionInProgress() {
           )}
           <button
             type="button"
-            className={`${buttonClass} border-(--accent) bg-(--accent) text-white`}
+            className={`${buttonClass} border-(--accent-solid) bg-(--accent-solid) text-(--on-color)`}
             disabled={offlinium < finishCost}
             onClick={() => speedUpConstruction(remaining)}
           >

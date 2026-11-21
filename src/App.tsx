@@ -5,6 +5,7 @@ import Header from "./components/layouts/Header";
 import Footer from "./components/layouts/Footer";
 import Help from "./components/Help";
 import Profile from "./components/Profile";
+import ThemeSettings from "./components/ThemeSettings";
 import Tracking from "./components/Tracking";
 import Status from "./components/Status";
 import Planet from "./components/Planet";
@@ -41,6 +42,7 @@ function AppContent() {
         return (
           <>
             <Profile />
+            <ThemeSettings />
             <Status />
             <Tracking />
             <DataBackup />
@@ -55,8 +57,8 @@ function AppContent() {
     <div
       className={`min-h-screen flex flex-col transition-[background-color] duration-400 ease-[ease] p-0 m-0 ${
         isOnline
-          ? "bg-[linear-gradient(180deg,var(--accent-bg)_0%,#ffffff_40%)]"
-          : "bg-[linear-gradient(180deg,var(--green-bg)_0%,#ffffff_40%)]"
+          ? "bg-[linear-gradient(180deg,var(--accent-bg)_0%,var(--page-bg)_40%)]"
+          : "bg-[linear-gradient(180deg,var(--green-bg)_0%,var(--page-bg)_40%)]"
       }`}
     >
       <Header isMenuOpen={isMenuOpen} onMenuOpen={() => setIsMenuOpen(true)} />

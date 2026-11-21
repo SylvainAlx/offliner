@@ -33,19 +33,19 @@ export default function DataBackup() {
         <div className="mt-4 grid gap-2.25 [&>button]:w-full">
           <Button
             onClick={() => setIsExportModalOpen(true)}
-            color="var(--accent)"
+            color="var(--accent-solid)"
           >
             Exporter mes données
           </Button>
           <Button
             onClick={() => setIsImportModalOpen(true)}
-            color="var(--green-dark)"
+            color="var(--green-solid)"
           >
             Importer une sauvegarde
           </Button>
           <Button
             onClick={() => setIsResetModalOpen(true)}
-            color="var(--red-dark)"
+            color="var(--red-solid)"
           >
             Effacer toutes les données
           </Button>

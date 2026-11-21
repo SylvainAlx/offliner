@@ -20,7 +20,7 @@ export default function HomePage({ onPlay }: { onPlay: () => void }) {
   const { companionIds } = useHomePage();
 
   return (
-    <main className="relative min-h-svh overflow-hidden bg-[radial-gradient(circle_at_8%_12%,rgba(170,59,255,0.12),transparent_34%),radial-gradient(circle_at_92%_78%,rgba(34,197,94,0.12),transparent_35%),linear-gradient(145deg,#fcfbff_0%,#ffffff_52%,#f8fff9_100%)] p-6 text-(--gray-900) max-[760px]:px-4 max-[760px]:py-4.5">
+    <main className="relative min-h-svh overflow-hidden bg-[radial-gradient(circle_at_8%_12%,rgba(170,59,255,0.12),transparent_34%),radial-gradient(circle_at_92%_78%,rgba(34,197,94,0.12),transparent_35%),var(--page-bg)] p-6 text-(--gray-900) max-[760px]:px-4 max-[760px]:py-4.5">
       <div
         className="pointer-events-none absolute -top-52.5 left-1/4 size-80 rounded-full bg-[rgba(170,59,255,0.1)] opacity-[0.55] blur-xs"
         aria-hidden="true"
@@ -107,7 +107,7 @@ export default function HomePage({ onPlay }: { onPlay: () => void }) {
           className="grid grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)] gap-3 max-[760px]:grid-cols-1"
           aria-label="À propos d'Offliner"
         >
-          <article className="flex items-start gap-3.25 rounded-[17px] border border-(--gray-100) bg-[rgba(255,255,255,0.74)] p-4.5 shadow-[0_8px_22px_rgba(17,24,39,0.045)]">
+          <article className="flex items-start gap-3.25 rounded-[17px] border border-(--gray-100) bg-(--surface)/75 p-4.5 shadow-[0_8px_22px_rgba(17,24,39,0.045)]">
             <span
               className="grid size-8.5 shrink-0 place-items-center rounded-[10px] bg-(--gray-50) text-[1.05rem]"
               aria-hidden="true"
@@ -125,7 +125,7 @@ export default function HomePage({ onPlay }: { onPlay: () => void }) {
             </div>
           </article>
 
-          <article className="flex items-start gap-3.25 rounded-[17px] border border-(--gray-100) bg-[rgba(255,255,255,0.74)] p-4.5 shadow-[0_8px_22px_rgba(17,24,39,0.045)]">
+          <article className="flex items-start gap-3.25 rounded-[17px] border border-(--gray-100) bg-(--surface)/75 p-4.5 shadow-[0_8px_22px_rgba(17,24,39,0.045)]">
             <span
               className="grid size-8.5 shrink-0 place-items-center rounded-[10px] bg-(--gray-50) text-[1.05rem]"
               aria-hidden="true"

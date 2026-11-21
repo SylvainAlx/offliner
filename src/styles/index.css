@@ -1,15 +1,27 @@
 @import "tailwindcss";
 
 :root {
-   --green-primary: #22c55e;
+  /* Light theme (default). Components only use these variables, or the
+     Tailwind palette entries redirected for the dark theme below. */
+  --green-primary: #22c55e;
   --green-dark: #15803d;
   --green-bg: #dcfce7;
+  --green-solid: #15803d;
   --red-primary: #ef4444;
   --red-dark: #b91c1c;
   --red-bg: #fee2e2;
+  --red-border: #fecaca;
+  --red-solid: #b91c1c;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --warning-text: #92400e;
+  --warning-solid: #92400e;
   --gray-50: #f9fafb;
   --gray-100: #f3f4f6;
   --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
   --gray-600: #4b5563;
   --gray-700: #374151;
   --gray-800: #1f2937;
@@ -22,12 +34,19 @@
 
   --text: #6b6375;
   --text-h: #08060d;
+  /* Page background, and the background of cards. */
+  --page-bg: #ffffff;
   --bg: #fff;
+  /* Raised surfaces: inputs, tiles, modals (what bg-white means). */
+  --surface: #ffffff;
   --border: #e5e4e7;
   --code-bg: #f4f3ec;
   --accent: #411264;
   --accent-bg: rgba(170, 59, 255, 0.1);
   --accent-border: rgba(170, 59, 255, 0.5);
+  /* Filled accent buttons, with --on-color text. */
+  --accent-solid: #411264;
+  --on-color: #ffffff;
   --social-bg: rgba(244, 243, 236, 0.5);
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
@@ -39,9 +58,9 @@
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
-  color-scheme: light dark;
+  color-scheme: light;
   color: var(--text);
-  background: var(--bg);
+  background: var(--page-bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -50,6 +69,79 @@
   @media (max-width: 1024px) {
     font-size: 16px;
   }
+}
+
+/* Dark theme: set by utils/theme.ts as data-theme on <html>. The Tailwind
+   palette entries used in class names follow, so classes like bg-white or
+   text-gray-700 need no change in the components. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --green-primary: #22c55e;
+  --green-dark: #4ade80;
+  --green-bg: rgba(34, 197, 94, 0.14);
+  --green-solid: #16a34a;
+  --red-primary: #ef4444;
+  --red-dark: #f87171;
+  --red-bg: rgba(239, 68, 68, 0.16);
+  --red-border: rgba(248, 113, 113, 0.35);
+  --red-solid: #dc2626;
+  --warning-bg: rgba(245, 158, 11, 0.12);
+  --warning-border: rgba(245, 158, 11, 0.35);
+  --warning-text: #fcd34d;
+  --warning-solid: #b45309;
+  --gray-50: #161c28;
+  --gray-100: #1e2533;
+  --gray-200: #2c3445;
+  --gray-300: #3c4557;
+  --gray-400: #5a6375;
+  --gray-500: #8a93a5;
+  --gray-600: #a8b0bf;
+  --gray-700: #c5ccd8;
+  --gray-800: #e2e6ee;
+  --gray-900: #f3f5f9;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md:
+    0 4px 6px -1px rgba(0, 0, 0, 0.45), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg:
+    0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.45);
+
+  --text: #a8b0bf;
+  --text-h: #f3f5f9;
+  --page-bg: #0b0f17;
+  --bg: #111722;
+  --surface: #182030;
+  --border: #2c3445;
+  --code-bg: #1e2533;
+  --accent: #c9a7ff;
+  --accent-bg: rgba(170, 59, 255, 0.18);
+  --accent-border: rgba(190, 130, 255, 0.5);
+  --accent-solid: #7c3aed;
+  --social-bg: rgba(30, 37, 51, 0.5);
+  --shadow:
+    rgba(0, 0, 0, 0.5) 0 10px 15px -3px, rgba(0, 0, 0, 0.4) 0 4px 6px -2px;
+
+  --color-white: var(--surface);
+  --color-gray-50: var(--gray-50);
+  --color-gray-100: var(--gray-100);
+  --color-gray-200: var(--gray-200);
+  --color-gray-300: var(--gray-300);
+  --color-gray-600: var(--gray-600);
+  --color-gray-700: var(--gray-700);
+  --color-gray-900: var(--gray-900);
+  --color-green-50: rgba(34, 197, 94, 0.12);
+  --color-green-200: rgba(74, 222, 128, 0.3);
+  --color-green-500: #22c55e;
+  --color-green-700: #4ade80;
+  --color-blue-50: rgba(59, 130, 246, 0.15);
+  --color-blue-700: #93c5fd;
+  --color-orange-50: rgba(249, 115, 22, 0.15);
+  --color-orange-700: #fdba74;
+  --color-amber-50: rgba(245, 158, 11, 0.12);
+  --color-amber-200: rgba(245, 158, 11, 0.35);
+  --color-amber-900: #fcd34d;
+  --color-red-100: rgba(239, 68, 68, 0.18);
+  --color-red-800: #fca5a5;
 }
 
 #root {

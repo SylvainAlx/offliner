@@ -29,7 +29,7 @@ export default function ResourceBar() {
           key={type}
           className={`${chipClass} ${
             type === "offlinium" && !isOnline
-              ? "border-[rgba(170,59,255,0.4)] bg-[rgba(245,235,255,0.8)] shadow-[0_0_12px_rgba(170,59,255,0.2)]"
+              ? "border-(--accent-border) bg-(--accent-bg) shadow-[0_0_12px_rgba(170,59,255,0.2)]"
               : ""
           }`}
           title={RESOURCE_LABELS[type]}

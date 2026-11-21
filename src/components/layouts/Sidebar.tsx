@@ -60,7 +60,7 @@ export default function Sidebar({
         className={[
           "hidden",
           // mobile
-          "max-md:block max-md:fixed max-md:inset-0 max-md:z-20 max-md:bg-gray-900/40 max-md:transition-opacity max-md:duration-240 max-md:ease-[ease]",
+          "max-md:block max-md:fixed max-md:inset-0 max-md:z-20 max-md:bg-black/50 max-md:transition-opacity max-md:duration-240 max-md:ease-[ease]",
           // Only one pointer-events class at a time: with both, the order of
           // the generated CSS decides, and clicks went through the backdrop.
           isOpen
