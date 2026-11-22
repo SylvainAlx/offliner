@@ -17,7 +17,7 @@ import PlanetViewToggle, {
   type PlanetView,
 } from "./planet/PlanetViewToggle";
 
-export default function Planet() {
+export default function Planet({ onOpenInhabitants }: { onOpenInhabitants: () => void }) {
   const planet = useUser((state) => state.user.planet);
   const kind = useMemo(() => generatePlanetSprite(planet.seed).kind, [planet.seed]);
   const [view, setView] = useState<PlanetView>(loadPlanetView);
@@ -44,7 +44,7 @@ export default function Planet() {
           />
         </div>
       )}
-      <PlanetLeader />
+      <PlanetLeader onOpenInhabitants={onOpenInhabitants} />
       <ConstructionInProgress />
       {view === "list" && <BuildingGrid />}
       <PopulationPanel />

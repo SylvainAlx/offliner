@@ -9,6 +9,7 @@ import ThemeSettings from "./components/ThemeSettings";
 import Tracking from "./components/Tracking";
 import Status from "./components/Status";
 import Planet from "./components/Planet";
+import Inhabitants from "./components/inhabitants/Inhabitants";
 import StarSystemView from "./components/system/StarSystemView";
 import SystemLocked from "./components/system/SystemLocked";
 import { useUser } from "./stores/userStore";
@@ -38,7 +39,9 @@ function AppContent() {
   const renderSection = () => {
     switch (activeSection) {
       case "planet":
-        return <Planet />;
+        return <Planet onOpenInhabitants={() => setActiveSection("inhabitants")} />;
+      case "inhabitants":
+        return <Inhabitants />;
       case "system":
         return isSystemUnlocked ? (
           <StarSystemView />

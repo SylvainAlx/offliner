@@ -388,6 +388,73 @@ describe("planetary leader", () => {
   });
 });
 
+describe("weekly notables", () => {
+  const WEEK = 7 * 24 * HOUR;
+
+  it("welcomes one inhabitant per week of the planet's life", () => {
+    const user = newUser();
+    const start = user.createdAt;
+    expect(user.leader!.isCustomized).toBe(false);
+    expect(user.notablesToCustomize).toBe(1);
+
+    user.advance(start + WEEK - 1, 0);
+    expect(user.weeklyNotables).toHaveLength(0);
+    expect(user.getNextNotableAt(start + WEEK - 1)).toBe(start + WEEK);
+
+    user.advance(start + WEEK, 0);
+    expect(user.weeklyNotables).toHaveLength(1);
+    const first = user.weeklyNotables[0];
+    expect(first).toMatchObject({ role: "notable", featuredAt: start + WEEK, description: "", isCustomized: false });
+    expect(first.title.length).toBeGreaterThan(0);
+    expect(user.getNextNotableAt(start + WEEK)).toBe(start + 2 * WEEK);
+
+    // Three weeks away: the two missed inhabitants are waiting, newest first.
+    user.advance(start + 3 * WEEK + HOUR, 0);
+    expect(user.weeklyNotables.map((notable) => notable.featuredAt)).toEqual([
+      start + 3 * WEEK,
+      start + 2 * WEEK,
+      start + WEEK,
+    ]);
+    expect(user.notablesToCustomize).toBe(4);
+  });
+
+  it("gives the same inhabitants to the same planet, and lets the player tell their story", async () => {
+    const { createWeeklyNotable, getNotableWeek } = await import("../../src/models/notable");
+    expect(createWeeklyNotable("velora", 0, 2)).toEqual(createWeeklyNotable("velora", 0, 2));
+    expect(createWeeklyNotable("velora", 0, 2).id).not.toBe(createWeeklyNotable("velora", 0, 3).id);
+    expect(getNotableWeek(createWeeklyNotable("velora", 1000, 5), 1000)).toBe(5);
+    for (let week = 1; week < 12; week++) {
+      expect(createWeeklyNotable("velora", 0, week).title).not.toBe(createWeeklyNotable("velora", 0, week + 1).title);
+    }
+
+    const user = newUser();
+    user.advance(user.createdAt + WEEK, 0);
+    const id = user.weeklyNotables[0].id;
+    expect(user.updateNotable(id, { name: "Lia Ferral", title: "Ingénieure", description: "A réparé le réacteur." })).toBe(true);
+    expect(user.weeklyNotables[0]).toMatchObject({ name: "Lia Ferral", isCustomized: true });
+
+    // A tick that sees the same week again never duplicates or resets them.
+    user.advance(user.createdAt + WEEK + HOUR, 0);
+    expect(user.weeklyNotables).toHaveLength(1);
+    expect(user.weeklyNotables[0].name).toBe("Lia Ferral");
+
+    const restored = new User();
+    restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
+    expect(restored.notables).toEqual(user.notables);
+  });
+
+  it("treats leaders from older saves as already known", () => {
+    const legacy = new User();
+    legacy.loadFromSnapshot({
+      createdAt: 0,
+      planet: { name: "Velora IV", seed: "velora" },
+      notables: [{ id: "a", seed: "b", role: "leader", name: "Ada", title: "Chef", description: "", featuredAt: 0 }],
+    });
+    expect(legacy.leader!.isCustomized).toBe(true);
+    expect(legacy.notablesToCustomize).toBe(0);
+  });
+});
+
 describe("star system", () => {
   it("always gives the same system for a planet, with 3 to 6 planets around a star", async () => {
     const { generateStarSystem, isKindPlausible, orbitTemperature, MIN_PLANETS, MAX_PLANETS } =

@@ -41,6 +41,9 @@ une apparence générés au hasard, 10 colons et quelques ressources.
 - **Population.** L’habitat fixe le maximum d’habitants (campement, village,
   ville, puis mégalopole). La population grandit en temps réel, mange de
   l’alimentation, et diminue en cas de famine.
+- **Habitants célèbres.** Un chef planétaire guide la colonie dès le premier
+  jour, puis un nouvel habitant se distingue chaque semaine. Le joueur leur
+  donne un nom, un titre et une histoire.
 
 Les règles chiffrées sont regroupées dans `src/models/buildings.ts` et
 `src/utils/constants.ts`.
@@ -59,6 +62,9 @@ Les règles chiffrées sont regroupées dans `src/models/buildings.ts` et
 - planète et bâtiments en pixel art générés en code : la planète dépend d’une
   graine aléatoire, et les bâtiments changent d’apparence avec leur niveau et
   le type de planète ;
+- section Habitants : le chef planétaire et la galerie des habitants mis en
+  avant chaque semaine, avec une pastille tant qu’un nouveau venu attend
+  son histoire ;
 - succès regroupés par catégorie : planète, temps hors ligne, régularité ;
 - historique des périodes hors ligne ;
 - thème clair, sombre ou automatique (suit le réglage de l’appareil) ;

@@ -71,4 +71,13 @@ function formatLength(ms: number): string {
   return `${hours} h ${String(minutes).padStart(2, "0")}`;
 }
 
-export { formatLength, formatDate, formatDateTime, formatDay, formatMonth, formatDuration };
+/** A wait counted in days, such as "3 j 04 h", or in hours below a day. */
+function formatWait(ms: number): string {
+  const totalHours = Math.floor(Math.max(0, ms) / 3_600_000);
+  if (totalHours < 24) return formatLength(ms);
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+  return hours === 0 ? `${days} j` : `${days} j ${String(hours).padStart(2, "0")} h`;
+}
+
+export { formatWait, formatLength, formatDate, formatDateTime, formatDay, formatMonth, formatDuration };

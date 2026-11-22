@@ -227,13 +227,18 @@ code {
   }
 }
 
-@keyframes home-page-orb-float {
+/* An inhabitant hopping on the welcome scene (in scene pixels). */
+@keyframes home-hop {
   0%,
+  70%,
   100% {
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
-  50% {
-    transform: translateY(-8px) scale(1.08);
+  80% {
+    transform: translateY(-2px);
+  }
+  90% {
+    transform: translateY(0);
   }
 }
 

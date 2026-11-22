@@ -1,7 +1,9 @@
 import { PeriodList } from "./periodList";
 import {
   applyNotableChanges,
+  countWeeksSince,
   createLeader,
+  createWeeklyNotable,
   loadNotables,
   type Notable,
   type NotableChanges,
@@ -27,6 +29,7 @@ import {
   type Resources,
 } from "./resources";
 import {
+  NOTABLE_INTERVAL_MS,
   OFFLINIUM_DELIVERY_INTERVAL,
   SPEED_UP_MS_PER_OFFLINIUM,
   STARTING_POPULATION,
@@ -87,7 +90,18 @@ export class User {
     const to = Math.max(now, this.realTimeSettledAt);
     const completed = advanceRealTime(this, this.realTimeSettledAt, to);
     this.realTimeSettledAt = to;
+    this.welcomeNotables(to);
     return completed;
+  }
+
+  /** Puts one more inhabitant in the spotlight for every week completed. */
+  welcomeNotables(now: number): void {
+    const weeks = countWeeksSince(this.createdAt, now);
+    const known = new Set(this.notables.map((notable) => notable.id));
+    for (let week = 1; week <= weeks; week++) {
+      const notable = createWeeklyNotable(this.planet.seed, this.createdAt, week);
+      if (!known.has(notable.id)) this.notables.push(notable);
+    }
   }
 
   /**
@@ -168,6 +182,23 @@ export class User {
 
   get leader(): Notable | undefined {
     return this.notables.find((notable) => notable.role === "leader");
+  }
+
+  /** The weekly inhabitants, newest first. */
+  get weeklyNotables(): Notable[] {
+    return this.notables
+      .filter((notable) => notable.role === "notable")
+      .sort((a, b) => b.featuredAt - a.featuredAt);
+  }
+
+  /** Inhabitants still waiting for the player to tell their story. */
+  get notablesToCustomize(): number {
+    return this.notables.filter((notable) => !notable.isCustomized).length;
+  }
+
+  /** When the next inhabitant will be put in the spotlight. */
+  getNextNotableAt(now: number): number {
+    return this.createdAt + (countWeeksSince(this.createdAt, now) + 1) * NOTABLE_INTERVAL_MS;
   }
 
   updateNotable(id: string, changes: NotableChanges): boolean {

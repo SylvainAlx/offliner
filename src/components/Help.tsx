@@ -75,6 +75,12 @@ export default function Help() {
         {FOOD_PER_INHABITANT_PER_HOUR} unité d&apos;alimentation par heure : sans
         ferme suffisante, la population finit par diminuer.
       </p>
+      <p className={paragraph}>
+        Un chef planétaire guide votre colonie dès le premier jour. Ensuite,
+        chaque semaine passée sur la planète, un nouvel habitant se distingue.
+        Retrouvez-les dans l&apos;onglet Habitants pour leur donner un nom, un
+        titre et une histoire.
+      </p>
     </Card>
   );
 }

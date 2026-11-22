@@ -1,23 +1,9 @@
-import CompanionSprite from "./CompanionSprite";
 import Button from "./ui/Button";
+import HomeIllustration from "./home/HomeIllustration";
 import { useHomePage } from "../hooks/useHomePage";
 
-const companionPositions = [
-  "left-[15%] rotate-[-6deg]",
-  "left-1/2 -translate-x-1/2",
-  "right-[14%] rotate-[6deg]",
-];
-
-const companionSizes = ["size-16", "size-[94px]", "size-[70px]"];
-
-const orbPositions = [
-  "top-[44%] left-[22%] text-[1.25rem]",
-  "top-[31%] left-[71%] text-[0.9rem] [animation-delay:-1.2s]",
-  "top-[56%] right-[18%] text-[1.05rem] [animation-delay:-2s]",
-];
-
 export default function HomePage({ onPlay }: { onPlay: () => void }) {
-  const { companionIds } = useHomePage();
+  const { scene, drawAnotherScene } = useHomePage();
 
   return (
     <main className="relative min-h-svh overflow-hidden bg-[radial-gradient(circle_at_8%_12%,rgba(170,59,255,0.12),transparent_34%),radial-gradient(circle_at_92%_78%,rgba(34,197,94,0.12),transparent_35%),var(--page-bg)] p-6 text-(--gray-900) max-[760px]:px-4 max-[760px]:py-4.5">
@@ -70,37 +56,7 @@ export default function HomePage({ onPlay }: { onPlay: () => void }) {
             </Button>
           </div>
 
-          <div
-            className="relative min-h-82.5 overflow-hidden rounded-[28px] border border-[rgba(170,59,255,0.16)] bg-[linear-gradient(180deg,#f4efff_0%,#f7fff8_67%,#e9f9ed_100%)] shadow-[0_18px_40px_rgba(65,18,100,0.11)] max-[430px]:min-h-57.5 max-[760px]:min-h-63.75 max-[760px]:max-w-125"
-            aria-hidden="true"
-          >
-            <div className="absolute top-8.25 right-13.5 size-14.5 rounded-full bg-[#fcd34d] shadow-[0_0_0_11px_rgba(253,224,71,0.18),0_0_35px_rgba(253,224,71,0.38)]" />
-            <div className="absolute top-19.5 left-10.5 h-4.75 w-18 scale-[0.8] rounded-full bg-[rgba(255,255,255,0.7)] before:absolute before:right-7.5 before:bottom-0 before:size-7.25 before:rounded-full before:bg-inherit before:content-[''] after:absolute after:right-2.25 after:bottom-0 after:size-5.5 after:rounded-full after:bg-inherit after:content-['']" />
-            <div className="absolute top-32.5 right-30 h-4.75 w-18 scale-[0.55] rounded-full bg-[rgba(255,255,255,0.7)] opacity-65 before:absolute before:right-7.5 before:bottom-0 before:size-7.25 before:rounded-full before:bg-inherit before:content-[''] after:absolute after:right-2.25 after:bottom-0 after:size-5.5 after:rounded-full after:bg-inherit after:content-['']" />
-            <div className="absolute right-[-13%] bottom-[-31%] left-[-13%] h-[62%] rotate-[-4deg] rounded-[50%_50%_0_0] bg-[#bbebc6]" />
-            <div className="absolute right-[-13%] bottom-[-43%] left-[-13%] h-[62%] rotate-[5deg] rounded-[50%_50%_0_0] bg-[#83cf92]" />
-            <div className="absolute inset-x-0 bottom-19 z-2 max-[430px]:bottom-13.75">
-              {companionIds.map((id, index) => (
-                <div
-                  className={`absolute bottom-0 grid place-items-end justify-center ${companionPositions[index] ?? companionPositions[0]}`}
-                  key={id}
-                >
-                  <CompanionSprite
-                    id={id}
-                    className={`block ${companionSizes[index] ?? companionSizes[0]} [image-rendering:pixelated] drop-shadow-[0_5px_2px_rgba(17,24,39,0.18)]`}
-                  />
-                </div>
-              ))}
-            </div>
-            {orbPositions.map((position) => (
-              <span
-                className={`absolute z-3 text-[#fff7a8] [text-shadow:0_0_11px_#facc15] animate-[home-page-orb-float_2.8s_ease-in-out_infinite] motion-reduce:animate-none ${position}`}
-                key={position}
-              >
-                ✦
-              </span>
-            ))}
-          </div>
+          <HomeIllustration scene={scene} onDrawAnother={drawAnotherScene} />
         </section>
 
         <section

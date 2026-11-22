@@ -39,6 +39,8 @@ export const POPULATION_GROWTH_PER_HOUR = 0.05;
 /** Loss per hour while the planet starves, as a share of the population. */
 export const STARVATION_LOSS_PER_HOUR = 0.02;
 
+/** A new inhabitant is put in the spotlight every week of the planet's life. */
+export const NOTABLE_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 export const MAX_NAME_LENGTH = 40;
 export const MAX_DESCRIPTION_LENGTH = 200;
 export const MAX_BACKUP_FILE_BYTES = 5 * 1024 * 1024;
