@@ -3,9 +3,7 @@ import Card from "../ui/Card";
 import PlanetSprite from "../PlanetSprite";
 import { useUser } from "../../stores/userStore";
 import {
-  ABUNDANCE_LABELS,
   generateStarSystem,
-  type Abundance,
   type StarSystem,
   type SystemPlanet,
 } from "../../models/starSystem";
@@ -77,8 +75,8 @@ function MapPlanet({
   onSelect: () => void;
 }) {
   const sprite = useMemo(
-    () => generatePlanetSprite(planet.seed),
-    [planet.seed],
+    () => generatePlanetSprite(planet.seed, planet.kind),
+    [planet.seed, planet.kind],
   );
   const radius = orbitRadius(planet.orbit, count);
   const angle = (planet.angle * Math.PI) / 180;
@@ -236,24 +234,6 @@ function SystemMap({
   );
 }
 
-function AbundanceMeter({ value }: { value: Abundance }) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className="inline-flex gap-0.5" aria-hidden="true">
-        {[1, 2, 3].map((step) => (
-          <span
-            key={step}
-            className={`inline-block h-2.5 w-2 rounded-[2px] ${
-              step <= value ? "bg-(--green-primary)" : "bg-(--gray-200)"
-            }`}
-          />
-        ))}
-      </span>
-      {ABUNDANCE_LABELS[value]}
-    </span>
-  );
-}
-
 function PlanetDetails({
   planet,
   starName,
@@ -277,8 +257,6 @@ function PlanetDetails({
       "Température moyenne",
       `${planet.temperatureC > 0 ? "+" : ""}${planet.temperatureC} °C`,
     ],
-    ["Métal", <AbundanceMeter key="metal" value={planet.metal} />],
-    ["Fertilité", <AbundanceMeter key="fertility" value={planet.fertility} />],
   ];
 
   return (
@@ -291,6 +269,7 @@ function PlanetDetails({
         <div className="grid size-20 shrink-0 place-items-center rounded-xl bg-[#0b1020]">
           <PlanetSprite
             seed={planet.seed}
+            kind={planet.kind}
             className="block size-18 [image-rendering:pixelated] [shape-rendering:crispEdges]"
           />
         </div>

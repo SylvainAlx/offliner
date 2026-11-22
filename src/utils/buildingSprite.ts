@@ -28,13 +28,13 @@ const H = BUILDING_SPRITE_HEIGHT;
 const GROUND_Y = 17;
 const OUTLINE = "#1f1633";
 
-interface Ground {
+export interface Ground {
   top: string;
   body: string;
   speck: string;
 }
 
-const GROUNDS: Record<PlanetKind, Ground> = {
+export const PLANET_GROUNDS: Record<PlanetKind, Ground> = {
   ocean: { top: "#65a30d", body: "#3f6212", speck: "#a3e635" },
   desert: { top: "#f59e0b", body: "#b45309", speck: "#fde68a" },
   ice: { top: "#f0f9ff", body: "#93c5fd", speck: "#ffffff" },
@@ -331,16 +331,20 @@ export function getBuildingTier(type: BuildingType, level: number): number {
   return level < 5 ? 0 : level < 10 ? 1 : 2;
 }
 
+/** Height of a building without its strip of ground. */
+export const BUILDING_HEIGHT_WITHOUT_GROUND = GROUND_Y;
+
 export function generateBuildingSprite(
   type: BuildingType,
   level: number,
   kind: PlanetKind,
+  options: { withGround: boolean } = { withGround: true },
 ): BuildingSprite {
   const canvas = new Canvas();
   DRAWERS[type](canvas, getBuildingTier(type, level));
   const grid = canvas.outlined();
   const ground = new Canvas();
-  drawGround(ground, GROUNDS[kind]);
+  if (options.withGround) drawGround(ground, PLANET_GROUNDS[kind]);
 
   const runs: BuildingSpriteRun[] = [];
   for (let y = 0; y < H; y += 1) {
@@ -359,5 +363,9 @@ export function generateBuildingSprite(
       x += width;
     }
   }
-  return { width: W, height: H, runs };
+  return {
+    width: W,
+    height: options.withGround ? H : GROUND_Y,
+    runs: options.withGround ? runs : runs.filter((run) => run.y < GROUND_Y),
+  };
 }

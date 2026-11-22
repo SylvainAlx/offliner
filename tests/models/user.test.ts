@@ -28,14 +28,14 @@ function newUser(): User {
 
 describe("buildings", () => {
   it("follows the cost curves of the design document", () => {
-    expect(getBuildingCost("metalMine", 1)).toEqual({ metal: 60, offlinium: 15 });
-    expect(getBuildingCost("metalMine", 3)).toEqual({ metal: 135, offlinium: 33 });
-    expect(getBuildingCost("laboratory", 2)).toEqual({ metal: 400, offlinium: 800 });
+    expect(getBuildingCost("metalMine", 1)).toEqual({ metal: 90, offlinium: 15 });
+    expect(getBuildingCost("metalMine", 3)).toEqual({ metal: 202, offlinium: 33 });
+    expect(getBuildingCost("laboratory", 2)).toEqual({ metal: 600, offlinium: 800 });
   });
 
   it("takes real time in proportion to the cost", () => {
-    // (60 + 15) / 2500 h = 1.8 min
-    expect(getConstructionMs("metalMine", 1)).toBe(108_000);
+    // (90 + 15) / 1000 h = 6.3 min
+    expect(getConstructionMs("metalMine", 1)).toBe(378_000);
   });
 
   it("turns the habitat into a village, a city, then a megalopolis", () => {
@@ -82,9 +82,9 @@ describe("economy", () => {
 
   it("runs the buildings slower when staff is short", () => {
     const levels = { ...emptyLevels(), farm: 3, reactor: 5 };
-    const economy = computeEconomy(levels, 8);
+    const economy = computeEconomy(levels, 12);
     expect(economy.energyFactor).toBe(1);
-    expect(economy.staffRequired).toBe(16);
+    expect(economy.staffRequired).toBe(24);
     expect(economy.staffFactor).toBe(0.5);
     expect(economy.productionFactor).toBe(0.5);
   });
@@ -204,7 +204,7 @@ describe("user", () => {
     user.population = 100;
     user.advance(T0 + HOUR, 2 * HOUR);
     expect(user.resources.offlinium).toBeCloseTo(
-      STARTING_RESOURCES.offlinium + HOUR / INTERVAL + (HOUR / INTERVAL) * 1.2,
+      STARTING_RESOURCES.offlinium + HOUR / INTERVAL + (HOUR / INTERVAL) * 1.5,
     );
   });
 
@@ -390,24 +390,35 @@ describe("planetary leader", () => {
 
 describe("star system", () => {
   it("always gives the same system for a planet, with 3 to 6 planets around a star", async () => {
-    const { generateStarSystem, MIN_PLANETS, MAX_PLANETS } = await import("../../src/models/starSystem");
+    const { generateStarSystem, isKindPlausible, orbitTemperature, MIN_PLANETS, MAX_PLANETS } =
+      await import("../../src/models/starSystem");
     const home = { seed: "velora", name: "Velora IV", fields: 163 };
     const system = generateStarSystem(home);
     expect(generateStarSystem(home)).toEqual(system);
 
     const counts = new Set<number>();
-    for (let index = 0; index < 60; index += 1) {
+    for (let index = 0; index < 80; index += 1) {
       const other = generateStarSystem({ seed: `seed-${index}`, name: "X", fields: 163 });
       counts.add(other.planets.length);
       expect(other.planets.filter((planet) => planet.isHome)).toHaveLength(1);
       other.planets.forEach((planet, orbit) => {
         expect(planet.orbit).toBe(orbit);
-        if (!planet.isColonizable) expect(planet.kind).toBe("gas");
-        if (planet.temperatureC > 100 || planet.temperatureC < -60) expect(planet.fertility).toBe(0);
+        expect(planet.isColonizable).toBe(planet.kind !== "gas");
+        // Every planet, the player's included, fits its distance to the star.
+        expect(isKindPlausible(planet.kind, orbitTemperature(other.star.type, orbit))).toBe(true);
       });
     }
     expect(Math.min(...counts)).toBe(MIN_PLANETS);
     expect(Math.max(...counts)).toBe(MAX_PLANETS);
+  });
+
+  it("keeps volcanic worlds close to the star and icy ones far from it", async () => {
+    const { isKindPlausible, orbitTemperature } = await import("../../src/models/starSystem");
+    expect(isKindPlausible("lava", orbitTemperature("yellow", 0))).toBe(true);
+    expect(isKindPlausible("ice", orbitTemperature("yellow", 0))).toBe(false);
+    expect(isKindPlausible("lava", orbitTemperature("yellow", 5))).toBe(false);
+    expect(isKindPlausible("ice", orbitTemperature("yellow", 5))).toBe(true);
+    expect(isKindPlausible("ocean", orbitTemperature("yellow", 2))).toBe(true);
   });
 
   it("puts the player's own planet in it, as it is", async () => {
@@ -426,7 +437,7 @@ describe("star system", () => {
 
 describe("spaceport", () => {
   it("is a building like the others, needed to open the star system", () => {
-    expect(getBuildingCost("spaceport", 1)).toEqual({ metal: 400, offlinium: 200 });
+    expect(getBuildingCost("spaceport", 1)).toEqual({ metal: 600, offlinium: 200 });
     const user = newUser();
     expect(user.planet.levels.spaceport).toBe(0);
     user.resources = { metal: 1000, food: 0, offlinium: 1000 };
@@ -441,5 +452,40 @@ describe("spaceport", () => {
     const legacy = new User();
     legacy.loadFromSnapshot({ planet: { levels: { metalMine: 2 } } });
     expect(legacy.planet.levels.spaceport).toBe(0);
+  });
+});
+
+describe("surface view", () => {
+  it("stands every building on the ground, inside the scene, without overlapping", async () => {
+    const { getBuildingAnchor, surfaceY, SCENE_WIDTH, SCENE_HEIGHT, BUILDING_WIDTH, BUILDING_HEIGHT } =
+      await import("../../src/utils/surfaceScene");
+    const { BUILDING_TYPES } = await import("../../src/models/buildings");
+    const anchors = BUILDING_TYPES.map((type) => ({ type, ...getBuildingAnchor(type) }));
+    for (const anchor of anchors) {
+      expect(anchor.x - BUILDING_WIDTH / 2).toBeGreaterThanOrEqual(0);
+      expect(anchor.x + BUILDING_WIDTH / 2).toBeLessThanOrEqual(SCENE_WIDTH);
+      expect(anchor.y).toBeGreaterThan(surfaceY(anchor.x)); // on the ground, below the horizon
+      expect(anchor.y + 8).toBeLessThanOrEqual(SCENE_HEIGHT); // level label included
+    }
+    // Buildings of the same row never overlap.
+    for (const first of anchors) {
+      for (const second of anchors) {
+        if (first === second || Math.abs(first.y - second.y) >= BUILDING_HEIGHT) continue;
+        expect(Math.abs(first.x - second.x)).toBeGreaterThanOrEqual(BUILDING_WIDTH);
+      }
+    }
+  });
+
+  it("draws the ground in the colors of the planet, and buildings without their own ground", async () => {
+    const { generateSurfaceGround } = await import("../../src/utils/surfaceScene");
+    const { generateBuildingSprite, PLANET_GROUNDS } = await import("../../src/utils/buildingSprite");
+    const ground = generateSurfaceGround("ice", "seed");
+    expect(ground.some((run) => run.color === PLANET_GROUNDS.ice.top)).toBe(true);
+    expect(generateSurfaceGround("ice", "seed")).toEqual(ground);
+
+    const plain = generateBuildingSprite("farm", 1, "ice", { withGround: false });
+    expect(plain.height).toBe(17);
+    expect(plain.runs.every((run) => run.y < 17)).toBe(true);
+    expect(plain.runs.some((run) => run.color === PLANET_GROUNDS.ice.body)).toBe(false);
   });
 });
