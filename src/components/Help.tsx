@@ -8,6 +8,15 @@ import {
   STORAGE_CAPACITY_FACTOR,
 } from "../models/buildings";
 import {
+  CARGO_CAPACITY_PER_LEVEL,
+  CARGO_FUEL_PER_AU,
+  COLONISTS_PER_SHIP,
+  COLONIZATION_COST,
+  COLONIZATION_FUEL_PER_AU,
+  FLIGHT_MS_PER_AU,
+  MAX_COLONIES,
+  MIN_FLIGHT_MS,
+  SPACEPORT_RANGE_AU_PER_LEVEL,
   BASE_FOOD_PER_HOUR,
   BASE_METAL_PER_HOUR,
   FOOD_PER_INHABITANT_PER_HOUR,
@@ -289,9 +298,42 @@ export default function Help() {
         <HelpSection icon="☀️" title="Système planétaire">
           <p className={text}>
             Le spatioport ouvre l&apos;onglet Système, qui présente les planètes
-            voisines : distance, température et cases disponibles. C&apos;est de
-            là que partiront les futures expéditions.
+            voisines : distance, température et cases disponibles.
           </p>
+        </HelpSection>
+
+        <HelpSection icon="🚀" title="Expéditions et colonies">
+          <ul className={list}>
+            <li className={bullet}>
+              Chaque niveau de spatioport porte{" "}
+              {SPACEPORT_RANGE_AU_PER_LEVEL.toLocaleString("fr-FR")} UA plus loin,
+              depuis sa planète. Les planètes hors de portée sont estompées sur la
+              carte.
+            </li>
+            <li className={bullet}>
+              <strong>Colonisation</strong> : {format(COLONIZATION_COST.metal)} de
+              métal, {format(COLONIZATION_COST.food)} d&apos;alimentation,{" "}
+              {COLONISTS_PER_SHIP} colons et {COLONIZATION_FUEL_PER_AU} ⬡ de
+              carburant par UA. La colonie démarre avec ses colons, un petit stock
+              et son propre gouverneur. {MAX_COLONIES} colonies au maximum, en
+              plus de votre planète de départ.
+            </li>
+            <li className={bullet}>
+              <strong>Cargo</strong> : transporte du métal et de
+              l&apos;alimentation vers une de vos planètes, jusqu&apos;à{" "}
+              {format(CARGO_CAPACITY_PER_LEVEL)} unités par niveau de spatioport,
+              pour {CARGO_FUEL_PER_AU} ⬡ par UA.
+            </li>
+            <li className={bullet}>
+              Le vol dure {FLIGHT_MS_PER_AU / 3600000} h par UA (
+              {MIN_FLIGHT_MS / 60000} min au minimum), en temps réel.
+            </li>
+            <li className={bullet}>
+              Chaque planète a ses propres réserves, sa population et son
+              chantier ; l&apos;Offlinium est commun. Passez de l&apos;une à
+              l&apos;autre avec le sélecteur au-dessus des ressources.
+            </li>
+          </ul>
         </HelpSection>
 
         <HelpSection icon="💾" title="Vos données">

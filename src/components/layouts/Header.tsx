@@ -1,5 +1,6 @@
 import { useUser } from "../../stores/userStore";
 import ResourceBar from "../ResourceBar";
+import ColonySelector from "./ColonySelector";
 import { useOnlineStatus } from "../../stores/onlineStatusStore";
 
 export default function Header({
@@ -50,7 +51,8 @@ export default function Header({
           />
         </div>
       </div>
-      <div className="mt-3">
+      <div className="mt-3 flex flex-col gap-2">
+        <ColonySelector />
         <ResourceBar />
       </div>
       {offlineCountdownMs !== null && (

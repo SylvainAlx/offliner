@@ -117,7 +117,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDefinition> = {
     label: "Spatioport",
     icon: "🚀",
     description:
-      "Ouvre l'accès au système planétaire. Il produira plus tard les vaisseaux des expéditions.",
+      "Ouvre le système planétaire et lance les expéditions : chaque niveau porte 0,5 UA plus loin et ajoute 2 000 de capacité au cargo.",
     cost: { metal: 600, offlinium: 200, factor: 2 },
     production: () => ({}),
     energyProduced: () => 0,

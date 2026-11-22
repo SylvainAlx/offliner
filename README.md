@@ -62,6 +62,8 @@ Les règles chiffrées sont regroupées dans `src/models/buildings.ts` et
 - planète et bâtiments en pixel art générés en code : la planète dépend d’une
   graine aléatoire, et les bâtiments changent d’apparence avec leur niveau et
   le type de planète ;
+- expéditions de colonisation et de cargo depuis le spatioport, avec portée,
+  temps de vol en temps réel et sélecteur de planète ;
 - section Habitants : le chef planétaire et la galerie des habitants mis en
   avant chaque semaine, avec une pastille tant qu’un nouveau venu attend
   son histoire ;
@@ -84,6 +86,13 @@ colonies (`Colony`). Chaque colonie a sa planète, son chantier, son métal,
 son alimentation et sa population, et toutes avancent sur la même horloge
 temps réel. Les sauvegardes de version 1 (une seule planète) sont converties
 automatiquement en version 2 au chargement ou à l’import.
+
+Depuis l’onglet Système, le spatioport lance des expéditions : colonisation
+d’une planète libre (3 colonies au maximum) ou cargo de métal et
+d’alimentation vers une de vos planètes. Chaque niveau de spatioport porte
+0,5 UA plus loin et ajoute 2 000 unités de capacité au cargo ; le carburant
+se paie en Offlinium. Les vaisseaux sont sous-entendus : on ne les construit
+pas, leur prix fait partie de celui de l’expédition.
 
 L’application enregistre la partie toutes les 30 secondes lorsqu’elle est
 ouverte, à chaque action et à chaque construction terminée. Le choix du thème

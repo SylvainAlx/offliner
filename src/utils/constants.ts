@@ -39,6 +39,24 @@ export const POPULATION_GROWTH_PER_HOUR = 0.05;
 /** Loss per hour while the planet starves, as a share of the population. */
 export const STARVATION_LOSS_PER_HOUR = 0.02;
 
+// --- Expeditions -----------------------------------------------------------
+/** Each spaceport level reaches this much further, from its own planet. */
+export const SPACEPORT_RANGE_AU_PER_LEVEL = 0.5;
+/** Real flight time per astronomical unit, with a minimum per flight. */
+export const FLIGHT_MS_PER_AU = 2 * 60 * 60 * 1000;
+export const MIN_FLIGHT_MS = 30 * 60 * 1000;
+/** Offlinium burnt per astronomical unit. */
+export const COLONIZATION_FUEL_PER_AU = 100;
+export const CARGO_FUEL_PER_AU = 40;
+/** Metal and food one cargo flight carries, per spaceport level. */
+export const CARGO_CAPACITY_PER_LEVEL = 2000;
+/** Colonies the player can own besides the starting planet. */
+export const MAX_COLONIES = 3;
+/** What a colony ship costs; part of it lands with the colonists. */
+export const COLONIZATION_COST = { metal: 2000, food: 300 } as const;
+export const COLONY_STARTING_RESOURCES = { metal: 500, food: 300 } as const;
+export const COLONISTS_PER_SHIP = 10;
+
 /** A new inhabitant is put in the spotlight every week of the planet's life. */
 export const NOTABLE_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 export const MAX_NAME_LENGTH = 40;

@@ -690,3 +690,147 @@ describe("colonies", () => {
     expect(population.progress).toBe(STARTING_POPULATION + 20);
   });
 });
+
+describe("expeditions", () => {
+  async function userWithNeighbors() {
+    const { generateStarSystem } = await import("../../src/models/starSystem");
+    const { getDistanceAu } = await import("../../src/models/expedition");
+    // A system with a colonizable planet within 0.5 AU and another one further.
+    for (let index = 0; ; index++) {
+      const seed = `expedition-${index}`;
+      const system = generateStarSystem({ seed, name: "Base", fields: 163 });
+      const home = system.planets.find((planet) => planet.isHome)!;
+      const others = system.planets.filter((planet) => !planet.isHome && planet.isColonizable);
+      const near = others.find((planet) => getDistanceAu(home, planet) <= 0.5);
+      const far = others.find((planet) => getDistanceAu(home, planet) > 1);
+      if (!near || !far) continue;
+      const user = newUser();
+      user.homeColony.planet.seed = seed;
+      user.homeColony.planet.name = "Base";
+      user.homeColony.population = 50;
+      setBalance(user, { metal: 20_000, food: 5000, offlinium: 5000 });
+      return { user, near, far };
+    }
+  }
+
+  it("reaches 0.5 AU per spaceport level, flies 2 h per AU and burns Offlinium", async () => {
+    const e = await import("../../src/models/expedition");
+    expect(e.getSpaceportRange(3)).toBe(1.5);
+    expect(e.getRequiredSpaceportLevel(0.3)).toBe(1);
+    expect(e.getRequiredSpaceportLevel(0.5)).toBe(1);
+    expect(e.getRequiredSpaceportLevel(1.1)).toBe(3);
+    expect(e.getFlightMs(1.5)).toBe(3 * HOUR);
+    expect(e.getFlightMs(0.1)).toBe(HOUR / 2);
+    expect(e.getFuelCost("colonization", 1.5)).toBe(150);
+    expect(e.getFuelCost("cargo", 1.5)).toBe(60);
+    expect(e.getCargoCapacity(2)).toBe(4000);
+  });
+
+  it("founds a colony at the exact arrival time, with its colonists, stock and leader", async () => {
+    const { user, near, far } = await userWithNeighbors();
+    const home = user.homeColony;
+    expect(user.planExpedition("colonization", home.id, near.id)!.blocker).toBe("noSpaceport");
+    home.planet.levels.spaceport = 1;
+    const tooFar = user.planExpedition("colonization", home.id, far.id)!;
+    expect(tooFar.blocker).toBe("outOfRange");
+    expect(tooFar.requiredLevel).toBeGreaterThan(1);
+    expect(user.planExpedition("colonization", home.id, "home")!.blocker).toBe("samePlanet");
+
+    const plan = user.planExpedition("colonization", home.id, near.id)!;
+    expect(plan.blocker).toBeNull();
+    expect(plan.cost).toEqual({ metal: 2000, food: 300, offlinium: plan.fuel });
+    expect(user.launchExpedition("colonization", home.id, near.id, T0)).toBe(true);
+    expect(home.resources).toEqual({ metal: 18_000, food: 4700 });
+    expect(user.offlinium).toBe(5000 - plan.fuel);
+    expect(home.population).toBe(40);
+    expect(user.colonyCount).toBe(1);
+    expect(user.planExpedition("colonization", home.id, near.id)!.blocker).toBe("occupied");
+
+    const arriveAt = T0 + plan.flightMs;
+    user.realTimeSettledAt = T0;
+    user.advance(arriveAt - 1, 0);
+    expect(user.colonies).toHaveLength(1);
+    user.advance(arriveAt + HOUR, 0);
+    expect(user.expeditions).toHaveLength(0);
+    const colony = user.getColonyAt(near.id)!;
+    expect(colony.foundedAt).toBe(arriveAt);
+    expect(colony.planet).toMatchObject({ name: near.name, seed: near.seed, kind: near.kind, fields: near.fields });
+    // An hour of base production since the landing, nothing before it.
+    expect(colony.resources.metal).toBeCloseTo(500 + BASE_METAL_PER_HOUR);
+    expect(user.getLeader(colony.id)).toMatchObject({ role: "leader", featuredAt: arriveAt });
+    expect(user.expeditionReports[0]).toMatchObject({ kind: "colonization", outcome: "founded", targetName: near.name });
+    expect(user.activeColony).toBe(home);
+  });
+
+  it("stops at 3 colonies and keeps one inhabitant at home", async () => {
+    const { user, near } = await userWithNeighbors();
+    const home = user.homeColony;
+    home.planet.levels.spaceport = 1;
+    home.population = 10;
+    expect(user.planExpedition("colonization", home.id, near.id)!.blocker).toBe("colonists");
+
+    home.population = 50;
+    const { Colony } = await import("../../src/models/colony");
+    for (let index = 0; index < 3; index++) {
+      user.addColony(new Colony({ foundedAt: T0, systemPlanetId: `elsewhere-${index}` }));
+    }
+    expect(user.colonyCount).toBe(3);
+    expect(user.planExpedition("colonization", home.id, near.id)!.blocker).toBe("maxColonies");
+  });
+
+  it("carries up to 2000 per spaceport level to one of the player's planets", async () => {
+    const { user, near, far } = await userWithNeighbors();
+    const home = user.homeColony;
+    home.planet.levels.spaceport = 1;
+    expect(user.planExpedition("cargo", home.id, near.id, { metal: 100, food: 0 })!.blocker).toBe("notOwned");
+
+    user.launchExpedition("colonization", home.id, near.id, T0);
+    user.realTimeSettledAt = T0;
+    user.advance(T0 + 10 * HOUR, 0);
+    const colony = user.getColonyAt(near.id)!;
+    const now = T0 + 10 * HOUR;
+
+    expect(user.planExpedition("cargo", home.id, near.id)!.blocker).toBe("emptyCargo");
+    expect(user.planExpedition("cargo", home.id, near.id, { metal: 1500, food: 501 })!.blocker).toBe("capacity");
+    const plan = user.planExpedition("cargo", home.id, near.id, { metal: 1500, food: 500 })!;
+    expect(plan.blocker).toBeNull();
+    expect(plan.capacity).toBe(2000);
+    expect(plan.cost).toEqual({ metal: 1500, food: 500, offlinium: plan.fuel });
+
+    const metalBefore = colony.resources.metal;
+    const homeMetal = home.resources.metal;
+    expect(user.launchExpedition("cargo", home.id, near.id, now, { metal: 1500, food: 500 })).toBe(true);
+    expect(home.resources.metal).toBe(homeMetal - 1500);
+    user.advance(now + plan.flightMs, 0);
+    expect(colony.resources.metal).toBeGreaterThan(metalBefore + 1500);
+    expect(user.expeditionReports[0]).toMatchObject({ kind: "cargo", outcome: "delivered" });
+
+    // From the colony, which has no spaceport yet.
+    expect(user.planExpedition("cargo", colony.id, "home", { metal: 1, food: 0 })!.blocker).toBe("noSpaceport");
+    expect(user.planExpedition("cargo", home.id, far.id, { metal: 1, food: 0 })!.blocker).toBe("notOwned");
+  });
+
+  it("keeps expeditions in flight through a save, and sends back what cannot land", async () => {
+    const { user, near } = await userWithNeighbors();
+    const home = user.homeColony;
+    home.planet.levels.spaceport = 1;
+    user.launchExpedition("colonization", home.id, near.id, T0);
+    const restored = new User();
+    restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
+    expect(restored.expeditions).toEqual(user.expeditions);
+    expect(restored.colonyCount).toBe(1);
+
+    // Someone got there first: the colonists and their stock come back.
+    const { Colony } = await import("../../src/models/colony");
+    restored.addColony(new Colony({ foundedAt: T0, systemPlanetId: near.id }));
+    const population = restored.homeColony.population;
+    restored.realTimeSettledAt = T0;
+    restored.advance(restored.expeditions[0].arriveAt, 0);
+    expect(restored.expeditionReports[0].outcome).toBe("returned");
+    expect(restored.homeColony.population).toBeGreaterThanOrEqual(population + 10 - 0.01);
+
+    const copy = restored.clone();
+    copy.expeditionReports[0].cargo.metal = -1;
+    expect(restored.expeditionReports[0].cargo.metal).toBe(500);
+  });
+});
