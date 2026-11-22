@@ -13,6 +13,7 @@ import {
   describeStaff,
 } from "../../utils/buildingEffects";
 import { formatDuration } from "../../utils/format";
+import BuildingActions from "./BuildingActions";
 
 /** How many upcoming levels the table shows. */
 const LEVELS_SHOWN = 5;
@@ -43,6 +44,9 @@ export default function BuildingDetailModal({
     >
       {type !== null && (
         <>
+          <div className="mt-4">
+            <BuildingActions type={type} />
+          </div>
           <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[0.8rem]">
             <dt className="text-(--gray-500)">Niveau actuel</dt>
             <dd className="m-0 font-bold text-(--gray-900)">

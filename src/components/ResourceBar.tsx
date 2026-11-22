@@ -16,7 +16,10 @@ const chipClass =
 export default function ResourceBar() {
   const isOnline = useOnlineStatus((state) => state.isOnline);
   const user = useUser((state) => state.user);
-  const economy = user.economy;
+  // Metal, food, energy and population are the planet's; Offlinium, the player's.
+  const colony = user.activeColony;
+  const resources = user.getResources(colony);
+  const economy = colony.economy;
   const energyBalance = economy.energyProduced - economy.energyConsumed;
 
   return (
@@ -27,8 +30,8 @@ export default function ResourceBar() {
       {RESOURCE_TYPES.map((type) => {
         // Offlinium is never capped; metal and food stop at the depot's capacity.
         const capped = type !== "offlinium";
-        const isFull = capped && user.resources[type] >= economy.storageCapacity;
-        const amount = formatAmount(user.resources[type]);
+        const isFull = capped && resources[type] >= economy.storageCapacity;
+        const amount = formatAmount(resources[type]);
         const capacity = formatAmount(economy.storageCapacity);
         return (
           <span
@@ -67,10 +70,10 @@ export default function ResourceBar() {
       <span
         className={chipClass}
         title="Population / maximum"
-        aria-label={`Population : ${Math.floor(user.population)} sur ${formatAmount(economy.populationMax)}`}
+        aria-label={`Population : ${Math.floor(colony.population)} sur ${formatAmount(economy.populationMax)}`}
       >
         <span aria-hidden="true">{POPULATION_ICON}</span>
-        {Math.floor(user.population)}/{formatAmount(economy.populationMax)}
+        {Math.floor(colony.population)}/{formatAmount(economy.populationMax)}
       </span>
     </div>
   );

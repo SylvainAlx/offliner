@@ -58,49 +58,18 @@ export class PeriodList {
     );
   }
 
-  loadPeriods(rawPeriods: unknown = []): void {
-    try {
-      const candidate = getCandidate(rawPeriods);
-      if (candidate && !Array.isArray(candidate) && Array.isArray(candidate.days)) {
-        this.days = candidate.days.filter(isOfflineDay).map(toOfflineDay);
-        this.sortDays();
-        this.restoreOpenPeriod(
-          candidate.openPeriodStart,
-          candidate.openPeriodLastSeen,
-          candidate.openPeriodExclusions,
-        );
-        this.unconfirmedGaps = Array.isArray(candidate.unconfirmedGaps)
-          ? candidate.unconfirmedGaps
-              .filter(isExcludedInterval)
-              .slice(-MAX_UNCONFIRMED_GAPS)
-              .map((interval) => ({ start: interval.start, end: interval.end }))
-          : [];
-        return;
-      }
-
-      // Older saves contain one Period object per offline session. Compact them
-      // into daily entries as they are loaded.
-      const legacyPeriods = Array.isArray(candidate)
-        ? candidate
-        : candidate && Array.isArray(candidate.periods)
-          ? candidate.periods
-          : [];
-      this.clearPeriods();
-
-      let openStart: number | null = null;
-      legacyPeriods.filter(isStoredPeriod).forEach((period) => {
-        const start = Number(period.start);
-        if (period.end === null || period.end === undefined) {
-          if (openStart === null || start < openStart) openStart = start;
-          return;
-        }
-        this.aggregatePeriod(start, Number(period.end), new Set());
-      });
-      this.sortDays();
-      this.restoreOpenPeriod(openStart, null, null);
-    } catch {
-      this.clearPeriods();
-    }
+  loadPeriods(value: unknown): void {
+    this.clearPeriods();
+    if (!isRecord(value)) return;
+    this.days = Array.isArray(value.days) ? value.days.filter(isOfflineDay).map(toOfflineDay) : [];
+    this.sortDays();
+    this.restoreOpenPeriod(value.openPeriodStart, value.openPeriodLastSeen, value.openPeriodExclusions);
+    this.unconfirmedGaps = Array.isArray(value.unconfirmedGaps)
+      ? value.unconfirmedGaps
+          .filter(isExcludedInterval)
+          .slice(-MAX_UNCONFIRMED_GAPS)
+          .map((interval) => ({ start: interval.start, end: interval.end }))
+      : [];
   }
 
   clearPeriods(): void {
@@ -272,8 +241,8 @@ export class PeriodList {
     if (!isFiniteNumber(start)) return;
 
     this.openPeriodStart = start;
-    // Saves created before the heartbeat existed only know the start: the
-    // unobserved time is therefore counted from the start of the period.
+    // Without a valid last observation, the unobserved time is counted from
+    // the start of the period.
     this.openPeriodLastSeen =
       isFiniteNumber(lastSeen) && lastSeen >= start ? lastSeen : start;
     this.openPeriodExclusions = Array.isArray(exclusions)
@@ -346,29 +315,6 @@ export class PeriodList {
 
 const MAX_UNCONFIRMED_GAPS = 50;
 
-type PeriodCandidate = {
-  unconfirmedGaps?: unknown;
-  days?: unknown;
-  openPeriodStart?: unknown;
-  openPeriodLastSeen?: unknown;
-  openPeriodExclusions?: unknown;
-  periods?: unknown;
-};
-
-function getCandidate(rawPeriods: unknown): PeriodCandidate | unknown[] | null {
-  if (Array.isArray(rawPeriods)) return rawPeriods;
-  if (!isRecord(rawPeriods)) return null;
-
-  const candidate =
-    rawPeriods.periods ??
-    rawPeriods.periodList ??
-    rawPeriods.perdioList ??
-    rawPeriods.offlinePeriods ??
-    rawPeriods;
-  if (Array.isArray(candidate)) return candidate;
-  return isRecord(candidate) ? (candidate as PeriodCandidate) : null;
-}
-
 function getDayStart(timestamp: number): number {
   const date = new Date(timestamp);
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
@@ -408,18 +354,5 @@ function isExcludedInterval(value: unknown): value is ExcludedInterval {
     isFiniteNumber(value.start) &&
     isFiniteNumber(value.end) &&
     value.start < value.end
-  );
-}
-
-function isStoredPeriod(value: unknown): value is {
-  start: number;
-  end: number | null;
-} {
-  if (!isRecord(value)) return false;
-  return (
-    Number.isFinite(Number(value.start)) &&
-    (value.end === null ||
-      value.end === undefined ||
-      Number.isFinite(Number(value.end)))
   );
 }

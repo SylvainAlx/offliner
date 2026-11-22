@@ -72,7 +72,7 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     category: "Planète",
     icon: "🏗️",
     target: 1,
-    getProgress: (user) => user.planet.totalLevels,
+    getProgress: (user) => user.sumOverColonies((colony) => colony.planet.totalLevels),
   },
   {
     id: "village",
@@ -81,7 +81,7 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     category: "Planète",
     icon: "🏘️",
     target: 1,
-    getProgress: (user) => user.planet.levels.habitat,
+    getProgress: (user) => user.maxOverColonies((colony) => colony.planet.levels.habitat),
   },
   {
     id: "city",
@@ -90,7 +90,7 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     category: "Planète",
     icon: "🏙️",
     target: 6,
-    getProgress: (user) => user.planet.levels.habitat,
+    getProgress: (user) => user.maxOverColonies((colony) => colony.planet.levels.habitat),
   },
   {
     id: "population-hundred",
@@ -99,7 +99,7 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     category: "Planète",
     icon: "👥",
     target: 100,
-    getProgress: (user) => Math.floor(user.population),
+    getProgress: (user) => Math.floor(user.sumOverColonies((colony) => colony.population)),
   },
   {
     id: "mine-ten",
@@ -108,7 +108,7 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     category: "Planète",
     icon: "⛏️",
     target: 10,
-    getProgress: (user) => user.planet.levels.metalMine,
+    getProgress: (user) => user.maxOverColonies((colony) => colony.planet.levels.metalMine),
   },
   {
     id: "spaceport",
@@ -117,7 +117,7 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     category: "Planète",
     icon: "🚀",
     target: 1,
-    getProgress: (user) => user.planet.levels.spaceport,
+    getProgress: (user) => user.maxOverColonies((colony) => colony.planet.levels.spaceport),
   },
   {
     id: "laboratory",
@@ -126,7 +126,7 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     category: "Planète",
     icon: "🔬",
     target: 1,
-    getProgress: (user) => user.planet.levels.laboratory,
+    getProgress: (user) => user.maxOverColonies((colony) => colony.planet.levels.laboratory),
   },
 ];
 

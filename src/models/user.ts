@@ -1,59 +1,139 @@
 import { PeriodList } from "./periodList";
 import {
   applyNotableChanges,
+  countWeeksSince,
   createLeader,
+  createWeeklyNotable,
   loadNotables,
   type Notable,
   type NotableChanges,
 } from "./notable";
 import { Planet } from "./planet";
+import { Colony } from "./colony";
+import { advanceRealTime, type CompletedConstruction } from "./economy";
 import {
-  advanceRealTime,
-  computeEconomy,
-  type CompletedConstruction,
-  type Economy,
-} from "./economy";
+  getCargoCapacity,
+  getDistanceAu,
+  getFlightMs,
+  getFuelCost,
+  getHomeSystem,
+  getRequiredSpaceportLevel,
+  getSpaceportRange,
+  loadExpeditions,
+  type Expedition,
+  type ExpeditionCargo,
+  type ExpeditionKind,
+} from "./expedition";
+import type { StarSystem, SystemPlanet } from "./starSystem";
+import { getConstructionMs, type BuildingType } from "./buildings";
+import { hasResources, type ResourceAmounts, type Resources } from "./resources";
 import {
-  getBuildingCost,
-  getConstructionMs,
-  type BuildingType,
-} from "./buildings";
-import {
-  addResources,
-  hasResources,
-  sanitizeResources,
-  subtractResources,
-  type ResourceAmounts,
-  type Resources,
-} from "./resources";
-import {
+  COLONISTS_PER_SHIP,
+  COLONIZATION_COST,
+  COLONY_STARTING_RESOURCES,
+  MAX_COLONIES,
+  NOTABLE_INTERVAL_MS,
   OFFLINIUM_DELIVERY_INTERVAL,
   SPEED_UP_MS_PER_OFFLINIUM,
   STARTING_POPULATION,
   STARTING_RESOURCES,
 } from "../utils/constants";
-import { isFiniteNumber, isRecord, sanitizeName } from "../utils/sanitize";
+import {
+  isFiniteNumber,
+  isNonNegativeNumber,
+  isRecord,
+  sanitizeId,
+  sanitizeName,
+} from "../utils/sanitize";
 
 /** Why a building level cannot be started right now. */
 export type ConstructionBlocker = "busy" | "noField" | "resources" | null;
 
+/** A level reached, and on which planet. */
+export interface ColonyCompletedConstruction extends CompletedConstruction {
+  colonyId: string;
+}
+
+/** Why an expedition cannot leave right now. */
+export type ExpeditionBlocker =
+  | "noSpaceport"
+  | "samePlanet"
+  | "notColonizable"
+  | "occupied"
+  | "maxColonies"
+  | "notOwned"
+  | "outOfRange"
+  | "colonists"
+  | "emptyCargo"
+  | "capacity"
+  | "resources"
+  | null;
+
+/** Everything about an expedition before it leaves. */
+export interface ExpeditionPlan {
+  kind: ExpeditionKind;
+  from: Colony;
+  target: SystemPlanet;
+  distanceAu: number;
+  /** How far the departure spaceport reaches, and the level the trip needs. */
+  rangeAu: number;
+  requiredLevel: number;
+  flightMs: number;
+  fuel: number;
+  /** Paid at departure: metal and food by the planet, fuel by the player. */
+  cost: ResourceAmounts;
+  /** What lands at the destination. */
+  cargo: ExpeditionCargo;
+  colonists: number;
+  /** Metal and food a cargo flight can carry. */
+  capacity: number;
+  blocker: ExpeditionBlocker;
+}
+
+/** What happened when an expedition reached its destination. */
+export interface ExpeditionReport {
+  id: string;
+  kind: ExpeditionKind;
+  targetName: string;
+  arriveAt: number;
+  /** founded: a new colony; delivered: cargo unloaded; returned: sent back. */
+  outcome: "founded" | "delivered" | "returned";
+  cargo: ExpeditionCargo;
+  colonists: number;
+}
+
+/** The latest reports are kept, newest first. */
+const MAX_REPORTS = 10;
+
+/** Version of the saved data; a save of another version is not loaded. */
+export const SAVE_VERSION = 2;
+
 /**
  * The player and their game. Two clocks drive it:
- * - real time (`realTimeSettledAt`): constructions, metal, food, population;
- * - offline time (`periodList`, `settledOfflineMs`): Offlinium.
+ * - real time (`realTimeSettledAt`): on every colony, constructions, metal,
+ *   food and population;
+ * - offline time (`periodList`, `settledOfflineMs`): the player's Offlinium.
  */
 export class User {
+  saveVersion = SAVE_VERSION;
   name: string;
   createdAt: number;
   periodList: PeriodList;
-  planet: Planet;
-  /** Balances, fractions included; only whole units are spent or shown. */
-  resources: Resources;
-  /** Inhabitants, fractions included while the population grows or shrinks. */
-  population: number;
-  /** Inhabitants in the spotlight, the planetary leader first. */
+  /** Offlinium belongs to the player and pays on every planet. */
+  offlinium: number;
+  /** The player's planets, the starting one first. */
+  colonies: Colony[];
+  /** The starting planet; the star system is drawn around it. */
+  homeColonyId: string;
+  /** The planet shown in the Planète and Habitants sections. */
+  activeColonyId: string;
+  /** Inhabitants in the spotlight: a leader per colony, then one per week. */
   notables: Notable[];
-  /** Real time up to which the economy has been computed. */
+  /** Expeditions in flight, in the order they left. */
+  expeditions: Expedition[];
+  /** What the last expeditions did on arrival, newest first. */
+  expeditionReports: ExpeditionReport[];
+  /** Real time up to which every colony has been computed. */
   realTimeSettledAt: number;
   /** Offline time already turned into Offlinium. */
   settledOfflineMs: number;
@@ -62,32 +142,118 @@ export class User {
     this.name = name;
     this.createdAt = now;
     this.periodList = new PeriodList();
-    this.planet = new Planet();
-    this.resources = { ...STARTING_RESOURCES };
-    this.population = STARTING_POPULATION;
-    this.notables = [createLeader(this.planet.name, now)];
+    this.offlinium = STARTING_RESOURCES.offlinium;
+    const home = new Colony({
+      foundedAt: now,
+      systemPlanetId: "home",
+      resources: { metal: STARTING_RESOURCES.metal, food: STARTING_RESOURCES.food },
+      population: STARTING_POPULATION,
+    });
+    this.colonies = [home];
+    this.homeColonyId = home.id;
+    this.activeColonyId = home.id;
+    this.notables = [createLeader(home.planet.name, now, home.id)];
+    this.expeditions = [];
+    this.expeditionReports = [];
     this.realTimeSettledAt = now;
     this.settledOfflineMs = 0;
   }
 
-  get economy(): Economy {
-    return computeEconomy(this.planet.levels, this.population);
+  // --- Colonies -----------------------------------------------------------
+
+  getColony(id: string): Colony | undefined {
+    return this.colonies.find((colony) => colony.id === id);
+  }
+
+  get homeColony(): Colony {
+    return this.getColony(this.homeColonyId) ?? this.colonies[0];
+  }
+
+  get activeColony(): Colony {
+    return this.getColony(this.activeColonyId) ?? this.homeColony;
+  }
+
+  /** A new planet joins the player's, with its own leader from day one. */
+  addColony(colony: Colony): void {
+    if (this.getColony(colony.id)) return;
+    this.colonies.push(colony);
+    this.notables.push(createLeader(colony.planet.name, colony.foundedAt, colony.id));
+  }
+
+  setActiveColony(id: string): boolean {
+    if (!this.getColony(id)) return false;
+    this.activeColonyId = id;
+    return true;
+  }
+
+  /** What a colony can spend: its own metal and food, the player's Offlinium. */
+  getResources(colony: Colony = this.activeColony): Resources {
+    return { ...colony.resources, offlinium: this.offlinium };
+  }
+
+  /** Adds `amounts` (or removes them, with sign -1) where each one is kept. */
+  private applyAmounts(colony: Colony, amounts: ResourceAmounts, sign: 1 | -1): void {
+    colony.resources.metal += sign * (amounts.metal ?? 0);
+    colony.resources.food += sign * (amounts.food ?? 0);
+    this.offlinium += sign * (amounts.offlinium ?? 0);
+  }
+
+  /** Sum over all the planets, as a total population for instance. */
+  sumOverColonies(value: (colony: Colony) => number): number {
+    return this.colonies.reduce((total, colony) => total + value(colony), 0);
+  }
+
+  /** Best value among the planets, as the highest habitat for instance. */
+  maxOverColonies(value: (colony: Colony) => number): number {
+    return this.colonies.reduce((best, colony) => Math.max(best, value(colony)), 0);
+  }
+
+  /** The star system opens once any planet has a spaceport. */
+  get isSystemUnlocked(): boolean {
+    return this.maxOverColonies((colony) => colony.planet.levels.spaceport) > 0;
+  }
+
+  /** The laboratories of every planet add up their bonuses. */
+  get offliniumMultiplier(): number {
+    return 1 + this.sumOverColonies((colony) => colony.economy.offliniumMultiplier - 1);
   }
 
   // --- Clocks -------------------------------------------------------------
 
   /**
    * Brings the game up to date: Offlinium for the offline time gained since
-   * the last settlement, then the real-time economy. A clock that went back
-   * changes nothing until it catches up again. Returns the levels reached.
+   * the last settlement, then the real-time economy of every colony. A clock
+   * that went back changes nothing until it catches up again. Returns the
+   * levels reached.
    */
-  advance(now: number, totalOfflineMs: number): CompletedConstruction[] {
+  advance(now: number, totalOfflineMs: number): ColonyCompletedConstruction[] {
     this.settleOfflinium(totalOfflineMs);
     // A clock that went back only completes what is already due.
     const to = Math.max(now, this.realTimeSettledAt);
-    const completed = advanceRealTime(this, this.realTimeSettledAt, to);
+    const completed: ColonyCompletedConstruction[] = [];
+    // Expeditions land at their exact time: the planets are brought up to it
+    // first, and a colony founded then starts from there.
+    const due = this.expeditions
+      .filter((expedition) => expedition.arriveAt <= to)
+      .sort((a, b) => a.arriveAt - b.arriveAt);
+    let from = this.realTimeSettledAt;
+    for (const expedition of due) {
+      const at = Math.max(from, expedition.arriveAt);
+      completed.push(...this.advanceColonies(from, at));
+      from = at;
+      this.land(expedition, at);
+    }
+    this.expeditions = this.expeditions.filter((expedition) => !due.includes(expedition));
+    completed.push(...this.advanceColonies(from, to));
     this.realTimeSettledAt = to;
+    this.welcomeNotables(to);
     return completed;
+  }
+
+  private advanceColonies(from: number, to: number): ColonyCompletedConstruction[] {
+    return this.colonies.flatMap((colony) =>
+      advanceRealTime(colony, from, to).map((done) => ({ ...done, colonyId: colony.id })),
+    );
   }
 
   /**
@@ -99,34 +265,30 @@ export class User {
     const deliveries =
       Math.floor(totalOfflineMs / OFFLINIUM_DELIVERY_INTERVAL) -
       Math.floor(this.settledOfflineMs / OFFLINIUM_DELIVERY_INTERVAL);
-    this.resources.offlinium += deliveries * this.economy.offliniumMultiplier;
+    this.offlinium += deliveries * this.offliniumMultiplier;
     this.settledOfflineMs = totalOfflineMs;
   }
 
-  // --- Constructions ------------------------------------------------------
+  // --- Constructions (one site per colony) ---------------------------------
 
-  getNextLevel(type: BuildingType): number {
-    return this.planet.levels[type] + 1;
-  }
-
-  getNextCost(type: BuildingType): ResourceAmounts {
-    return getBuildingCost(type, this.getNextLevel(type));
-  }
-
-  getConstructionBlocker(type: BuildingType): ConstructionBlocker {
-    if (this.planet.construction) return "busy";
-    if (this.planet.freeFields <= 0) return "noField";
-    if (!hasResources(this.resources, this.getNextCost(type))) return "resources";
+  getConstructionBlocker(
+    type: BuildingType,
+    colony: Colony = this.activeColony,
+  ): ConstructionBlocker {
+    if (colony.planet.construction) return "busy";
+    if (colony.planet.freeFields <= 0) return "noField";
+    if (!hasResources(this.getResources(colony), colony.getNextCost(type))) return "resources";
     return null;
   }
 
   /** Pays for and starts the next level of a building. Call advance() first. */
-  startConstruction(type: BuildingType, now: number): boolean {
-    if (this.getConstructionBlocker(type) !== null) return false;
-    const targetLevel = this.getNextLevel(type);
-    const cost = this.getNextCost(type);
-    subtractResources(this.resources, cost);
-    this.planet.construction = {
+  startConstruction(type: BuildingType, now: number, colonyId = this.activeColonyId): boolean {
+    const colony = this.getColony(colonyId);
+    if (!colony || this.getConstructionBlocker(type, colony) !== null) return false;
+    const targetLevel = colony.getNextLevel(type);
+    const cost = colony.getNextCost(type);
+    this.applyAmounts(colony, cost, -1);
+    colony.planet.construction = {
       type,
       targetLevel,
       startedAt: now,
@@ -136,50 +298,259 @@ export class User {
     return true;
   }
 
-  cancelConstruction(): boolean {
-    const construction = this.planet.construction;
-    if (!construction) return false;
-    addResources(this.resources, construction.cost);
-    this.planet.construction = null;
+  /** Refunds the whole cost: metal to the colony, Offlinium to the player. */
+  cancelConstruction(colonyId = this.activeColonyId): boolean {
+    const colony = this.getColony(colonyId);
+    const construction = colony?.planet.construction;
+    if (!colony || !construction) return false;
+    this.applyAmounts(colony, construction.cost, 1);
+    colony.planet.construction = null;
     return true;
   }
 
-  /** Offlinium needed to skip `ms` of the construction in progress. */
+  /** Offlinium needed to skip `ms` of a construction in progress. */
   static getSpeedUpCost(ms: number): number {
     return Math.ceil(Math.max(0, ms) / SPEED_UP_MS_PER_OFFLINIUM);
   }
 
   /**
-   * Spends Offlinium to bring the end of the construction closer by up to
-   * `ms`. Call advance() before and after, so that a construction brought to
-   * its end completes at once.
+   * Spends Offlinium to bring the end of a colony's construction closer by up
+   * to `ms`. Call advance() before and after, so that a construction brought
+   * to its end completes at once.
    */
-  speedUpConstruction(ms: number, now: number): boolean {
-    const construction = this.planet.construction;
+  speedUpConstruction(ms: number, now: number, colonyId = this.activeColonyId): boolean {
+    const construction = this.getColony(colonyId)?.planet.construction;
     if (!construction || ms <= 0) return false;
     const skipped = Math.min(ms, Math.max(0, construction.endsAt - now));
     if (skipped <= 0) return false;
     const cost = User.getSpeedUpCost(skipped);
-    if (Math.floor(this.resources.offlinium) < cost) return false;
-    this.resources.offlinium -= cost;
+    if (Math.floor(this.offlinium) < cost) return false;
+    this.offlinium -= cost;
     construction.endsAt -= skipped;
     return true;
   }
 
+  renamePlanet(name: string, colonyId = this.activeColonyId): boolean {
+    const colony = this.getColony(colonyId);
+    const sanitized = sanitizeName(name);
+    if (!colony || !sanitized) return false;
+    colony.planet.name = sanitized;
+    return true;
+  }
+
+  // --- Expeditions ---------------------------------------------------------
+
+  /** The star system, drawn around the starting planet. */
+  get system(): StarSystem {
+    return getHomeSystem(this.homeColony.planet);
+  }
+
+  /** Where a colony sits in the star system. */
+  getSystemPlanet(colony: Colony): SystemPlanet | undefined {
+    return this.system.planets.find((planet) => planet.id === colony.systemPlanetId);
+  }
+
+  /** The player's colony on a planet of the system, if any. */
+  getColonyAt(targetId: string): Colony | undefined {
+    return this.colonies.find((colony) => colony.systemPlanetId === targetId);
+  }
+
+  /** Colonies besides the starting planet, those on their way included. */
+  get colonyCount(): number {
+    const onTheWay = this.expeditions.filter((item) => item.kind === "colonization").length;
+    return this.colonies.length - 1 + onTheWay;
+  }
+
+  /**
+   * Works out an expedition from a colony's spaceport towards a planet of the
+   * system: distance, flight time, fuel, cost, and what stops it, if anything.
+   * Null when the colony or the planet does not exist.
+   */
+  planExpedition(
+    kind: ExpeditionKind,
+    fromColonyId: string,
+    targetId: string,
+    requestedCargo: ExpeditionCargo = { metal: 0, food: 0 },
+  ): ExpeditionPlan | null {
+    const from = this.getColony(fromColonyId);
+    const target = this.system.planets.find((planet) => planet.id === targetId);
+    const origin = from && this.getSystemPlanet(from);
+    if (!from || !target || !origin) return null;
+
+    const level = from.planet.levels.spaceport;
+    const distanceAu = getDistanceAu(origin, target);
+    const fuel = getFuelCost(kind, distanceAu);
+    const capacity = getCargoCapacity(level);
+    const isColonization = kind === "colonization";
+    const cargo: ExpeditionCargo = isColonization
+      ? { ...COLONY_STARTING_RESOURCES }
+      : {
+          metal: Math.max(0, Math.floor(requestedCargo.metal)),
+          food: Math.max(0, Math.floor(requestedCargo.food)),
+        };
+    const cost: ResourceAmounts = isColonization
+      ? { ...COLONIZATION_COST, offlinium: fuel }
+      : { ...cargo, offlinium: fuel };
+    const colonists = isColonization ? COLONISTS_PER_SHIP : 0;
+    const flyingThere = this.expeditions.some(
+      (item) => item.kind === "colonization" && item.targetId === targetId,
+    );
+
+    let blocker: ExpeditionBlocker = null;
+    if (level <= 0) blocker = "noSpaceport";
+    else if (target.id === origin.id) blocker = "samePlanet";
+    else if (isColonization && !target.isColonizable) blocker = "notColonizable";
+    else if (isColonization && (this.getColonyAt(targetId) || flyingThere)) blocker = "occupied";
+    else if (isColonization && this.colonyCount >= MAX_COLONIES) blocker = "maxColonies";
+    else if (!isColonization && !this.getColonyAt(targetId)) blocker = "notOwned";
+    else if (distanceAu > getSpaceportRange(level) + 1e-9) blocker = "outOfRange";
+    // The departure planet keeps at least one inhabitant.
+    else if (isColonization && Math.floor(from.population) <= colonists) blocker = "colonists";
+    else if (!isColonization && cargo.metal + cargo.food <= 0) blocker = "emptyCargo";
+    else if (!isColonization && cargo.metal + cargo.food > capacity) blocker = "capacity";
+    else if (!hasResources(this.getResources(from), cost)) blocker = "resources";
+
+    return {
+      kind,
+      from,
+      target,
+      distanceAu,
+      rangeAu: getSpaceportRange(level),
+      requiredLevel: getRequiredSpaceportLevel(distanceAu),
+      flightMs: getFlightMs(distanceAu),
+      fuel,
+      cost,
+      cargo,
+      colonists,
+      capacity,
+      blocker,
+    };
+  }
+
+  /** Pays for an expedition and sends it off. Call advance() first. */
+  launchExpedition(
+    kind: ExpeditionKind,
+    fromColonyId: string,
+    targetId: string,
+    now: number,
+    cargo?: ExpeditionCargo,
+  ): boolean {
+    const plan = this.planExpedition(kind, fromColonyId, targetId, cargo);
+    if (!plan || plan.blocker !== null) return false;
+    this.applyAmounts(plan.from, plan.cost, -1);
+    plan.from.population -= plan.colonists;
+    this.expeditions.push({
+      id: crypto.randomUUID(),
+      kind,
+      fromColonyId,
+      targetId,
+      departAt: now,
+      arriveAt: now + plan.flightMs,
+      cargo: { ...plan.cargo },
+      colonists: plan.colonists,
+    });
+    return true;
+  }
+
+  /** An expedition reaches its destination at `at`. */
+  private land(expedition: Expedition, at: number): void {
+    const target = this.system.planets.find((planet) => planet.id === expedition.targetId);
+    const destination = this.getColonyAt(expedition.targetId);
+    let outcome: ExpeditionReport["outcome"];
+
+    if (expedition.kind === "cargo" && destination) {
+      destination.resources.metal += expedition.cargo.metal;
+      destination.resources.food += expedition.cargo.food;
+      outcome = "delivered";
+    } else if (
+      expedition.kind === "colonization" &&
+      target?.isColonizable &&
+      !destination &&
+      this.colonies.length - 1 < MAX_COLONIES
+    ) {
+      const planet = new Planet(target.name, target.seed);
+      planet.kind = target.kind;
+      planet.fields = target.fields;
+      this.addColony(
+        new Colony({
+          foundedAt: at,
+          systemPlanetId: target.id,
+          planet,
+          resources: { ...expedition.cargo },
+          population: expedition.colonists,
+        }),
+      );
+      outcome = "founded";
+    } else {
+      // Nowhere to land: everything goes back to the departure planet.
+      const origin = this.getColony(expedition.fromColonyId) ?? this.homeColony;
+      origin.resources.metal += expedition.cargo.metal;
+      origin.resources.food += expedition.cargo.food;
+      origin.population += expedition.colonists;
+      outcome = "returned";
+    }
+
+    this.expeditionReports = [
+      {
+        id: expedition.id,
+        kind: expedition.kind,
+        targetName: destination?.planet.name ?? target?.name ?? "?",
+        arriveAt: at,
+        outcome,
+        cargo: { ...expedition.cargo },
+        colonists: expedition.colonists,
+      },
+      ...this.expeditionReports,
+    ].slice(0, MAX_REPORTS);
+  }
+
+  // --- Notable inhabitants ------------------------------------------------
+
+  /** The leader of a colony, the active one by default. */
+  getLeader(colonyId = this.activeColonyId): Notable | undefined {
+    return this.notables.find(
+      (notable) => notable.role === "leader" && notable.colonyId === colonyId,
+    );
+  }
+
   get leader(): Notable | undefined {
-    return this.notables.find((notable) => notable.role === "leader");
+    return this.getLeader();
+  }
+
+  /**
+   * Puts one more inhabitant in the spotlight for every week completed. They
+   * live on the starting planet for now.
+   */
+  welcomeNotables(now: number): void {
+    const weeks = countWeeksSince(this.createdAt, now);
+    const known = new Set(this.notables.map((notable) => notable.id));
+    const home = this.homeColony;
+    for (let week = 1; week <= weeks; week++) {
+      const notable = createWeeklyNotable(home.planet.seed, this.createdAt, week, home.id);
+      if (!known.has(notable.id)) this.notables.push(notable);
+    }
+  }
+
+  /** The weekly inhabitants, newest first. */
+  get weeklyNotables(): Notable[] {
+    return this.notables
+      .filter((notable) => notable.role === "notable")
+      .sort((a, b) => b.featuredAt - a.featuredAt);
+  }
+
+  /** Inhabitants still waiting for the player to tell their story. */
+  get notablesToCustomize(): number {
+    return this.notables.filter((notable) => !notable.isCustomized).length;
+  }
+
+  /** When the next inhabitant will be put in the spotlight. */
+  getNextNotableAt(now: number): number {
+    return this.createdAt + (countWeeksSince(this.createdAt, now) + 1) * NOTABLE_INTERVAL_MS;
   }
 
   updateNotable(id: string, changes: NotableChanges): boolean {
     const notable = this.notables.find((item) => item.id === id);
     return notable ? applyNotableChanges(notable, changes) : false;
-  }
-
-  renamePlanet(name: string): boolean {
-    const sanitized = sanitizeName(name);
-    if (!sanitized) return false;
-    this.planet.name = sanitized;
-    return true;
   }
 
   // --- Offline periods ----------------------------------------------------
@@ -197,38 +568,89 @@ export class User {
   clone(): User {
     const copy = new User(this.name, this.createdAt);
     copy.periodList = this.periodList.clone();
-    copy.planet = this.planet.clone();
-    copy.resources = { ...this.resources };
-    copy.population = this.population;
+    copy.offlinium = this.offlinium;
+    copy.colonies = this.colonies.map((colony) => colony.clone());
+    copy.homeColonyId = this.homeColonyId;
+    copy.activeColonyId = this.activeColonyId;
     copy.notables = this.notables.map((notable) => ({ ...notable }));
+    copy.expeditions = this.expeditions.map((item) => ({ ...item, cargo: { ...item.cargo } }));
+    copy.expeditionReports = this.expeditionReports.map((item) => ({
+      ...item,
+      cargo: { ...item.cargo },
+    }));
     copy.realTimeSettledAt = this.realTimeSettledAt;
     copy.settledOfflineMs = this.settledOfflineMs;
     return copy;
   }
 
-  /** Imported data is validated field by field, never assigned wholesale. */
+  /**
+   * Imported data is validated field by field, never assigned wholesale. A
+   * save of another version, or without a planet, is ignored: the game
+   * starts afresh.
+   */
   loadFromSnapshot(parsed: unknown): void {
-    if (!isRecord(parsed)) return;
+    if (!isRecord(parsed) || parsed.saveVersion !== SAVE_VERSION) return;
+    const colonies = Array.isArray(parsed.colonies)
+      ? parsed.colonies.flatMap((value) => Colony.fromSnapshot(value, Date.now()) ?? [])
+      : [];
+    if (colonies.length === 0) return;
+
     this.name = sanitizeName(parsed.name) ?? this.name;
     if (isFiniteNumber(parsed.createdAt)) this.createdAt = parsed.createdAt;
     if (parsed.periodList !== undefined && parsed.periodList !== null) {
       this.periodList.loadPeriods(parsed.periodList);
     }
-    this.planet.load(parsed.planet);
-    if (isRecord(parsed.resources)) this.resources = sanitizeResources(parsed.resources);
-    if (isFiniteNumber(parsed.population) && parsed.population >= 0) {
-      this.population = parsed.population;
-    }
-    // Every planet has a leader, saves from before leaders included.
-    const notables = loadNotables(parsed.notables);
-    this.notables = notables.some((notable) => notable.role === "leader")
-      ? notables
-      : [createLeader(this.planet.name, this.createdAt), ...notables];
+
+    this.colonies = colonies;
+    if (isNonNegativeNumber(parsed.offlinium)) this.offlinium = parsed.offlinium;
+    const homeId = sanitizeId(parsed.homeColonyId);
+    this.homeColonyId = homeId && this.getColony(homeId) ? homeId : colonies[0].id;
+    const activeId = sanitizeId(parsed.activeColonyId);
+    this.activeColonyId = activeId && this.getColony(activeId) ? activeId : this.homeColonyId;
+    this.notables = loadNotables(parsed.notables);
+
+    // Expeditions only towards planets of the system, from known colonies.
+    this.expeditions = loadExpeditions(parsed.expeditions).filter(
+      (item) =>
+        this.getColony(item.fromColonyId) !== undefined &&
+        this.system.planets.some((planet) => planet.id === item.targetId),
+    );
+    this.expeditionReports = loadReports(parsed.expeditionReports);
+
     if (isFiniteNumber(parsed.realTimeSettledAt)) {
       this.realTimeSettledAt = parsed.realTimeSettledAt;
     }
-    if (isFiniteNumber(parsed.settledOfflineMs) && parsed.settledOfflineMs >= 0) {
+    if (isNonNegativeNumber(parsed.settledOfflineMs)) {
       this.settledOfflineMs = parsed.settledOfflineMs;
     }
   }
+}
+
+function loadReports(value: unknown): ExpeditionReport[] {
+  if (!Array.isArray(value)) return [];
+  return value.slice(0, MAX_REPORTS).flatMap((item): ExpeditionReport[] => {
+    if (!isRecord(item)) return [];
+    const id = sanitizeId(item.id);
+    const targetName = sanitizeName(item.targetName);
+    if (!id || !targetName || !isFiniteNumber(item.arriveAt)) return [];
+    if (item.kind !== "colonization" && item.kind !== "cargo") return [];
+    if (item.outcome !== "founded" && item.outcome !== "delivered" && item.outcome !== "returned") {
+      return [];
+    }
+    const cargo = isRecord(item.cargo) ? item.cargo : {};
+    return [
+      {
+        id,
+        kind: item.kind,
+        targetName,
+        arriveAt: item.arriveAt,
+        outcome: item.outcome,
+        cargo: {
+          metal: isNonNegativeNumber(cargo.metal) ? cargo.metal : 0,
+          food: isNonNegativeNumber(cargo.food) ? cargo.food : 0,
+        },
+        colonists: isNonNegativeNumber(item.colonists) ? Math.floor(item.colonists) : 0,
+      },
+    ];
+  });
 }

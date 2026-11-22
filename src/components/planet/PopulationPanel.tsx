@@ -1,4 +1,4 @@
-import { useUser } from "../../stores/userStore";
+import { useActiveColony } from "../../stores/userStore";
 import {
   describeSettlement,
   getPopulationMax,
@@ -25,13 +25,13 @@ const dangerNote = `${noteClass} border-(--red-border) bg-(--red-bg) text-(--red
 
 /** Where the population stands, where it is heading, and why. */
 export default function PopulationPanel() {
-  const user = useUser((state) => state.user);
-  const economy = user.economy;
-  const habitatLevel = user.planet.levels.habitat;
-  const population = Math.floor(user.population);
+  const colony = useActiveColony();
+  const economy = colony.economy;
+  const habitatLevel = colony.planet.levels.habitat;
+  const population = Math.floor(colony.population);
   const max = economy.populationMax;
-  const trend = getPopulationTrend(economy, user.population, user.resources.food);
-  const share = max > 0 ? Math.min(100, (user.population / max) * 100) : 0;
+  const trend = getPopulationTrend(economy, colony.population, colony.resources.food);
+  const share = max > 0 ? Math.min(100, (colony.population / max) * 100) : 0;
   const foodBalance = economy.foodPerHour - economy.foodEatenPerHour;
 
   return (

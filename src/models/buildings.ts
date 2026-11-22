@@ -40,29 +40,31 @@ export interface BuildingDefinition {
   staff: (level: number) => number;
 }
 
-// Values from the design document, to be balanced by simulation.
+// Values from the design document, rebalanced on 2026-11-22 after a 28 h
+// game: metal costs ×1.5, more staff per level, longer constructions, and a
+// stronger laboratory.
 export const BUILDINGS: Record<BuildingType, BuildingDefinition> = {
   metalMine: {
     type: "metalMine",
     label: "Mine de métal",
     icon: "⛏️",
     description: "Extrait du métal en continu, en temps réel.",
-    cost: { metal: 60, offlinium: 15, factor: 1.5 },
+    cost: { metal: 90, offlinium: 15, factor: 1.5 },
     production: (level) => ({ metal: growing(30, level) }),
     energyProduced: () => 0,
     energyConsumed: (level) => growing(10, level),
-    staff: (level) => 2 * level,
+    staff: (level) => 3 * level,
   },
   farm: {
     type: "farm",
     label: "Ferme",
     icon: "🌾",
     description: "Produit l'alimentation qui nourrit les habitants.",
-    cost: { metal: 50, offlinium: 10, factor: 1.5 },
-    production: (level) => ({ food: growing(25, level) }),
+    cost: { metal: 75, offlinium: 10, factor: 1.5 },
+    production: (level) => ({ food: growing(18, level) }),
     energyProduced: () => 0,
     energyConsumed: (level) => growing(8, level),
-    staff: (level) => 2 * level,
+    staff: (level) => 3 * level,
   },
   depot: {
     type: "depot",
@@ -70,33 +72,33 @@ export const BUILDINGS: Record<BuildingType, BuildingDefinition> = {
     icon: "📦",
     description:
       "Stocke le métal et l'alimentation. Au-delà de sa capacité, ce qui est produit est perdu. L'Offlinium n'est jamais plafonné.",
-    cost: { metal: 200, offlinium: 20, factor: 1.8 },
+    cost: { metal: 300, offlinium: 20, factor: 1.8 },
     production: () => ({}),
     energyProduced: () => 0,
     energyConsumed: () => 0,
-    staff: (level) => level,
+    staff: (level) => 2 * level,
   },
   reactor: {
     type: "reactor",
     label: "Réacteur",
     icon: "⚛️",
     description: "Produit l'énergie dont les autres bâtiments ont besoin.",
-    cost: { metal: 75, offlinium: 30, factor: 1.5 },
+    cost: { metal: 112, offlinium: 30, factor: 1.5 },
     production: () => ({}),
     energyProduced: (level) => growing(20, level),
     energyConsumed: () => 0,
-    staff: (level) => 2 * level,
+    staff: (level) => 3 * level,
   },
   laboratory: {
     type: "laboratory",
     label: "Laboratoire",
     icon: "🔬",
-    description: "Augmente l'Offlinium gagné hors ligne de 10 % par niveau.",
-    cost: { metal: 200, offlinium: 400, factor: 2 },
+    description: "Augmente l'Offlinium gagné hors ligne de 25 % par niveau.",
+    cost: { metal: 300, offlinium: 400, factor: 2 },
     production: () => ({}),
     energyProduced: () => 0,
     energyConsumed: (level) => growing(15, level),
-    staff: (level) => 3 * level,
+    staff: (level) => 5 * level,
   },
   habitat: {
     type: "habitat",
@@ -104,7 +106,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDefinition> = {
     icon: "🏘️",
     description:
       "Loge les habitants : village, puis ville au niveau 6, puis mégalopole au niveau 11.",
-    cost: { metal: 100, offlinium: 50, factor: 1.6 },
+    cost: { metal: 150, offlinium: 50, factor: 1.6 },
     production: () => ({}),
     energyProduced: () => 0,
     energyConsumed: (level) => growing(5, level),
@@ -115,21 +117,21 @@ export const BUILDINGS: Record<BuildingType, BuildingDefinition> = {
     label: "Spatioport",
     icon: "🚀",
     description:
-      "Ouvre l'accès au système planétaire. Il produira plus tard les vaisseaux des expéditions.",
-    cost: { metal: 400, offlinium: 200, factor: 2 },
+      "Ouvre le système planétaire et lance les expéditions : chaque niveau porte 0,5 UA plus loin et ajoute 2 000 de capacité au cargo.",
+    cost: { metal: 600, offlinium: 200, factor: 2 },
     production: () => ({}),
     energyProduced: () => 0,
     energyConsumed: (level) => growing(20, level),
-    staff: (level) => 5 * level,
+    staff: (level) => 8 * level,
   },
 };
 
 /** Every level of every building carries solar panels. */
 export const SOLAR_ENERGY_PER_LEVEL = 2;
 /** Construction hours = (metal + Offlinium) / this value. */
-export const CONSTRUCTION_COST_PER_HOUR = 2500;
+export const CONSTRUCTION_COST_PER_HOUR = 1000;
 /** Each Offlinium level of the laboratory adds this share of the base rate. */
-export const LABORATORY_BONUS_PER_LEVEL = 0.1;
+export const LABORATORY_BONUS_PER_LEVEL = 0.25;
 
 const HOUR_MS = 60 * 60 * 1000;
 

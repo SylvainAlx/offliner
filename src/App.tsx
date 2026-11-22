@@ -9,6 +9,7 @@ import ThemeSettings from "./components/ThemeSettings";
 import Tracking from "./components/Tracking";
 import Status from "./components/Status";
 import Planet from "./components/Planet";
+import Inhabitants from "./components/inhabitants/Inhabitants";
 import StarSystemView from "./components/system/StarSystemView";
 import SystemLocked from "./components/system/SystemLocked";
 import { useUser } from "./stores/userStore";
@@ -24,7 +25,9 @@ function AppContent() {
   const isOnline = useOnlineStatus((state) => state.isOnline);
   const [activeSection, setActiveSection] = useState<AppSection>("planet");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const isSystemUnlocked = useUser((state) => state.user.planet.levels.spaceport > 0);
+  const isSystemUnlocked = useUser((state) => state.user.isSystemUnlocked);
+  // Forms of the planet screen start again from the planet shown.
+  const activeColonyId = useUser((state) => state.user.activeColonyId);
 
   useEffect(() => useOnlineStatus.getState().initialize(), []);
 
@@ -38,10 +41,22 @@ function AppContent() {
   const renderSection = () => {
     switch (activeSection) {
       case "planet":
-        return <Planet />;
+        return (
+          <Planet
+            key={activeColonyId}
+            onOpenInhabitants={() => setActiveSection("inhabitants")}
+          />
+        );
+      case "inhabitants":
+        return <Inhabitants />;
       case "system":
         return isSystemUnlocked ? (
-          <StarSystemView />
+          <StarSystemView
+            onOpenPlanet={(colonyId) => {
+              useUser.getState().setActiveColony(colonyId);
+              setActiveSection("planet");
+            }}
+          />
         ) : (
           <SystemLocked onGoToPlanet={() => setActiveSection("planet")} />
         );

@@ -1,7 +1,13 @@
 import { useSideBar } from "../../hooks/useSideBar";
 import { useUser } from "../../stores/userStore";
 
-export type AppSection = "account" | "planet" | "system" | "achievements" | "help";
+export type AppSection =
+  | "account"
+  | "planet"
+  | "inhabitants"
+  | "system"
+  | "achievements"
+  | "help";
 
 const menuItems: Array<{
   id: AppSection;
@@ -12,8 +18,14 @@ const menuItems: Array<{
   {
     id: "planet",
     label: "Planète",
-    description: "Bâtiments et habitants",
+    description: "Bâtiments et ressources",
     icon: "🪐",
+  },
+  {
+    id: "inhabitants",
+    label: "Habitants",
+    description: "Chef et célébrités",
+    icon: "👑",
   },
   {
     id: "system",
@@ -55,7 +67,9 @@ export default function Sidebar({
   onSelect,
 }: SidebarProps) {
   // The star system opens once the spaceport is built.
-  const isSystemUnlocked = useUser((state) => state.user.planet.levels.spaceport > 0);
+  const isSystemUnlocked = useUser((state) => state.user.isSystemUnlocked);
+  // Inhabitants who arrived and still wait for the player to tell their story.
+  const notablesToCustomize = useUser((state) => state.user.notablesToCustomize);
   const { closeButtonRef, handleSelect } = useSideBar(
     isOpen,
     onClose,
@@ -122,6 +136,7 @@ export default function Sidebar({
               ? { ...menuItem, icon: "🔒", description: "Construisez le spatioport" }
               : menuItem;
             const isActive = activeSection === item.id;
+            const badge = item.id === "inhabitants" ? notablesToCustomize : 0;
             return (
               <button
                 className={[
@@ -136,7 +151,13 @@ export default function Sidebar({
                 ].join(" ")}
                 type="button"
                 aria-current={isActive ? "page" : undefined}
-                aria-label={isLocked ? `${item.label} : verrouillé, construisez le spatioport` : undefined}
+                aria-label={
+                  isLocked
+                    ? `${item.label} : verrouillé, construisez le spatioport`
+                    : badge > 0
+                      ? `${item.label} : ${badge} à personnaliser`
+                      : undefined
+                }
                 key={item.id}
                 onClick={() => handleSelect(item.id)}
               >
@@ -146,7 +167,7 @@ export default function Sidebar({
                 >
                   {item.icon}
                 </span>
-                <span className="grid min-w-0 gap-px">
+                <span className="grid min-w-0 flex-1 gap-px">
                   <strong className="text-(--gray-900) text-[0.9rem] font-black">
                     {item.label}
                   </strong>
@@ -154,6 +175,14 @@ export default function Sidebar({
                     {item.description}
                   </small>
                 </span>
+                {badge > 0 && (
+                  <span
+                    className="grid min-w-5.5 h-5.5 flex-none place-items-center rounded-full bg-(--green-solid) px-1.5 text-[0.7rem] font-black text-(--on-color)"
+                    aria-hidden="true"
+                  >
+                    {badge}
+                  </span>
+                )}
               </button>
             );
           })}

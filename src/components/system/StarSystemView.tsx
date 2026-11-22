@@ -2,13 +2,11 @@ import { useMemo, useState, type KeyboardEvent } from "react";
 import Card from "../ui/Card";
 import PlanetSprite from "../PlanetSprite";
 import { useUser } from "../../stores/userStore";
-import {
-  ABUNDANCE_LABELS,
-  generateStarSystem,
-  type Abundance,
-  type StarSystem,
-  type SystemPlanet,
-} from "../../models/starSystem";
+import type { StarSystem, SystemPlanet } from "../../models/starSystem";
+import type { User } from "../../models/user";
+import { getDistanceAu, getSpaceportRange } from "../../models/expedition";
+import ExpeditionPanel from "./ExpeditionPanel";
+import ExpeditionsOverview from "./ExpeditionsOverview";
 import {
   PLANET_KIND_LABELS,
   generatePlanetSprite,
@@ -65,20 +63,59 @@ function Stars({ seed }: { seed: string }) {
   );
 }
 
+/** What the map shows about a planet besides its look. */
+interface PlanetStatus {
+  /** The player's starting planet, one of their colonies, or neither. */
+  owner: "home" | "colony" | null;
+  name: string;
+  /** A colony ship is on its way there. */
+  isEnRoute: boolean;
+  /** One of the player's spaceports reaches it. */
+  isReachable: boolean;
+}
+
+function getPlanetStatus(user: User, planet: SystemPlanet): PlanetStatus {
+  const colony = user.getColonyAt(planet.id);
+  const owner = colony ? (colony.id === user.homeColonyId ? "home" : "colony") : null;
+  const isReachable =
+    owner !== null ||
+    user.colonies.some((port) => {
+      const origin = user.getSystemPlanet(port);
+      const level = port.planet.levels.spaceport;
+      return (
+        origin !== undefined &&
+        level > 0 &&
+        getDistanceAu(origin, planet) <= getSpaceportRange(level) + 1e-9
+      );
+    });
+  return {
+    owner,
+    name: colony?.planet.name ?? planet.name,
+    isEnRoute: user.expeditions.some(
+      (item) => item.kind === "colonization" && item.targetId === planet.id,
+    ),
+    isReachable,
+  };
+}
+
+const OWNER_COLORS = { home: "#4ade80", colony: "#67e8f9" } as const;
+
 function MapPlanet({
   planet,
+  status,
   count,
   isSelected,
   onSelect,
 }: {
   planet: SystemPlanet;
+  status: PlanetStatus;
   count: number;
   isSelected: boolean;
   onSelect: () => void;
 }) {
   const sprite = useMemo(
-    () => generatePlanetSprite(planet.seed),
-    [planet.seed],
+    () => generatePlanetSprite(planet.seed, planet.kind),
+    [planet.seed, planet.kind],
   );
   const radius = orbitRadius(planet.orbit, count);
   const angle = (planet.angle * Math.PI) / 180;
@@ -97,9 +134,20 @@ function MapPlanet({
     <g
       role="button"
       tabIndex={0}
-      aria-label={`${planet.name}${planet.isHome ? " (votre planète)" : ""}`}
+      aria-label={`${status.name}${
+        status.owner === "home"
+          ? " (votre planète)"
+          : status.owner === "colony"
+            ? " (votre colonie)"
+            : status.isEnRoute
+              ? " (colonisation en route)"
+              : status.isReachable
+                ? ""
+                : " (hors de portée)"
+      }`}
       aria-pressed={isSelected}
       className="cursor-pointer outline-none [&:focus-visible>circle]:stroke-(--accent)"
+      opacity={status.isReachable || isSelected ? 1 : 0.45}
       onClick={onSelect}
       onKeyDown={handleKeyDown}
     >
@@ -111,7 +159,13 @@ function MapPlanet({
         r={size / 2 + 5}
         fill="none"
         stroke={
-          isSelected ? "#c9a7ff" : planet.isHome ? "#4ade80" : "transparent"
+          isSelected
+            ? "#c9a7ff"
+            : status.owner
+              ? OWNER_COLORS[status.owner]
+              : status.isEnRoute
+                ? "#c9a7ff"
+                : "transparent"
         }
         strokeWidth={2}
         strokeDasharray={isSelected ? undefined : "3 3"}
@@ -135,16 +189,20 @@ function MapPlanet({
           />
         ))}
       </svg>
-      {planet.isHome && (
+      {(status.owner || status.isEnRoute) && (
         <text
           x={x}
           y={y + size / 2 + 16}
           textAnchor="middle"
           fontSize="11"
           fontWeight="700"
-          fill="#4ade80"
+          fill={status.owner ? OWNER_COLORS[status.owner] : "#c9a7ff"}
         >
-          Vous
+          {status.owner === "home"
+            ? "Vous"
+            : status.owner === "colony"
+              ? "Colonie"
+              : "En route"}
         </text>
       )}
     </g>
@@ -154,11 +212,13 @@ function MapPlanet({
 function SystemMap({
   system,
   seed,
+  statuses,
   selectedId,
   onSelect,
 }: {
   system: StarSystem;
   seed: string;
+  statuses: Record<string, PlanetStatus>;
   selectedId: string;
   onSelect: (id: string) => void;
 }) {
@@ -227,6 +287,7 @@ function SystemMap({
         <MapPlanet
           key={planet.id}
           planet={planet}
+          status={statuses[planet.id]}
           count={count}
           isSelected={planet.id === selectedId}
           onSelect={() => onSelect(planet.id)}
@@ -236,30 +297,16 @@ function SystemMap({
   );
 }
 
-function AbundanceMeter({ value }: { value: Abundance }) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className="inline-flex gap-0.5" aria-hidden="true">
-        {[1, 2, 3].map((step) => (
-          <span
-            key={step}
-            className={`inline-block h-2.5 w-2 rounded-[2px] ${
-              step <= value ? "bg-(--green-primary)" : "bg-(--gray-200)"
-            }`}
-          />
-        ))}
-      </span>
-      {ABUNDANCE_LABELS[value]}
-    </span>
-  );
-}
-
 function PlanetDetails({
   planet,
+  status,
   starName,
+  onOpenPlanet,
 }: {
   planet: SystemPlanet;
+  status: PlanetStatus;
   starName: string;
+  onOpenPlanet: () => void;
 }) {
   const rows: Array<[string, React.ReactNode]> = [
     ["Type", PLANET_KIND_LABELS[planet.kind]],
@@ -277,45 +324,51 @@ function PlanetDetails({
       "Température moyenne",
       `${planet.temperatureC > 0 ? "+" : ""}${planet.temperatureC} °C`,
     ],
-    ["Métal", <AbundanceMeter key="metal" value={planet.metal} />],
-    ["Fertilité", <AbundanceMeter key="fertility" value={planet.fertility} />],
   ];
 
   return (
     <section
-      className="flex flex-col gap-3 rounded-2xl border border-(--gray-200) bg-(--surface) p-3"
+      className="flex w-full flex-col gap-3 rounded-2xl border border-(--gray-200) bg-(--surface) p-3"
       aria-live="polite"
-      aria-label={`Fiche de ${planet.name}`}
+      aria-label={`Fiche de ${status.name}`}
     >
       <div className="flex items-center gap-3">
         <div className="grid size-20 shrink-0 place-items-center rounded-xl bg-[#0b1020]">
           <PlanetSprite
             seed={planet.seed}
+            kind={planet.kind}
             className="block size-18 [image-rendering:pixelated] [shape-rendering:crispEdges]"
           />
         </div>
         <div className="min-w-0">
           <strong className="block text-[1rem] text-(--gray-900) [overflow-wrap:anywhere]">
-            {planet.name}
+            {status.name}
           </strong>
           <span className="block text-[0.74rem] text-(--gray-600)">
             Orbite {planet.orbit + 1} autour de {starName}
           </span>
           <div className="mt-1 flex flex-wrap gap-1">
-            {planet.isHome && (
+            {status.owner && (
               <span className="rounded-full bg-green-50 px-2 py-0.5 text-[0.62rem] font-extrabold text-green-700 uppercase">
-                Votre planète
+                {status.owner === "home" ? "Votre planète" : "Votre colonie"}
               </span>
             )}
-            <span
-              className={`rounded-full px-2 py-0.5 text-[0.62rem] font-extrabold uppercase ${
-                planet.isColonizable
-                  ? "bg-blue-50 text-blue-700"
-                  : "bg-orange-50 text-orange-700"
-              }`}
-            >
-              {planet.isColonizable ? "Colonisable" : "Non colonisable"}
-            </span>
+            {status.isEnRoute && (
+              <span className="rounded-full bg-(--accent-bg) px-2 py-0.5 text-[0.62rem] font-extrabold text-(--accent) uppercase">
+                Colons en route
+              </span>
+            )}
+            {!status.owner && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-[0.62rem] font-extrabold uppercase ${
+                  planet.isColonizable
+                    ? "bg-blue-50 text-blue-700"
+                    : "bg-orange-50 text-orange-700"
+                }`}
+              >
+                {planet.isColonizable ? "Colonisable" : "Non colonisable"}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -329,33 +382,32 @@ function PlanetDetails({
         ))}
       </dl>
 
-      {!planet.isHome && (
-        <div className="flex flex-col gap-1">
-          <button
-            type="button"
-            className="min-h-10 cursor-not-allowed rounded-[10px] border border-dashed border-(--accent-border) bg-(--accent-bg) px-3 text-[0.8rem] font-bold text-(--accent) opacity-70"
-            disabled
-          >
-            🚀 Lancer une expédition
-          </button>
-          <span className="text-center text-[0.7rem] text-(--gray-500)">
-            Les expéditions arriveront dans une prochaine version.
-          </span>
-        </div>
+      {status.owner && (
+        <button
+          type="button"
+          className="min-h-10 cursor-pointer rounded-[10px] border border-(--gray-200) bg-(--surface) px-3 text-[0.8rem] font-bold text-(--gray-700) hover:bg-(--gray-100)"
+          onClick={onOpenPlanet}
+        >
+          🪐 Gérer cette planète
+        </button>
       )}
+      <ExpeditionPanel key={planet.id} target={planet} />
     </section>
   );
 }
 
 /** The player's star system: where the next targets will be chosen. */
-export default function StarSystemView() {
-  // Only what the system depends on: the planet object changes every second.
-  const seed = useUser((state) => state.user.planet.seed);
-  const name = useUser((state) => state.user.planet.name);
-  const fields = useUser((state) => state.user.planet.fields);
-  const system = useMemo(
-    () => generateStarSystem({ seed, name, fields }),
-    [seed, name, fields],
+export default function StarSystemView({
+  onOpenPlanet,
+}: {
+  onOpenPlanet: (colonyId: string) => void;
+}) {
+  const user = useUser((state) => state.user);
+  // Drawn around the starting planet, and kept between ticks.
+  const system = user.system;
+  const seed = user.homeColony.planet.seed;
+  const statuses = Object.fromEntries(
+    system.planets.map((planet) => [planet.id, getPlanetStatus(user, planet)]),
   );
   const [selectedId, setSelectedId] = useState("home");
   const selected =
@@ -365,11 +417,12 @@ export default function StarSystemView() {
     <Card
       ariaLabel="Système planétaire"
       title={`Système ${system.star.name}`}
-      subtitle={`${system.star.label} · ${system.planets.length} planètes. Touchez une planète pour voir ses caractéristiques.`}
+      subtitle={`${system.star.label} · ${system.planets.length} planètes. Touchez une planète pour la coloniser ou y envoyer un cargo.`}
     >
       <SystemMap
         system={system}
         seed={seed}
+        statuses={statuses}
         selectedId={selected.id}
         onSelect={setSelectedId}
       />
@@ -391,13 +444,27 @@ export default function StarSystemView() {
             }`}
             onClick={() => setSelectedId(item.id)}
           >
-            {item.isHome ? "🏠 " : ""}
-            {item.name}
+            {statuses[item.id].owner === "home"
+              ? "🏠 "
+              : statuses[item.id].owner === "colony"
+                ? "🏳️ "
+                : ""}
+            {statuses[item.id].name}
           </button>
         ))}
       </div>
 
-      <PlanetDetails planet={selected} starName={system.star.name} />
+      <ExpeditionsOverview />
+
+      <PlanetDetails
+        planet={selected}
+        status={statuses[selected.id]}
+        starName={system.star.name}
+        onOpenPlanet={() => {
+          const colony = user.getColonyAt(selected.id);
+          if (colony) onOpenPlanet(colony.id);
+        }}
+      />
     </Card>
   );
 }

@@ -14,8 +14,9 @@ export function useInstallGuide() {
   const hasProgress = useUser((state) => {
     const { user } = state;
     return (
-      user.planet.totalLevels > 0 ||
-      user.planet.construction !== null ||
+      user.colonies.some(
+        (colony) => colony.planet.totalLevels > 0 || colony.planet.construction !== null,
+      ) ||
       user.periodList.days.length > 0 ||
       user.periodList.openPeriodStart !== null
     );

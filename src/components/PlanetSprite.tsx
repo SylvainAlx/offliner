@@ -1,14 +1,16 @@
 import { useMemo } from "react";
-import { generatePlanetSprite } from "../utils/planetSprite";
+import { generatePlanetSprite, type PlanetKind } from "../utils/planetSprite";
 
 interface PlanetSpriteProps {
   seed: string;
+  /** Imposed kind; otherwise the seed decides. */
+  kind?: PlanetKind;
   className?: string;
 }
 
 /** The planet drawn in pixel art from its seed, always the same. */
-export default function PlanetSprite({ seed, className }: PlanetSpriteProps) {
-  const sprite = useMemo(() => generatePlanetSprite(seed), [seed]);
+export default function PlanetSprite({ seed, kind, className }: PlanetSpriteProps) {
+  const sprite = useMemo(() => generatePlanetSprite(seed, kind), [seed, kind]);
 
   return (
     <svg

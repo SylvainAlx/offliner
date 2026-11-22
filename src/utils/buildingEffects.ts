@@ -6,6 +6,7 @@ import {
   getStorageCapacity,
   type BuildingType,
 } from "../models/buildings";
+import { getCargoCapacity, getSpaceportRange } from "../models/expedition";
 import {
   ENERGY_ICON,
   POPULATION_ICON,
@@ -29,7 +30,7 @@ export function describeBuildingEffect(type: BuildingType, level: number): strin
     case "depot":
       return `${formatAmount(getStorageCapacity(level))} ${RESOURCE_ICONS.metal} et ${RESOURCE_ICONS.food} max`;
     case "spaceport":
-      return level === 1 ? "Accès au système planétaire" : "Vaisseaux (bientôt)";
+      return `Portée ${getSpaceportRange(level).toLocaleString("fr-FR")} UA · cargo ${formatAmount(getCargoCapacity(level))}`;
     case "habitat":
       return `${formatAmount(getPopulationMax(level))} ${POPULATION_ICON} max (${describeSettlement(level)})`;
   }

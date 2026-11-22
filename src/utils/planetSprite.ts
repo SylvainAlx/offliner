@@ -63,7 +63,7 @@ const PALETTES: Record<PlanetKind, Palette[]> = {
   ],
 };
 
-const KINDS: PlanetKind[] = ["ocean", "desert", "ice", "lava", "gas", "toxic"];
+export const PLANET_KINDS: PlanetKind[] = ["ocean", "desert", "ice", "lava", "gas", "toxic"];
 
 const SIZE = 40;
 const CENTER = (SIZE - 1) / 2;
@@ -98,7 +98,7 @@ function pick<T>(items: readonly T[], random: () => number): T {
 }
 
 /** Smooth noise: random values on a coarse lattice, interpolated. */
-function createNoise(random: () => number, cells: number): (x: number, y: number) => number {
+export function createNoise(random: () => number, cells: number): (x: number, y: number) => number {
   const lattice = Array.from({ length: cells + 1 }, () =>
     Array.from({ length: cells + 1 }, () => random()),
   );
@@ -116,7 +116,7 @@ function createNoise(random: () => number, cells: number): (x: number, y: number
   };
 }
 
-function mix(color: string, target: string, amount: number): string {
+export function mix(color: string, target: string, amount: number): string {
   const parse = (hex: string) => [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16));
   const [r1, g1, b1] = parse(color);
   const [r2, g2, b2] = parse(target);
@@ -125,10 +125,15 @@ function mix(color: string, target: string, amount: number): string {
   return `#${channel(r1, r2)}${channel(g1, g2)}${channel(b1, b2)}`;
 }
 
-/** Creates a stable pixel-art planet from its seed. */
-export function generatePlanetSprite(seed: string): PlanetSprite {
+/**
+ * Creates a stable pixel-art planet from its seed. Its kind comes from the
+ * seed too, unless `forcedKind` imposes one (the star system picks the kind
+ * of the other planets from their distance to the star).
+ */
+export function generatePlanetSprite(seed: string, forcedKind?: PlanetKind): PlanetSprite {
   const random = createRandom(hashSeed(seed));
-  const kind = pick(KINDS, random);
+  const seededKind = pick(PLANET_KINDS, random);
+  const kind = forcedKind ?? seededKind;
   const palette = pick(PALETTES[kind], random);
   const coarse = createNoise(random, 4);
   const fine = createNoise(random, 9);

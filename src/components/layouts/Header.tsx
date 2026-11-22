@@ -1,4 +1,6 @@
+import { useUser } from "../../stores/userStore";
 import ResourceBar from "../ResourceBar";
+import ColonySelector from "./ColonySelector";
 import { useOnlineStatus } from "../../stores/onlineStatusStore";
 
 export default function Header({
@@ -8,40 +10,49 @@ export default function Header({
   isMenuOpen: boolean;
   onMenuOpen: () => void;
 }) {
+  const notablesToCustomize = useUser((state) => state.user.notablesToCustomize);
   const offlineCountdownMs = useOnlineStatus(
     (state) => state.offlineCountdownMs,
   );
 
   return (
     <header className="text-center px-5 pt-9 pb-5 max-w-270 mx-auto w-full max-md:px-4 max-md:pt-5 max-md:pb-4">
-      <div className="flex justify-between items-center mb-2 gap-3 max-md:gap-2.5">
+      <div className="flex justify-end items-center mb-2 gap-3 max-md:gap-2.5">
         <button
-          className="hidden max-md:block w-11 h-11 p-0 border border-(--gray-200) rounded-[13px] bg-white/80 text-(--gray-800) cursor-pointer font-[inherit] text-[1.25rem] leading-none"
+          className="relative hidden max-md:block max-md:mr-auto w-11 h-11 p-0 border border-(--gray-200) rounded-[13px] bg-white/80 text-(--gray-800) cursor-pointer font-[inherit] text-[1.25rem] leading-none"
           type="button"
           onClick={onMenuOpen}
-          aria-label="Ouvrir le menu"
+          aria-label={
+            notablesToCustomize > 0
+              ? `Ouvrir le menu, ${notablesToCustomize} habitant${notablesToCustomize > 1 ? "s" : ""} à personnaliser`
+              : "Ouvrir le menu"
+          }
           aria-haspopup="menu"
           aria-expanded={isMenuOpen}
           aria-controls="app-navigation"
         >
           <span aria-hidden="true">☰</span>
+          {notablesToCustomize > 0 && (
+            <span
+              className="absolute -top-1 -right-1 size-3.5 rounded-full border-2 border-(--page-bg) bg-(--green-solid)"
+              aria-hidden="true"
+            />
+          )}
         </button>
-        <div className="flex items-center gap-2 max-md:mr-auto">
+        <div className="flex items-center gap-2">
+          <h1 className="text-[2rem] max-md:text-[1.7rem] font-extrabold m-0">
+            Offliner
+          </h1>
           <img
             className="size-10 object-contain"
             src="/icons/logo.svg"
             alt=""
             aria-hidden="true"
           />
-          <h1 className="text-[2rem] max-md:text-[1.7rem] font-extrabold m-0">
-            Offliner
-          </h1>
         </div>
       </div>
-      <p className="m-0 text-(--gray-600) text-[0.95rem] font-medium text-left">
-        Votre planète hors-ligne
-      </p>
-      <div className="mt-3">
+      <div className="mt-3 flex flex-col gap-2">
+        <ColonySelector />
         <ResourceBar />
       </div>
       {offlineCountdownMs !== null && (

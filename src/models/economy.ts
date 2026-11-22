@@ -9,7 +9,7 @@ import {
   type BuildingType,
 } from "./buildings";
 import type { Planet } from "./planet";
-import type { Resources } from "./resources";
+import type { ColonyResources } from "./colony";
 import {
   BASE_FOOD_PER_HOUR,
   BASE_METAL_PER_HOUR,
@@ -38,7 +38,10 @@ export interface Economy {
   populationMax: number;
   /** Metal and food each stop accumulating at this amount (depot). */
   storageCapacity: number;
-  /** Multiplier of the base Offlinium rate (laboratory bonus). */
+  /**
+   * 1 + this planet's laboratory bonus. The player's Offlinium rate adds up
+   * the bonuses of all their planets (User.offliniumMultiplier).
+   */
   offliniumMultiplier: number;
 }
 
@@ -87,10 +90,10 @@ export function computeEconomy(levels: BuildingLevels, population: number): Econ
   };
 }
 
-/** What the real-time clock changes on a planet. */
+/** What the real-time clock changes on a planet: a colony. */
 export interface RealTimeState {
   planet: Planet;
-  resources: Resources;
+  resources: ColonyResources;
   population: number;
 }
 

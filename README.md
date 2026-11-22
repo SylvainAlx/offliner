@@ -41,6 +41,9 @@ une apparence générés au hasard, 10 colons et quelques ressources.
 - **Population.** L’habitat fixe le maximum d’habitants (campement, village,
   ville, puis mégalopole). La population grandit en temps réel, mange de
   l’alimentation, et diminue en cas de famine.
+- **Habitants célèbres.** Un chef planétaire guide la colonie dès le premier
+  jour, puis un nouvel habitant se distingue chaque semaine. Le joueur leur
+  donne un nom, un titre et une histoire.
 
 Les règles chiffrées sont regroupées dans `src/models/buildings.ts` et
 `src/utils/constants.ts`.
@@ -59,6 +62,11 @@ Les règles chiffrées sont regroupées dans `src/models/buildings.ts` et
 - planète et bâtiments en pixel art générés en code : la planète dépend d’une
   graine aléatoire, et les bâtiments changent d’apparence avec leur niveau et
   le type de planète ;
+- expéditions de colonisation et de cargo depuis le spatioport, avec portée,
+  temps de vol en temps réel et sélecteur de planète ;
+- section Habitants : le chef planétaire et la galerie des habitants mis en
+  avant chaque semaine, avec une pastille tant qu’un nouveau venu attend
+  son histoire ;
 - succès regroupés par catégorie : planète, temps hors ligne, régularité ;
 - historique des périodes hors ligne ;
 - thème clair, sombre ou automatique (suit le réglage de l’appareil) ;
@@ -69,8 +77,22 @@ Les règles chiffrées sont regroupées dans `src/models/buildings.ts` et
 
 La progression est enregistrée dans une base IndexedDB locale, gérée par
 [Dexie](https://dexie.org/) : la base `offliner-v1`, enregistrement
-`profiles/current`. L’ancienne base `offliner`, celle de la version
-« village », est supprimée au premier lancement.
+`profiles/current`.
+
+La partie est organisée pour accueillir plusieurs planètes : le joueur
+(`User`) possède l’Offlinium, les habitants célèbres et une liste de
+colonies (`Colony`). Chaque colonie a sa planète, son chantier, son métal,
+son alimentation et sa population, et toutes avancent sur la même horloge
+temps réel. Les sauvegardes portent un numéro de version (`SAVE_VERSION`) :
+une sauvegarde d’une autre version n’est pas chargée, et la partie repart de
+zéro.
+
+Depuis l’onglet Système, le spatioport lance des expéditions : colonisation
+d’une planète libre (3 colonies au maximum) ou cargo de métal et
+d’alimentation vers une de vos planètes. Chaque niveau de spatioport porte
+0,5 UA plus loin et ajoute 2 000 unités de capacité au cargo ; le carburant
+se paie en Offlinium. Les vaisseaux sont sous-entendus : on ne les construit
+pas, leur prix fait partie de celui de l’expédition.
 
 L’application enregistre la partie toutes les 30 secondes lorsqu’elle est
 ouverte, à chaque action et à chaque construction terminée. Le choix du thème
@@ -175,9 +197,12 @@ La Content-Security-Policy interdit les scripts écrits directement dans
 ```text
 src/
 ├── components/   Composants React et mise en page
-│   └── planet/   Écran de la planète : bâtiments, construction, population, bilan
+│   ├── home/     Illustration de la page d’accueil
+│   ├── inhabitants/ Habitants célèbres
+│   ├── planet/   Écran de la planète : bâtiments, construction, population, bilan
+│   └── system/   Système planétaire
 ├── hooks/        Logique réutilisable des écrans et interactions
-├── models/       Logique de jeu : joueur, planète, bâtiments, économie, périodes hors ligne, succès
+├── models/       Logique de jeu : joueur, colonies, planète, bâtiments, économie, périodes hors ligne, succès
 ├── services/     Persistance locale
 ├── stores/       État global Zustand (partie, connexion, installation, thème)
 ├── styles/       Feuille de style et variables de thème
@@ -189,11 +214,15 @@ tests/            Tests Vitest, organisés comme src/
 ## Statut du projet
 
 Le projet est en développement actif. Le dépôt est public pour permettre la
-consultation du code et le partage du projet. Les contributions externes, pull
-requests et collaborations ne sont pas ouvertes pour le moment.
+lecture et la revue du code ; il n’accepte pas de contributions (voir
+[CONTRIBUTING.md](CONTRIBUTING.md)).
 
 ## Licence
 
-Aucune licence open source n’est encore définie pour ce projet. La visibilité
-publique du dépôt ne constitue pas, à elle seule, une autorisation de copier,
-modifier ou redistribuer le code. Une licence pourra être ajoutée ultérieurement.
+© 2026 Sylvain Alexandre. Tous droits réservés.
+
+Offliner n’est pas un logiciel libre. Le code, les textes et les graphismes
+sont protégés par le droit d’auteur : vous pouvez les lire et les commenter,
+mais pas les copier, les modifier, les redistribuer ni les réutiliser sans
+autorisation écrite. Les conditions complètes sont dans le fichier
+[LICENSE](LICENSE).

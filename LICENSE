@@ -1,0 +1,45 @@
+Offliner
+Copyright © 2026 Sylvain Alexandre. Tous droits réservés.
+
+Ce dépôt et tout son contenu (code source, textes, graphismes en pixel art,
+générateurs graphiques, interface et documentation) sont l'œuvre de
+Sylvain Alexandre et sont protégés par le droit d'auteur.
+
+Aucune licence n'est accordée, à l'exception de ce qui suit.
+
+1. Ce qui est permis
+
+   - Consulter le code sur GitHub et le lire pour le comprendre ou le
+     commenter, notamment dans le cadre d'une revue de code.
+   - Faire un fork sur GitHub, dans la seule mesure où les conditions
+     d'utilisation de GitHub l'imposent pour un dépôt public. Ce fork ne donne
+     aucun droit d'utilisation supplémentaire.
+   - Citer de courts extraits du code dans une critique ou une analyse, en
+     mentionnant l'auteur et la source.
+
+2. Ce qui est interdit sans l'accord écrit préalable de l'auteur
+
+   - Copier, reproduire ou réutiliser tout ou partie du code, des textes ou
+     des graphismes, y compris dans un autre projet.
+   - Modifier le code ou créer une œuvre dérivée.
+   - Distribuer, publier ou héberger l'application ou une version modifiée,
+     à titre gratuit ou payant.
+   - Utiliser le contenu de ce dépôt pour entraîner un modèle d'intelligence
+     artificielle.
+
+3. Contributions
+
+   Ce dépôt n'accepte pas de contributions : les pull requests et les
+   propositions de code ne seront pas intégrées.
+
+Pour toute demande d'autorisation, contactez l'auteur via son profil GitHub :
+https://github.com/SylvainAlx
+
+---
+
+English summary: Copyright © 2026 Sylvain Alexandre. All rights reserved.
+This repository is public for reading and code review only. No license is
+granted to copy, modify, distribute, host or reuse any part of it (code,
+text or artwork), or to use it to train AI models, without the author's prior
+written permission. Contributions are not accepted. The French text above
+prevails.

@@ -36,6 +36,7 @@ import {
 } from "../../src/utils/constants";
 import { getBuildingCost, getConstructionMs } from "../../src/models/buildings";
 import { HOUR, local } from "../helpers/time";
+import { setBalance } from "../helpers/user";
 
 const T0 = local(2026, 1, 10, 8);
 
@@ -66,7 +67,7 @@ describe("userStore", () => {
       expect(user.periodList.openPeriodStart).toBeNull();
       expect(user.periodList.computeCompletedMs()).toBe(0);
       expect(user.periodList.unconfirmedGaps).toHaveLength(1);
-      expect(user.resources.offlinium).toBe(STARTING_RESOURCES.offlinium);
+      expect(user.offlinium).toBe(STARTING_RESOURCES.offlinium);
     });
 
     it("credits at most the cap when the player confirms", async () => {
@@ -82,7 +83,7 @@ describe("userStore", () => {
       const total = user.periodList.computeTotalMs();
 
       expect(total).toBe(CAP);
-      expect(user.resources.offlinium).toBe(STARTING_RESOURCES.offlinium + CAP / INTERVAL);
+      expect(user.offlinium).toBe(STARTING_RESOURCES.offlinium + CAP / INTERVAL);
       expect(user.periodList.unconfirmedGaps).toEqual([]);
     });
 
@@ -121,11 +122,19 @@ describe("userStore", () => {
     const snapshot = {
       name: "Importé",
       createdAt: 1,
-      resources: { metal: 5, food: 6, offlinium: 10 },
+      saveVersion: 2,
+      offlinium: 10,
       settledOfflineMs: 0,
       periodList: { days: [], openPeriodStart: T0, openPeriodLastSeen: T0 + HOUR },
-      planet: { name: "Testia I", levels: { metalMine: 2 } },
-      population: 10,
+      colonies: [
+        {
+          id: "testia",
+          systemPlanetId: "home",
+          planet: { name: "Testia I", seed: "testia", levels: { metalMine: 2 } },
+          resources: { metal: 5, food: 6 },
+          population: 10,
+        },
+      ],
       realTimeSettledAt: Date.now(),
     };
 
@@ -134,10 +143,10 @@ describe("userStore", () => {
 
       const user = useUser.getState().user;
       expect(user.name).toBe("Importé");
-      expect(user.planet.name).toBe("Testia I");
-      expect(user.planet.levels.metalMine).toBe(2);
+      expect(user.homeColony.planet.name).toBe("Testia I");
+      expect(user.homeColony.planet.levels.metalMine).toBe(2);
       expect(user.periodList.openPeriodStart).toBeNull();
-      expect(user.resources.offlinium).toBe(10 + HOUR / INTERVAL);
+      expect(user.offlinium).toBe(10 + HOUR / INTERVAL);
       expect(lastSaved()).toMatchObject({ name: "Importé" });
     });
 
@@ -153,7 +162,12 @@ describe("userStore", () => {
       await useUser.getState().resetAll();
 
       expect(useUser.getState().user.name).toBe("Joueur");
-      expect(lastSaved()).toMatchObject({ name: "Joueur", resources: STARTING_RESOURCES });
+      expect(lastSaved()).toMatchObject({
+        name: "Joueur",
+        saveVersion: 2,
+        offlinium: STARTING_RESOURCES.offlinium,
+        colonies: [{ resources: { metal: STARTING_RESOURCES.metal, food: STARTING_RESOURCES.food } }],
+      });
     });
   });
 
@@ -164,8 +178,8 @@ describe("userStore", () => {
       vi.mocked(userRepository.save).mockClear();
 
       useUser.getState().tick(user.realTimeSettledAt + HOUR);
-      expect(useUser.getState().user.resources.metal).toBeGreaterThan(user.resources.metal);
-      expect(user.resources.metal).toBe(STARTING_RESOURCES.metal);
+      expect(useUser.getState().user.homeColony.resources.metal).toBeGreaterThan(user.homeColony.resources.metal);
+      expect(user.homeColony.resources.metal).toBe(STARTING_RESOURCES.metal);
       // Just saved: the tick only updates the state.
       await new Promise((resolve) => setTimeout(resolve, 5));
       expect(userRepository.save).not.toHaveBeenCalled();
@@ -179,12 +193,17 @@ describe("userStore", () => {
 
     it("completes a construction and keeps track of it", () => {
       expect(useUser.getState().startConstruction("metalMine")).toBe(true);
-      const { endsAt } = useUser.getState().user.planet.construction!;
+      const { endsAt } = useUser.getState().user.homeColony.planet.construction!;
 
       useUser.getState().tick(endsAt);
-      expect(useUser.getState().user.planet.levels.metalMine).toBe(1);
+      expect(useUser.getState().user.homeColony.planet.levels.metalMine).toBe(1);
       expect(useUser.getState().completedConstructions).toEqual([
-        { type: "metalMine", level: 1, at: endsAt },
+        {
+          type: "metalMine",
+          level: 1,
+          at: endsAt,
+          colonyId: useUser.getState().user.homeColonyId,
+        },
       ]);
     });
 
@@ -203,7 +222,7 @@ describe("userStore", () => {
   describe("actions", () => {
     it("starts a construction only with enough resources, without touching the old state", () => {
       const poor = new UserModel();
-      poor.resources = { metal: 0, food: 0, offlinium: 0 };
+      setBalance(poor, { metal: 0, food: 0, offlinium: 0 });
       useUser.setState({ user: poor });
       expect(useUser.getState().startConstruction("metalMine")).toBe(false);
 
@@ -211,17 +230,17 @@ describe("userStore", () => {
       useUser.setState({ user });
       expect(useUser.getState().startConstruction("metalMine")).toBe(true);
       const cost = getBuildingCost("metalMine", 1);
-      expect(Math.floor(useUser.getState().user.resources.offlinium)).toBe(
+      expect(Math.floor(useUser.getState().user.offlinium)).toBe(
         STARTING_RESOURCES.offlinium - cost.offlinium!,
       );
-      expect(user.planet.construction).toBeNull();
+      expect(user.homeColony.planet.construction).toBeNull();
     });
 
     it("finishes a construction at once when it is sped up to its end", () => {
       useUser.getState().startConstruction("metalMine");
       expect(useUser.getState().speedUpConstruction(getConstructionMs("metalMine", 1))).toBe(true);
-      expect(useUser.getState().user.planet.levels.metalMine).toBe(1);
-      expect(useUser.getState().user.planet.construction).toBeNull();
+      expect(useUser.getState().user.homeColony.planet.levels.metalMine).toBe(1);
+      expect(useUser.getState().user.homeColony.planet.construction).toBeNull();
     });
 
     it("ignores blank names", () => {

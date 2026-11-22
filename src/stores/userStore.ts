@@ -1,7 +1,8 @@
 import { create } from "zustand";
-import { User } from "../models/user";
+import { User, type ColonyCompletedConstruction } from "../models/user";
+import type { Colony } from "../models/colony";
+import type { ExpeditionCargo, ExpeditionKind } from "../models/expedition";
 import type { BuildingType } from "../models/buildings";
-import type { CompletedConstruction } from "../models/economy";
 import type { NotableChanges } from "../models/notable";
 import { userRepository } from "../services/userRepository";
 import { AUTOSAVE_INTERVAL_MS } from "../utils/constants";
@@ -11,10 +12,19 @@ export interface UserStore {
   user: User;
   isHydrated: boolean;
   /** Levels reached since the app was opened, newest last. */
-  completedConstructions: CompletedConstruction[];
+  completedConstructions: ColonyCompletedConstruction[];
   hydrate: () => Promise<User>;
   updateName: (name: string) => void;
   renamePlanet: (name: string) => boolean;
+  /** Shows another of the player's planets. */
+  setActiveColony: (id: string) => boolean;
+  /** Sends an expedition from a colony's spaceport to a planet of the system. */
+  launchExpedition: (
+    kind: ExpeditionKind,
+    fromColonyId: string,
+    targetId: string,
+    cargo?: ExpeditionCargo,
+  ) => boolean;
   updateNotable: (id: string, changes: NotableChanges) => boolean;
   /** Brings the game up to date with both clocks. Called every second. */
   tick: (now: number) => void;
@@ -90,7 +100,7 @@ export const useUser = create<UserStore>((set, get) => {
     return true;
   }
 
-  function commit(next: User, completed: CompletedConstruction[]): void {
+  function commit(next: User, completed: ColonyCompletedConstruction[]): void {
     set({
       user: next,
       completedConstructions:
@@ -128,6 +138,11 @@ export const useUser = create<UserStore>((set, get) => {
     },
 
     renamePlanet: (name) => update((user) => user.renamePlanet(name)),
+
+    setActiveColony: (id) => update((user) => user.setActiveColony(id)),
+
+    launchExpedition: (kind, fromColonyId, targetId, cargo) =>
+      update((user, now) => user.launchExpedition(kind, fromColonyId, targetId, now, cargo)),
 
     updateNotable: (id, changes) => update((user) => user.updateNotable(id, changes)),
 
@@ -235,3 +250,8 @@ export const useUser = create<UserStore>((set, get) => {
     },
   };
 });
+
+/** The planet the player is looking at (Planète and Habitants sections). */
+export function useActiveColony(): Colony {
+  return useUser((state) => state.user.activeColony);
+}
