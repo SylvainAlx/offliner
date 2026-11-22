@@ -19,6 +19,7 @@ import {
   STARTING_RESOURCES,
 } from "../../src/utils/constants";
 import { HOUR } from "../helpers/time";
+import { setBalance } from "../helpers/user";
 
 const T0 = 1_800_000_000_000;
 
@@ -97,38 +98,38 @@ describe("economy", () => {
 
   it("feeds the starting colons with the base food production", () => {
     const user = newUser();
-    advanceRealTime(user, T0, T0 + 10 * HOUR);
-    expect(user.resources.food).toBeCloseTo(STARTING_RESOURCES.food);
-    expect(user.population).toBe(STARTING_POPULATION);
-    expect(user.resources.metal).toBeCloseTo(STARTING_RESOURCES.metal + 10 * BASE_METAL_PER_HOUR);
+    advanceRealTime(user.homeColony, T0, T0 + 10 * HOUR);
+    expect(user.homeColony.resources.food).toBeCloseTo(STARTING_RESOURCES.food);
+    expect(user.homeColony.population).toBe(STARTING_POPULATION);
+    expect(user.homeColony.resources.metal).toBeCloseTo(STARTING_RESOURCES.metal + 10 * BASE_METAL_PER_HOUR);
   });
 
   it("lets the population starve once the food runs out", () => {
     const user = newUser();
-    user.planet.levels.habitat = 5;
-    user.population = 100;
-    user.resources.food = 0;
-    advanceRealTime(user, T0, T0 + HOUR);
-    expect(user.resources.food).toBe(0);
-    expect(user.population).toBeLessThan(100);
-    expect(user.population).toBeGreaterThan(97);
+    user.homeColony.planet.levels.habitat = 5;
+    user.homeColony.population = 100;
+    user.homeColony.resources.food = 0;
+    advanceRealTime(user.homeColony, T0, T0 + HOUR);
+    expect(user.homeColony.resources.food).toBe(0);
+    expect(user.homeColony.population).toBeLessThan(100);
+    expect(user.homeColony.population).toBeGreaterThan(97);
   });
 
   it("grows the population towards the habitat's maximum", () => {
     const user = newUser();
-    user.planet.levels.habitat = 2;
-    user.planet.levels.reactor = 1;
-    user.resources.food = 10_000;
-    advanceRealTime(user, T0, T0 + 100 * HOUR);
-    expect(user.population).toBe(getPopulationMax(2));
+    user.homeColony.planet.levels.habitat = 2;
+    user.homeColony.planet.levels.reactor = 1;
+    user.homeColony.resources.food = 10_000;
+    advanceRealTime(user.homeColony, T0, T0 + 100 * HOUR);
+    expect(user.homeColony.population).toBe(getPopulationMax(2));
   });
 });
 
 describe("user", () => {
   it("starts with the planned resources and population", () => {
     const user = newUser();
-    expect(user.resources).toEqual(STARTING_RESOURCES);
-    expect(user.population).toBe(STARTING_POPULATION);
+    expect(user.getResources()).toEqual(STARTING_RESOURCES);
+    expect(user.homeColony.population).toBe(STARTING_POPULATION);
   });
 
   it("builds in real time, and the level counts from its exact end", () => {
@@ -137,13 +138,13 @@ describe("user", () => {
     const endsAt = T0 + getConstructionMs("metalMine", 1);
 
     expect(user.advance(endsAt - 1, 0)).toEqual([]);
-    expect(user.planet.levels.metalMine).toBe(0);
+    expect(user.homeColony.planet.levels.metalMine).toBe(0);
 
     expect(user.advance(endsAt + HOUR, 0)).toEqual([
-      { type: "metalMine", level: 1, at: endsAt },
+      { type: "metalMine", level: 1, at: endsAt, colonyId: user.homeColonyId },
     ]);
-    expect(user.planet.levels.metalMine).toBe(1);
-    expect(user.planet.construction).toBeNull();
+    expect(user.homeColony.planet.levels.metalMine).toBe(1);
+    expect(user.homeColony.planet.construction).toBeNull();
   });
 
   it("refuses a second construction, a full planet or missing resources", () => {
@@ -152,11 +153,11 @@ describe("user", () => {
     expect(user.getConstructionBlocker("metalMine")).toBe("busy");
 
     const full = newUser();
-    full.planet.levels.metalMine = PLANET_FIELDS;
+    full.homeColony.planet.levels.metalMine = PLANET_FIELDS;
     expect(full.getConstructionBlocker("farm")).toBe("noField");
 
     const poor = newUser();
-    poor.resources.offlinium = 0;
+    poor.offlinium = 0;
     expect(poor.getConstructionBlocker("farm")).toBe("resources");
     expect(poor.startConstruction("farm", T0)).toBe(false);
   });
@@ -167,43 +168,43 @@ describe("user", () => {
     expect(user.startConstruction("laboratory", T0)).toBe(false);
 
     const rich = newUser();
-    rich.resources = { metal: 1000, food: 0, offlinium: 1000 };
+    setBalance(rich, { metal: 1000, food: 0, offlinium: 1000 });
     rich.startConstruction("laboratory", T0);
     expect(rich.cancelConstruction()).toBe(true);
-    expect(rich.resources).toEqual({ metal: 1000, food: 0, offlinium: 1000 });
-    expect(rich.planet.usedFields).toBe(0);
+    expect(rich.getResources()).toEqual({ metal: 1000, food: 0, offlinium: 1000 });
+    expect(rich.homeColony.planet.usedFields).toBe(0);
   });
 
   it("buys construction time with Offlinium: 1 per 10 s", () => {
     const user = newUser();
-    user.resources.metal = 10_000;
+    user.homeColony.resources.metal = 10_000;
     user.startConstruction("reactor", T0);
-    const before = user.planet.construction!.endsAt;
-    const offlinium = user.resources.offlinium;
+    const before = user.homeColony.planet.construction!.endsAt;
+    const offlinium = user.offlinium;
 
     expect(user.speedUpConstruction(60_000, T0)).toBe(true);
-    expect(user.planet.construction!.endsAt).toBe(before - 60_000);
-    expect(user.resources.offlinium).toBe(offlinium - 6);
+    expect(user.homeColony.planet.construction!.endsAt).toBe(before - 60_000);
+    expect(user.offlinium).toBe(offlinium - 6);
 
     // Finishing it completes it at the next update.
     expect(user.speedUpConstruction(Number.MAX_SAFE_INTEGER, T0)).toBe(true);
     expect(user.advance(T0, 0)).toHaveLength(1);
-    expect(user.planet.levels.reactor).toBe(1);
+    expect(user.homeColony.planet.levels.reactor).toBe(1);
   });
 
   it("earns Offlinium from offline time only, boosted by the laboratory", () => {
     const user = newUser();
     user.advance(T0 + HOUR, 0);
-    expect(user.resources.offlinium).toBe(STARTING_RESOURCES.offlinium);
+    expect(user.offlinium).toBe(STARTING_RESOURCES.offlinium);
 
     user.advance(T0 + HOUR, HOUR);
-    expect(user.resources.offlinium).toBe(STARTING_RESOURCES.offlinium + HOUR / INTERVAL);
+    expect(user.offlinium).toBe(STARTING_RESOURCES.offlinium + HOUR / INTERVAL);
 
-    user.planet.levels.laboratory = 2;
-    user.planet.levels.reactor = 10;
-    user.population = 100;
+    user.homeColony.planet.levels.laboratory = 2;
+    user.homeColony.planet.levels.reactor = 10;
+    user.homeColony.population = 100;
     user.advance(T0 + HOUR, 2 * HOUR);
-    expect(user.resources.offlinium).toBeCloseTo(
+    expect(user.offlinium).toBeCloseTo(
       STARTING_RESOURCES.offlinium + HOUR / INTERVAL + (HOUR / INTERVAL) * 1.5,
     );
   });
@@ -211,32 +212,32 @@ describe("user", () => {
   it("ignores a clock that went back", () => {
     const user = newUser();
     user.advance(T0 + HOUR, 0);
-    const metal = user.resources.metal;
+    const metal = user.homeColony.resources.metal;
     expect(user.advance(T0, 0)).toEqual([]);
-    expect(user.resources.metal).toBe(metal);
+    expect(user.homeColony.resources.metal).toBe(metal);
     expect(user.realTimeSettledAt).toBe(T0 + HOUR);
   });
 
   it("survives a save and a clone", () => {
     const user = newUser();
     user.startConstruction("farm", T0);
-    user.planet.levels.habitat = 3;
-    user.population = 42.5;
+    user.homeColony.planet.levels.habitat = 3;
+    user.homeColony.population = 42.5;
 
     const restored = new User();
     restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
-    expect(restored.planet.name).toBe(user.planet.name);
-    expect(restored.planet.levels).toEqual(user.planet.levels);
-    expect(restored.planet.construction).toEqual(user.planet.construction);
-    expect(restored.resources).toEqual(user.resources);
-    expect(restored.population).toBe(42.5);
+    expect(restored.homeColony.planet.name).toBe(user.homeColony.planet.name);
+    expect(restored.homeColony.planet.levels).toEqual(user.homeColony.planet.levels);
+    expect(restored.homeColony.planet.construction).toEqual(user.homeColony.planet.construction);
+    expect(restored.getResources()).toEqual(user.getResources());
+    expect(restored.homeColony.population).toBe(42.5);
     expect(restored.realTimeSettledAt).toBe(T0);
 
     const copy = user.clone();
-    copy.planet.levels.habitat = 9;
-    copy.planet.construction!.cost.metal = 0;
-    expect(user.planet.levels.habitat).toBe(3);
-    expect(user.planet.construction!.cost.metal).toBe(getBuildingCost("farm", 1).metal);
+    copy.homeColony.planet.levels.habitat = 9;
+    copy.homeColony.planet.construction!.cost.metal = 0;
+    expect(user.homeColony.planet.levels.habitat).toBe(3);
+    expect(user.homeColony.planet.construction!.cost.metal).toBe(getBuildingCost("farm", 1).metal);
   });
 
   it("ignores unknown or malformed data", () => {
@@ -247,11 +248,11 @@ describe("user", () => {
       population: -1,
       __proto__: { admin: true },
     });
-    expect(user.planet.levels.metalMine).toBe(0);
-    expect(user.planet.levels.farm).toBe(2);
-    expect(user.planet.construction).toBeNull();
-    expect(user.resources).toEqual({ metal: 0, food: 3, offlinium: 0 });
-    expect(user.population).toBe(STARTING_POPULATION);
+    expect(user.homeColony.planet.levels.metalMine).toBe(0);
+    expect(user.homeColony.planet.levels.farm).toBe(2);
+    expect(user.homeColony.planet.construction).toBeNull();
+    expect(user.getResources()).toEqual({ metal: 0, food: 3, offlinium: 0 });
+    expect(user.homeColony.population).toBe(STARTING_POPULATION);
   });
 });
 
@@ -280,12 +281,12 @@ describe("planet sprite", () => {
     const user = new User();
     const restored = new User();
     restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
-    expect(restored.planet.seed).toBe(user.planet.seed);
-    expect(user.clone().planet.seed).toBe(user.planet.seed);
+    expect(restored.homeColony.planet.seed).toBe(user.homeColony.planet.seed);
+    expect(user.clone().homeColony.planet.seed).toBe(user.homeColony.planet.seed);
 
     const legacy = new User();
     legacy.loadFromSnapshot({ planet: { name: "Velora IV" } });
-    expect(legacy.planet.seed).toBe("Velora IV");
+    expect(legacy.homeColony.planet.seed).toBe("Velora IV");
   });
 });
 
@@ -313,20 +314,20 @@ describe("depot and population trend", () => {
     expect(getStorageCapacity(1)).toBe(1800);
 
     const user = newUser();
-    user.resources = { metal: 990, food: 990, offlinium: 5000 };
-    user.planet.levels.farm = 5;
-    user.planet.levels.reactor = 5;
-    user.population = 10;
-    advanceRealTime(user, T0, T0 + 10 * HOUR);
-    expect(user.resources.metal).toBe(1000);
-    expect(user.resources.food).toBe(1000);
+    setBalance(user, { metal: 990, food: 990, offlinium: 5000 });
+    user.homeColony.planet.levels.farm = 5;
+    user.homeColony.planet.levels.reactor = 5;
+    user.homeColony.population = 10;
+    advanceRealTime(user.homeColony, T0, T0 + 10 * HOUR);
+    expect(user.homeColony.resources.metal).toBe(1000);
+    expect(user.homeColony.resources.food).toBe(1000);
 
     // A refund above the capacity is kept, but does not grow.
-    user.resources.metal = 1500;
-    advanceRealTime(user, T0 + 10 * HOUR, T0 + 11 * HOUR);
-    expect(user.resources.metal).toBe(1500);
+    user.homeColony.resources.metal = 1500;
+    advanceRealTime(user.homeColony, T0 + 10 * HOUR, T0 + 11 * HOUR);
+    expect(user.homeColony.resources.metal).toBe(1500);
     user.advance(T0 + 11 * HOUR, 100 * HOUR);
-    expect(user.resources.offlinium).toBeGreaterThan(5000 + 1000);
+    expect(user.offlinium).toBeGreaterThan(5000 + 1000);
   });
 
   it("tells where the population is heading", async () => {
@@ -355,7 +356,7 @@ describe("planetary leader", () => {
     const leader = user.leader!;
     expect(leader.role).toBe("leader");
     expect(leader.title).toBe("Chef planétaire");
-    expect(leader.description).toContain(user.planet.name);
+    expect(leader.description).toContain(user.homeColony.planet.name);
 
     expect(user.updateNotable(leader.id, { name: "Ada Prax", title: "Gouverneure", description: "  Fondatrice.  " })).toBe(true);
     expect(user.leader).toMatchObject({ name: "Ada Prax", title: "Gouverneure", description: "Fondatrice." });
@@ -506,19 +507,19 @@ describe("spaceport", () => {
   it("is a building like the others, needed to open the star system", () => {
     expect(getBuildingCost("spaceport", 1)).toEqual({ metal: 600, offlinium: 200 });
     const user = newUser();
-    expect(user.planet.levels.spaceport).toBe(0);
-    user.resources = { metal: 1000, food: 0, offlinium: 1000 };
+    expect(user.homeColony.planet.levels.spaceport).toBe(0);
+    setBalance(user, { metal: 1000, food: 0, offlinium: 1000 });
     expect(user.startConstruction("spaceport", T0)).toBe(true);
     user.advance(T0 + getConstructionMs("spaceport", 1), 0);
-    expect(user.planet.levels.spaceport).toBe(1);
+    expect(user.homeColony.planet.levels.spaceport).toBe(1);
 
     const restored = new User();
     restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
-    expect(restored.planet.levels.spaceport).toBe(1);
+    expect(restored.homeColony.planet.levels.spaceport).toBe(1);
     // Saves from before the spaceport simply have none.
     const legacy = new User();
     legacy.loadFromSnapshot({ planet: { levels: { metalMine: 2 } } });
-    expect(legacy.planet.levels.spaceport).toBe(0);
+    expect(legacy.homeColony.planet.levels.spaceport).toBe(0);
   });
 });
 
@@ -554,5 +555,138 @@ describe("surface view", () => {
     expect(plain.height).toBe(17);
     expect(plain.runs.every((run) => run.y < 17)).toBe(true);
     expect(plain.runs.some((run) => run.color === PLANET_GROUNDS.ice.body)).toBe(false);
+  });
+});
+
+describe("colonies", () => {
+  async function foundSecondColony(user: User) {
+    const { Colony } = await import("../../src/models/colony");
+    const planet = new Planet("Talion II", "talion");
+    planet.kind = "ice";
+    const colony = new Colony({
+      foundedAt: T0,
+      systemPlanetId: "orbit-3",
+      planet,
+      resources: { metal: 2000, food: 100 },
+      population: 20,
+    });
+    user.addColony(colony);
+    return colony;
+  }
+
+  it("turns a version 1 save into a player with one colony", () => {
+    const legacy = new User();
+    legacy.loadFromSnapshot({
+      name: "Alex",
+      createdAt: T0,
+      planet: { name: "Velora IV", seed: "velora", levels: { metalMine: 4, farm: 2 }, construction: null },
+      resources: { metal: 812.5, food: 140, offlinium: 3210 },
+      population: 33.2,
+      notables: [{ id: "a", seed: "b", role: "leader", name: "Ada", title: "Chef", description: "", featuredAt: T0 }],
+      realTimeSettledAt: T0 + HOUR,
+      settledOfflineMs: 5000,
+    });
+    expect(legacy.colonies).toHaveLength(1);
+    const home = legacy.homeColony;
+    expect(legacy.activeColony).toBe(home);
+    expect(home.systemPlanetId).toBe("home");
+    expect(home.planet).toMatchObject({ name: "Velora IV", seed: "velora", kind: null });
+    expect(home.planet.levels.metalMine).toBe(4);
+    expect(home.resources).toEqual({ metal: 812.5, food: 140 });
+    expect(home.population).toBe(33.2);
+    expect(legacy.offlinium).toBe(3210);
+    expect(legacy.leader).toMatchObject({ name: "Ada", colonyId: home.id });
+    expect(legacy.realTimeSettledAt).toBe(T0 + HOUR);
+
+    // Saved again, it is a version 2 save that reads back the same.
+    const saved = JSON.parse(JSON.stringify(legacy));
+    expect(saved).toMatchObject({ saveVersion: 2, offlinium: 3210, homeColonyId: home.id });
+    expect(saved).not.toHaveProperty("planet");
+    const restored = new User();
+    restored.loadFromSnapshot(saved);
+    expect(restored.colonies.map((colony) => colony.id)).toEqual([home.id]);
+    expect(restored.getResources()).toEqual(legacy.getResources());
+    expect(restored.notables).toEqual(legacy.notables);
+  });
+
+  it("runs every colony on the same real-time clock, each with its own stocks and site", async () => {
+    const user = newUser();
+    const home = user.homeColony;
+    const colony = await foundSecondColony(user);
+
+    expect(user.startConstruction("metalMine", T0)).toBe(true);
+    expect(user.startConstruction("farm", T0, colony.id)).toBe(true);
+    // Each planet pays its metal; the Offlinium is the player's.
+    expect(home.resources.metal).toBe(STARTING_RESOURCES.metal - getBuildingCost("metalMine", 1).metal!);
+    expect(colony.resources.metal).toBe(2000 - getBuildingCost("farm", 1).metal!);
+    expect(user.offlinium).toBe(
+      STARTING_RESOURCES.offlinium - getBuildingCost("metalMine", 1).offlinium! - getBuildingCost("farm", 1).offlinium!,
+    );
+
+    const done = user.advance(T0 + 10 * HOUR, 0);
+    expect(done.map((item) => [item.type, item.colonyId]).sort()).toEqual([
+      ["farm", colony.id],
+      ["metalMine", home.id],
+    ]);
+    expect(home.planet.levels).toMatchObject({ metalMine: 1, farm: 0 });
+    expect(colony.planet.levels).toMatchObject({ metalMine: 0, farm: 1 });
+    expect(colony.population).toBeGreaterThan(19);
+
+    // Cancelling refunds the planet that paid.
+    user.startConstruction("reactor", T0 + 10 * HOUR, colony.id);
+    const before = home.resources.metal;
+    expect(user.cancelConstruction(colony.id)).toBe(true);
+    expect(home.resources.metal).toBe(before);
+    expect(colony.planet.construction).toBeNull();
+  });
+
+  it("adds up the laboratories of every planet", async () => {
+    const user = newUser();
+    const colony = await foundSecondColony(user);
+    for (const target of [user.homeColony, colony]) {
+      target.planet.levels.laboratory = 2;
+      target.planet.levels.reactor = 10;
+      target.population = 100;
+    }
+    expect(user.offliniumMultiplier).toBeCloseTo(1 + 2 * 2 * 0.25);
+  });
+
+  it("switches the planet shown, gives each colony a leader and keeps a colony's kind", async () => {
+    const user = newUser();
+    const colony = await foundSecondColony(user);
+    expect(user.getLeader(colony.id)).toMatchObject({ colonyId: colony.id, featuredAt: T0 });
+    user.addColony(colony);
+    expect(user.colonies).toHaveLength(2);
+    expect(user.setActiveColony("missing")).toBe(false);
+    expect(user.setActiveColony(colony.id)).toBe(true);
+    expect(user.activeColony).toBe(colony);
+    expect(user.getResources()).toEqual({ metal: 2000, food: 100, offlinium: STARTING_RESOURCES.offlinium });
+    expect(user.renamePlanet("Nouvelle Talion")).toBe(true);
+    expect(user.homeColony.planet.name).not.toBe("Nouvelle Talion");
+
+    const restored = new User();
+    restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
+    expect(restored.activeColony.id).toBe(colony.id);
+    expect(restored.activeColony.planet.kind).toBe("ice");
+    expect(restored.getLeader(colony.id)).toMatchObject({ role: "leader", colonyId: colony.id });
+    expect(restored.getLeader(colony.id)!.description).toContain("Talion II");
+    expect(restored.leader).toBe(restored.getLeader(colony.id));
+    expect(restored.getLeader(user.homeColonyId)!.id).toBe(user.getLeader(user.homeColonyId)!.id);
+
+    const copy = restored.clone();
+    copy.activeColony.resources.metal = 0;
+    expect(restored.activeColony.resources.metal).toBe(2000);
+  });
+
+  it("counts achievements over all the planets", async () => {
+    const { getAchievements } = await import("../../src/models/achievement");
+    const user = newUser();
+    const colony = await foundSecondColony(user);
+    colony.planet.levels.spaceport = 1;
+    const unlocked = getAchievements(user, 0).filter((item) => item.unlocked).map((item) => item.id);
+    expect(unlocked).toContain("spaceport");
+    expect(user.isSystemUnlocked).toBe(true);
+    const population = getAchievements(user, 0).find((item) => item.id === "population-hundred")!;
+    expect(population.progress).toBe(STARTING_POPULATION + 20);
   });
 });

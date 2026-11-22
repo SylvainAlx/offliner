@@ -36,9 +36,11 @@ export function useDataBackup() {
       Number.isFinite(record.createdAt) &&
       isObject(record.periodList) &&
       Array.isArray(record.periodList.days) &&
-      isObject(record.planet) &&
-      isObject(record.planet.levels) &&
-      isObject(record.resources)
+      // Version 2: a list of colonies; version 1: a single planet.
+      ((Array.isArray(record.colonies) && record.colonies.length > 0) ||
+        (isObject(record.planet) &&
+          isObject(record.planet.levels) &&
+          isObject(record.resources)))
     );
   }
 

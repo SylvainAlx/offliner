@@ -328,10 +328,11 @@ function PlanetDetails({
 
 /** The player's star system: where the next targets will be chosen. */
 export default function StarSystemView() {
-  // Only what the system depends on: the planet object changes every second.
-  const seed = useUser((state) => state.user.planet.seed);
-  const name = useUser((state) => state.user.planet.name);
-  const fields = useUser((state) => state.user.planet.fields);
+  // The system is drawn around the starting planet. Only what it depends on
+  // is selected: the planet object changes every second.
+  const seed = useUser((state) => state.user.homeColony.planet.seed);
+  const name = useUser((state) => state.user.homeColony.planet.name);
+  const fields = useUser((state) => state.user.homeColony.planet.fields);
   const system = useMemo(
     () => generateStarSystem({ seed, name, fields }),
     [seed, name, fields],

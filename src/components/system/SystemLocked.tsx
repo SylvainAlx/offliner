@@ -2,18 +2,21 @@ import { useMemo } from "react";
 import Card from "../ui/Card";
 import Button from "../ui/Button";
 import BuildingSprite from "../BuildingSprite";
-import { useUser } from "../../stores/userStore";
+import { useActiveColony, useUser } from "../../stores/userStore";
+import { getPlanetKind } from "../../models/planet";
 import { BUILDINGS, getBuildingCost } from "../../models/buildings";
 import { formatResources } from "../../models/resources";
-import { generatePlanetSprite } from "../../utils/planetSprite";
 import { formatCountdown } from "../../utils/format";
 
 /** Shown in place of the star system until the spaceport is built. */
 export default function SystemLocked({ onGoToPlanet }: { onGoToPlanet: () => void }) {
-  const seed = useUser((state) => state.user.planet.seed);
-  const construction = useUser((state) => state.user.planet.construction);
+  const planet = useActiveColony().planet;
+  const construction = planet.construction;
   const now = useUser((state) => state.user.realTimeSettledAt);
-  const kind = useMemo(() => generatePlanetSprite(seed).kind, [seed]);
+  const kind = useMemo(
+    () => getPlanetKind({ seed: planet.seed, kind: planet.kind }),
+    [planet.seed, planet.kind],
+  );
   const isBuilding = construction?.type === "spaceport";
 
   return (

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useUser } from "../stores/userStore";
-import { generatePlanetSprite } from "../utils/planetSprite";
+import { getPlanetKind } from "../models/planet";
 import {
   BUILDINGS,
   BUILDING_TYPES,
@@ -26,21 +26,26 @@ export interface BuildingTileData {
 export function usePlanet() {
   const user = useUser((state) => state.user);
   const startConstruction = useUser((state) => state.startConstruction);
-  const { planet } = user;
-  const planetKind = useMemo(() => generatePlanetSprite(planet.seed).kind, [planet.seed]);
+  const colony = user.activeColony;
+  const { planet } = colony;
+  const planetKind = useMemo(
+    () => getPlanetKind({ seed: planet.seed, kind: planet.kind }),
+    [planet.seed, planet.kind],
+  );
+  const resources = user.getResources(colony);
 
   const buildings: BuildingTileData[] = BUILDING_TYPES.map((type) => {
-    const nextLevel = user.getNextLevel(type);
-    const cost = user.getNextCost(type);
+    const nextLevel = colony.getNextLevel(type);
+    const cost = colony.getNextCost(type);
     return {
       type,
       definition: BUILDINGS[type],
       level: planet.levels[type],
       nextLevel,
       cost,
-      missing: missingResources(user.resources, cost),
+      missing: missingResources(resources, cost),
       constructionMs: getConstructionMs(type, nextLevel),
-      blocker: user.getConstructionBlocker(type),
+      blocker: user.getConstructionBlocker(type, colony),
       isUnderConstruction: planet.construction?.type === type,
     };
   });

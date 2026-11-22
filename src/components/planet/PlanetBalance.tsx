@@ -17,8 +17,9 @@ function percent(value: number): string {
 /** How the planet is doing: production, storage, energy, staff. */
 export default function PlanetBalance() {
   const user = useUser((state) => state.user);
-  const economy = user.economy;
-  const population = Math.floor(user.population);
+  const colony = user.activeColony;
+  const economy = colony.economy;
+  const population = Math.floor(colony.population);
   const foodBalance = economy.foodPerHour - economy.foodEatenPerHour;
   const warnings: string[] = [];
   if (economy.energyFactor < 1) {
@@ -33,7 +34,7 @@ export default function PlanetBalance() {
   }
   // Food and growth are explained in the Population section.
   const full = (["metal", "food"] as const).filter(
-    (type) => user.resources[type] >= economy.storageCapacity,
+    (type) => colony.resources[type] >= economy.storageCapacity,
   );
   if (full.length > 0) {
     warnings.push(
@@ -42,7 +43,7 @@ export default function PlanetBalance() {
   }
 
   const rows: Array<[string, string]> = [
-    ["Cases", `${user.planet.usedFields} / ${user.planet.fields}`],
+    ["Cases", `${colony.planet.usedFields} / ${colony.planet.fields}`],
     [
       "Dépôt",
       `${formatAmount(economy.storageCapacity)} ${RESOURCE_ICONS.metal} et ${formatAmount(economy.storageCapacity)} ${RESOURCE_ICONS.food} max`,
@@ -60,7 +61,8 @@ export default function PlanetBalance() {
     ["Rendement", percent(economy.productionFactor)],
     [
       "Offlinium hors ligne",
-      `${formatAmount(OFFLINIUM_PER_HOUR * economy.offliniumMultiplier)} ${RESOURCE_ICONS.offlinium}/h`,
+      // Every planet's laboratory counts: this is the player's rate.
+      `${formatAmount(OFFLINIUM_PER_HOUR * user.offliniumMultiplier)} ${RESOURCE_ICONS.offlinium}/h`,
     ],
   ];
 

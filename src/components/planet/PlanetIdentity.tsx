@@ -5,7 +5,7 @@ import { useUser } from "../../stores/userStore";
 import { MAX_NAME_LENGTH } from "../../utils/constants";
 
 export default function PlanetIdentity() {
-  const planetName = useUser((state) => state.user.planet.name);
+  const planetName = useUser((state) => state.user.activeColony.planet.name);
   const renamePlanet = useUser((state) => state.renamePlanet);
   const [name, setName] = useState(planetName);
   const [isSaved, setIsSaved] = useState(false);

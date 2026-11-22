@@ -24,7 +24,7 @@ const menuItems: Array<{
   {
     id: "inhabitants",
     label: "Habitants",
-    description: "Le chef et les célébrités",
+    description: "Chef et célébrités",
     icon: "👑",
   },
   {
@@ -67,7 +67,7 @@ export default function Sidebar({
   onSelect,
 }: SidebarProps) {
   // The star system opens once the spaceport is built.
-  const isSystemUnlocked = useUser((state) => state.user.planet.levels.spaceport > 0);
+  const isSystemUnlocked = useUser((state) => state.user.isSystemUnlocked);
   // Inhabitants who arrived and still wait for the player to tell their story.
   const notablesToCustomize = useUser((state) => state.user.notablesToCustomize);
   const { closeButtonRef, handleSelect } = useSideBar(

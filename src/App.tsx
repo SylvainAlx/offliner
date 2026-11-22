@@ -25,7 +25,7 @@ function AppContent() {
   const isOnline = useOnlineStatus((state) => state.isOnline);
   const [activeSection, setActiveSection] = useState<AppSection>("planet");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const isSystemUnlocked = useUser((state) => state.user.planet.levels.spaceport > 0);
+  const isSystemUnlocked = useUser((state) => state.user.isSystemUnlocked);
 
   useEffect(() => useOnlineStatus.getState().initialize(), []);
 

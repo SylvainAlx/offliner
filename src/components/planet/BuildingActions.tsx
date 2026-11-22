@@ -15,14 +15,15 @@ import ConstructionControls from "./ConstructionControls";
 export default function BuildingActions({ type }: { type: BuildingType }) {
   const user = useUser((state) => state.user);
   const startConstruction = useUser((state) => state.startConstruction);
-  const construction = user.planet.construction;
+  const colony = user.activeColony;
+  const construction = colony.planet.construction;
 
   if (construction?.type === type) return <ConstructionControls />;
 
-  const nextLevel = user.getNextLevel(type);
-  const cost = user.getNextCost(type);
-  const missing = missingResources(user.resources, cost);
-  const blocker = user.getConstructionBlocker(type);
+  const nextLevel = colony.getNextLevel(type);
+  const cost = colony.getNextCost(type);
+  const missing = missingResources(user.getResources(colony), cost);
+  const blocker = user.getConstructionBlocker(type, colony);
   const reason =
     blocker === "busy" && construction
       ? `Le chantier est occupé par : ${BUILDINGS[construction.type].label} (fin dans ${formatCountdown(construction.endsAt - user.realTimeSettledAt)}).`

@@ -156,13 +156,14 @@ export default function Inhabitants() {
   const leader = user.leader;
   const weekly = user.weeklyNotables;
   const editing = user.notables.find((notable) => notable.id === editingId);
-  const population = Math.floor(user.population);
+  const colony = user.activeColony;
+  const population = Math.floor(colony.population);
 
   return (
     <Card
       ariaLabel="Habitants"
       title="Habitants célèbres"
-      subtitle={`${population} habitant${population > 1 ? "s" : ""} sur ${user.planet.name} · un nouveau mis en avant chaque semaine`}
+      subtitle={`${population} habitant${population > 1 ? "s" : ""} sur ${colony.planet.name} · un nouveau mis en avant chaque semaine`}
     >
       {leader && <LeaderHero leader={leader} onEdit={() => setEditingId(leader.id)} />}
 

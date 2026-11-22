@@ -63,7 +63,7 @@ const PALETTES: Record<PlanetKind, Palette[]> = {
   ],
 };
 
-const KINDS: PlanetKind[] = ["ocean", "desert", "ice", "lava", "gas", "toxic"];
+export const PLANET_KINDS: PlanetKind[] = ["ocean", "desert", "ice", "lava", "gas", "toxic"];
 
 const SIZE = 40;
 const CENTER = (SIZE - 1) / 2;
@@ -132,7 +132,7 @@ export function mix(color: string, target: string, amount: number): string {
  */
 export function generatePlanetSprite(seed: string, forcedKind?: PlanetKind): PlanetSprite {
   const random = createRandom(hashSeed(seed));
-  const seededKind = pick(KINDS, random);
+  const seededKind = pick(PLANET_KINDS, random);
   const kind = forcedKind ?? seededKind;
   const palette = pick(PALETTES[kind], random);
   const coarse = createNoise(random, 4);

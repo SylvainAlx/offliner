@@ -78,6 +78,13 @@ La progression est enregistrée dans une base IndexedDB locale, gérée par
 `profiles/current`. L’ancienne base `offliner`, celle de la version
 « village », est supprimée au premier lancement.
 
+La partie est organisée pour accueillir plusieurs planètes : le joueur
+(`User`) possède l’Offlinium, les habitants célèbres et une liste de
+colonies (`Colony`). Chaque colonie a sa planète, son chantier, son métal,
+son alimentation et sa population, et toutes avancent sur la même horloge
+temps réel. Les sauvegardes de version 1 (une seule planète) sont converties
+automatiquement en version 2 au chargement ou à l’import.
+
 L’application enregistre la partie toutes les 30 secondes lorsqu’elle est
 ouverte, à chaque action et à chaque construction terminée. Le choix du thème
 est une préférence d’affichage : il est gardé dans le `localStorage` de
@@ -181,9 +188,12 @@ La Content-Security-Policy interdit les scripts écrits directement dans
 ```text
 src/
 ├── components/   Composants React et mise en page
-│   └── planet/   Écran de la planète : bâtiments, construction, population, bilan
+│   ├── home/     Illustration de la page d’accueil
+│   ├── inhabitants/ Habitants célèbres
+│   ├── planet/   Écran de la planète : bâtiments, construction, population, bilan
+│   └── system/   Système planétaire
 ├── hooks/        Logique réutilisable des écrans et interactions
-├── models/       Logique de jeu : joueur, planète, bâtiments, économie, périodes hors ligne, succès
+├── models/       Logique de jeu : joueur, colonies, planète, bâtiments, économie, périodes hors ligne, succès
 ├── services/     Persistance locale
 ├── stores/       État global Zustand (partie, connexion, installation, thème)
 ├── styles/       Feuille de style et variables de thème

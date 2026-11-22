@@ -18,7 +18,7 @@ export default function ConstructionControls() {
   const user = useUser((state) => state.user);
   const cancelConstruction = useUser((state) => state.cancelConstruction);
   const speedUpConstruction = useUser((state) => state.speedUpConstruction);
-  const construction = user.planet.construction;
+  const construction = user.activeColony.planet.construction;
 
   if (!construction) return null;
 
@@ -27,7 +27,7 @@ export default function ConstructionControls() {
   const total = construction.endsAt - construction.startedAt;
   const remaining = Math.max(0, construction.endsAt - now);
   const progress = total > 0 ? Math.min(100, ((total - remaining) / total) * 100) : 100;
-  const offlinium = Math.floor(user.resources.offlinium);
+  const offlinium = Math.floor(user.offlinium);
   const quarterCost = User.getSpeedUpCost(Math.min(QUARTER_HOUR_MS, remaining));
   const finishCost = User.getSpeedUpCost(remaining);
 

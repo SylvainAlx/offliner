@@ -20,6 +20,8 @@ export interface Notable {
   /** Drives the inhabitant's pixel-art look (utils/companionSprite). */
   seed: string;
   role: NotableRole;
+  /** The colony they live on; each colony has its own leader. */
+  colonyId: string;
   name: string;
   title: string;
   description: string;
@@ -57,12 +59,14 @@ function elidedOf(name: string): string {
 export function createLeader(
   planetName: string,
   featuredAt: number,
+  colonyId: string,
   random: () => number = Math.random,
 ): Notable {
   return {
     id: crypto.randomUUID(),
     seed: crypto.randomUUID(),
     role: "leader",
+    colonyId,
     name: generateInhabitantName(random),
     title: LEADER_TITLE,
     description: `Guide la colonie ${elidedOf(planetName)} depuis le premier jour.`,
@@ -103,6 +107,7 @@ export function createWeeklyNotable(
   planetSeed: string,
   createdAt: number,
   week: number,
+  colonyId: string,
 ): Notable {
   const seed = `${planetSeed}:week-${week}`;
   const random = createRandom(hashSeed(seed));
@@ -110,6 +115,7 @@ export function createWeeklyNotable(
     id: seed,
     seed,
     role: "notable",
+    colonyId,
     name: generateInhabitantName(random),
     // Titles take turns, so two weeks in a row never share one.
     title: WEEKLY_TITLES[(hashSeed(planetSeed) + week) % WEEKLY_TITLES.length],
@@ -132,7 +138,8 @@ export function applyNotableChanges(notable: Notable, changes: NotableChanges): 
   return true;
 }
 
-export function loadNotables(value: unknown): Notable[] {
+/** `homeColonyId` adopts the inhabitants of saves from before colonies. */
+export function loadNotables(value: unknown, homeColonyId: string): Notable[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item) => {
     if (!isRecord(item)) return [];
@@ -144,10 +151,21 @@ export function loadNotables(value: unknown): Notable[] {
     if (!id || !seed || !name || !title || description === null) return [];
     if (item.role !== "leader" && item.role !== "notable") return [];
     if (!isFiniteNumber(item.featuredAt)) return [];
+    const colonyId = sanitizeId(item.colonyId) ?? homeColonyId;
     // Saves from before this flag hold only leaders the player already saw.
     const isCustomized = item.isCustomized !== false;
     return [
-      { id, seed, role: item.role, name, title, description, featuredAt: item.featuredAt, isCustomized },
+      {
+        id,
+        seed,
+        role: item.role,
+        colonyId,
+        name,
+        title,
+        description,
+        featuredAt: item.featuredAt,
+        isCustomized,
+      },
     ];
   });
 }

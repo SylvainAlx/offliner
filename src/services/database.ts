@@ -2,7 +2,8 @@ import Dexie, { type Table } from "dexie";
 
 export interface StoredProfile {
   id: "current";
-  schemaVersion: 1;
+  /** 2 since the player owns a list of colonies (see SAVE_VERSION). */
+  schemaVersion: 1 | 2;
   updatedAt: number;
   data: unknown;
 }

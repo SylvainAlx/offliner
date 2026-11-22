@@ -1,5 +1,5 @@
 import { db, deleteLegacyDatabase } from "./database";
-import { User } from "../models/user";
+import { SAVE_VERSION, User } from "../models/user";
 
 function serializeUser(user: User): Record<string, unknown> {
   return JSON.parse(JSON.stringify(user)) as Record<string, unknown>;
@@ -19,7 +19,7 @@ export const userRepository = {
   async save(user: User): Promise<void> {
     await db.profiles.put({
       id: "current",
-      schemaVersion: 1,
+      schemaVersion: SAVE_VERSION,
       updatedAt: Date.now(),
       data: serializeUser(user),
     });

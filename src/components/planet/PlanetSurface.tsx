@@ -156,10 +156,17 @@ export default function PlanetSurface() {
   const [detail, setDetail] = useState<BuildingType | null>(null);
   const closeDetail = useCallback(() => setDetail(null), []);
 
-  const { seed, name, fields } = planet;
+  const { seed, name } = planet;
   const ground = useMemo(() => generateSurfaceGround(planetKind, seed), [planetKind, seed]);
   const stars = useMemo(() => generateSkyStars(seed), [seed]);
-  const star = useMemo(() => generateStarSystem({ seed, name, fields }).star, [seed, name, fields]);
+  // Every colony shares the star of the system drawn around the starting planet.
+  const homeSeed = useUser((state) => state.user.homeColony.planet.seed);
+  const homeName = useUser((state) => state.user.homeColony.planet.name);
+  const homeFields = useUser((state) => state.user.homeColony.planet.fields);
+  const star = useMemo(
+    () => generateStarSystem({ seed: homeSeed, name: homeName, fields: homeFields }).star,
+    [homeSeed, homeName, homeFields],
+  );
   const starRuns = useMemo(() => generateStarSprite(star), [star]);
   const construction = planet.construction;
 

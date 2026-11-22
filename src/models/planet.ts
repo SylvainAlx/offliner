@@ -7,6 +7,7 @@ import {
 } from "./buildings";
 import { sanitizeResourceAmounts, type ResourceAmounts } from "./resources";
 import { PLANET_FIELDS } from "../utils/constants";
+import { PLANET_KINDS, generatePlanetSprite, type PlanetKind } from "../utils/planetSprite";
 import { isFiniteNumber, isRecord, sanitizeId, sanitizeName } from "../utils/sanitize";
 
 export interface Construction {
@@ -32,9 +33,19 @@ export function generatePlanetName(random: () => number = Math.random): string {
   return `${pick(NAME_STARTS, random)}${pick(NAME_ENDS, random)} ${pick(NUMERALS, random)}`;
 }
 
+/** The planet's kind: the one it was given, or the one its seed draws. */
+export function getPlanetKind(planet: Pick<Planet, "seed" | "kind">): PlanetKind {
+  return planet.kind ?? generatePlanetSprite(planet.seed).kind;
+}
+
 export class Planet {
   /** Drives the planet's look (utils/planetSprite): never changes. */
   seed: string;
+  /**
+   * The kind imposed on the planet (a colony takes the one the star system
+   * gave it); null when its seed decides, as for the starting planet.
+   */
+  kind: PlanetKind | null;
   name: string;
   fields: number;
   levels: BuildingLevels;
@@ -42,6 +53,7 @@ export class Planet {
 
   constructor(name: string = generatePlanetName(), seed: string = crypto.randomUUID()) {
     this.seed = seed;
+    this.kind = null;
     this.name = name;
     this.fields = PLANET_FIELDS;
     this.levels = emptyLevels();
@@ -64,6 +76,7 @@ export class Planet {
 
   clone(): Planet {
     const copy = new Planet(this.name, this.seed);
+    copy.kind = this.kind;
     copy.fields = this.fields;
     copy.levels = { ...this.levels };
     copy.construction = this.construction
@@ -77,6 +90,7 @@ export class Planet {
     this.name = sanitizeName(value.name) ?? this.name;
     // Saves from before the planet had a look use its name, which is stable.
     this.seed = sanitizeId(value.seed) ?? this.name;
+    this.kind = PLANET_KINDS.find((kind) => kind === value.kind) ?? null;
     if (isFiniteNumber(value.fields) && value.fields > 0) {
       this.fields = Math.floor(value.fields);
     }
