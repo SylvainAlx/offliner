@@ -214,11 +214,15 @@ tests/            Tests Vitest, organisés comme src/
 ## Statut du projet
 
 Le projet est en développement actif. Le dépôt est public pour permettre la
-consultation du code et le partage du projet. Les contributions externes, pull
-requests et collaborations ne sont pas ouvertes pour le moment.
+lecture et la revue du code ; il n’accepte pas de contributions (voir
+[CONTRIBUTING.md](CONTRIBUTING.md)).
 
 ## Licence
 
-Aucune licence open source n’est encore définie pour ce projet. La visibilité
-publique du dépôt ne constitue pas, à elle seule, une autorisation de copier,
-modifier ou redistribuer le code. Une licence pourra être ajoutée ultérieurement.
+© 2026 Sylvain Alexandre. Tous droits réservés.
+
+Offliner n’est pas un logiciel libre. Le code, les textes et les graphismes
+sont protégés par le droit d’auteur : vous pouvez les lire et les commenter,
+mais pas les copier, les modifier, les redistribuer ni les réutiliser sans
+autorisation écrite. Les conditions complètes sont dans le fichier
+[LICENSE](LICENSE).
