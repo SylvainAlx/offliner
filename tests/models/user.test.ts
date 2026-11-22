@@ -243,16 +243,39 @@ describe("user", () => {
   it("ignores unknown or malformed data", () => {
     const user = new User();
     user.loadFromSnapshot({
-      planet: { levels: { metalMine: -2, unknown: 5, farm: 2.7 }, construction: { type: "x" } },
-      resources: { metal: "a", food: 3 },
-      population: -1,
+      saveVersion: 2,
+      offlinium: -4,
+      colonies: [
+        {
+          id: "home",
+          planet: { levels: { metalMine: -2, unknown: 5, farm: 2.7 }, construction: { type: "x" } },
+          resources: { metal: "a", food: 3 },
+          population: -1,
+        },
+        { planet: {} },
+      ],
       __proto__: { admin: true },
     });
+    expect(user.colonies).toHaveLength(1);
     expect(user.homeColony.planet.levels.metalMine).toBe(0);
     expect(user.homeColony.planet.levels.farm).toBe(2);
     expect(user.homeColony.planet.construction).toBeNull();
-    expect(user.getResources()).toEqual({ metal: 0, food: 3, offlinium: 0 });
-    expect(user.homeColony.population).toBe(STARTING_POPULATION);
+    expect(user.getResources()).toEqual({ metal: 0, food: 3, offlinium: STARTING_RESOURCES.offlinium });
+    expect(user.homeColony.population).toBe(0);
+  });
+
+  it("starts afresh from a save of another version or without a planet", () => {
+    for (const snapshot of [
+      { name: "Alex", planet: { name: "Velora IV" }, resources: { metal: 5 } },
+      { name: "Alex", saveVersion: 2, colonies: [] },
+      { name: "Alex", saveVersion: 3, colonies: [{ id: "a" }] },
+    ]) {
+      const user = new User("Joueur", T0);
+      const before = JSON.stringify(user.homeColony.planet);
+      user.loadFromSnapshot(snapshot);
+      expect(user.name).toBe("Joueur");
+      expect(JSON.stringify(user.homeColony.planet)).toBe(before);
+    }
   });
 });
 
@@ -277,16 +300,12 @@ describe("planet sprite", () => {
     expect(looks.size).toBe(12);
   });
 
-  it("keeps its seed through a save, and old saves fall back on the name", () => {
+  it("keeps its seed through a save and a clone", () => {
     const user = new User();
     const restored = new User();
     restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
     expect(restored.homeColony.planet.seed).toBe(user.homeColony.planet.seed);
     expect(user.clone().homeColony.planet.seed).toBe(user.homeColony.planet.seed);
-
-    const legacy = new User();
-    legacy.loadFromSnapshot({ planet: { name: "Velora IV" } });
-    expect(legacy.homeColony.planet.seed).toBe("Velora IV");
   });
 });
 
@@ -366,11 +385,11 @@ describe("planetary leader", () => {
 
   it("speaks proper French about the planet", async () => {
     const { createLeader } = await import("../../src/models/notable");
-    expect(createLeader("Arays III", 0).description).toContain("colonie d'Arays III");
-    expect(createLeader("Velora IV", 0).description).toContain("colonie de Velora IV");
+    expect(createLeader("Arays III", 0, "home").description).toContain("colonie d'Arays III");
+    expect(createLeader("Velora IV", 0, "home").description).toContain("colonie de Velora IV");
   });
 
-  it("survives a save and a clone, and older saves get one", () => {
+  it("survives a save and a clone", () => {
     const user = newUser();
     user.updateNotable(user.leader!.id, { name: "Ada Prax", title: "Gouverneure", description: "" });
 
@@ -381,11 +400,6 @@ describe("planetary leader", () => {
     const copy = user.clone();
     copy.leader!.name = "Autre";
     expect(user.leader!.name).toBe("Ada Prax");
-
-    const legacy = new User();
-    legacy.loadFromSnapshot({ createdAt: 42, planet: { name: "Velora IV" } });
-    expect(legacy.leader).toMatchObject({ role: "leader", featuredAt: 42 });
-    expect(legacy.leader!.description).toContain("Velora IV");
   });
 });
 
@@ -421,11 +435,11 @@ describe("weekly notables", () => {
 
   it("gives the same inhabitants to the same planet, and lets the player tell their story", async () => {
     const { createWeeklyNotable, getNotableWeek } = await import("../../src/models/notable");
-    expect(createWeeklyNotable("velora", 0, 2)).toEqual(createWeeklyNotable("velora", 0, 2));
-    expect(createWeeklyNotable("velora", 0, 2).id).not.toBe(createWeeklyNotable("velora", 0, 3).id);
-    expect(getNotableWeek(createWeeklyNotable("velora", 1000, 5), 1000)).toBe(5);
+    expect(createWeeklyNotable("velora", 0, 2, "home")).toEqual(createWeeklyNotable("velora", 0, 2, "home"));
+    expect(createWeeklyNotable("velora", 0, 2, "home").id).not.toBe(createWeeklyNotable("velora", 0, 3, "home").id);
+    expect(getNotableWeek(createWeeklyNotable("velora", 1000, 5, "home"), 1000)).toBe(5);
     for (let week = 1; week < 12; week++) {
-      expect(createWeeklyNotable("velora", 0, week).title).not.toBe(createWeeklyNotable("velora", 0, week + 1).title);
+      expect(createWeeklyNotable("velora", 0, week, "home").title).not.toBe(createWeeklyNotable("velora", 0, week + 1, "home").title);
     }
 
     const user = newUser();
@@ -442,17 +456,6 @@ describe("weekly notables", () => {
     const restored = new User();
     restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
     expect(restored.notables).toEqual(user.notables);
-  });
-
-  it("treats leaders from older saves as already known", () => {
-    const legacy = new User();
-    legacy.loadFromSnapshot({
-      createdAt: 0,
-      planet: { name: "Velora IV", seed: "velora" },
-      notables: [{ id: "a", seed: "b", role: "leader", name: "Ada", title: "Chef", description: "", featuredAt: 0 }],
-    });
-    expect(legacy.leader!.isCustomized).toBe(true);
-    expect(legacy.notablesToCustomize).toBe(0);
   });
 });
 
@@ -516,10 +519,6 @@ describe("spaceport", () => {
     const restored = new User();
     restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
     expect(restored.homeColony.planet.levels.spaceport).toBe(1);
-    // Saves from before the spaceport simply have none.
-    const legacy = new User();
-    legacy.loadFromSnapshot({ planet: { levels: { metalMine: 2 } } });
-    expect(legacy.homeColony.planet.levels.spaceport).toBe(0);
   });
 });
 
@@ -573,41 +572,6 @@ describe("colonies", () => {
     user.addColony(colony);
     return colony;
   }
-
-  it("turns a version 1 save into a player with one colony", () => {
-    const legacy = new User();
-    legacy.loadFromSnapshot({
-      name: "Alex",
-      createdAt: T0,
-      planet: { name: "Velora IV", seed: "velora", levels: { metalMine: 4, farm: 2 }, construction: null },
-      resources: { metal: 812.5, food: 140, offlinium: 3210 },
-      population: 33.2,
-      notables: [{ id: "a", seed: "b", role: "leader", name: "Ada", title: "Chef", description: "", featuredAt: T0 }],
-      realTimeSettledAt: T0 + HOUR,
-      settledOfflineMs: 5000,
-    });
-    expect(legacy.colonies).toHaveLength(1);
-    const home = legacy.homeColony;
-    expect(legacy.activeColony).toBe(home);
-    expect(home.systemPlanetId).toBe("home");
-    expect(home.planet).toMatchObject({ name: "Velora IV", seed: "velora", kind: null });
-    expect(home.planet.levels.metalMine).toBe(4);
-    expect(home.resources).toEqual({ metal: 812.5, food: 140 });
-    expect(home.population).toBe(33.2);
-    expect(legacy.offlinium).toBe(3210);
-    expect(legacy.leader).toMatchObject({ name: "Ada", colonyId: home.id });
-    expect(legacy.realTimeSettledAt).toBe(T0 + HOUR);
-
-    // Saved again, it is a version 2 save that reads back the same.
-    const saved = JSON.parse(JSON.stringify(legacy));
-    expect(saved).toMatchObject({ saveVersion: 2, offlinium: 3210, homeColonyId: home.id });
-    expect(saved).not.toHaveProperty("planet");
-    const restored = new User();
-    restored.loadFromSnapshot(saved);
-    expect(restored.colonies.map((colony) => colony.id)).toEqual([home.id]);
-    expect(restored.getResources()).toEqual(legacy.getResources());
-    expect(restored.notables).toEqual(legacy.notables);
-  });
 
   it("runs every colony on the same real-time clock, each with its own stocks and site", async () => {
     const user = newUser();

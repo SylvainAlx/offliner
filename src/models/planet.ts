@@ -88,8 +88,7 @@ export class Planet {
   load(value: unknown): void {
     if (!isRecord(value)) return;
     this.name = sanitizeName(value.name) ?? this.name;
-    // Saves from before the planet had a look use its name, which is stable.
-    this.seed = sanitizeId(value.seed) ?? this.name;
+    this.seed = sanitizeId(value.seed) ?? this.seed;
     this.kind = PLANET_KINDS.find((kind) => kind === value.kind) ?? null;
     if (isFiniteNumber(value.fields) && value.fields > 0) {
       this.fields = Math.floor(value.fields);

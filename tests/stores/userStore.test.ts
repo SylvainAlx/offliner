@@ -122,11 +122,19 @@ describe("userStore", () => {
     const snapshot = {
       name: "Importé",
       createdAt: 1,
-      resources: { metal: 5, food: 6, offlinium: 10 },
+      saveVersion: 2,
+      offlinium: 10,
       settledOfflineMs: 0,
       periodList: { days: [], openPeriodStart: T0, openPeriodLastSeen: T0 + HOUR },
-      planet: { name: "Testia I", levels: { metalMine: 2 } },
-      population: 10,
+      colonies: [
+        {
+          id: "testia",
+          systemPlanetId: "home",
+          planet: { name: "Testia I", seed: "testia", levels: { metalMine: 2 } },
+          resources: { metal: 5, food: 6 },
+          population: 10,
+        },
+      ],
       realTimeSettledAt: Date.now(),
     };
 

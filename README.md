@@ -77,15 +77,15 @@ Les règles chiffrées sont regroupées dans `src/models/buildings.ts` et
 
 La progression est enregistrée dans une base IndexedDB locale, gérée par
 [Dexie](https://dexie.org/) : la base `offliner-v1`, enregistrement
-`profiles/current`. L’ancienne base `offliner`, celle de la version
-« village », est supprimée au premier lancement.
+`profiles/current`.
 
 La partie est organisée pour accueillir plusieurs planètes : le joueur
 (`User`) possède l’Offlinium, les habitants célèbres et une liste de
 colonies (`Colony`). Chaque colonie a sa planète, son chantier, son métal,
 son alimentation et sa population, et toutes avancent sur la même horloge
-temps réel. Les sauvegardes de version 1 (une seule planète) sont converties
-automatiquement en version 2 au chargement ou à l’import.
+temps réel. Les sauvegardes portent un numéro de version (`SAVE_VERSION`) :
+une sauvegarde d’une autre version n’est pas chargée, et la partie repart de
+zéro.
 
 Depuis l’onglet Système, le spatioport lance des expéditions : colonisation
 d’une planète libre (3 colonies au maximum) ou cargo de métal et

@@ -1,4 +1,4 @@
-import { db, deleteLegacyDatabase } from "./database";
+import { db } from "./database";
 import { SAVE_VERSION, User } from "../models/user";
 
 function serializeUser(user: User): Record<string, unknown> {
@@ -7,11 +7,11 @@ function serializeUser(user: User): Record<string, unknown> {
 
 export const userRepository = {
   async load(): Promise<User> {
-    await deleteLegacyDatabase();
     const stored = await db.profiles.get("current");
     const user = new User();
 
-    if (stored) user.loadFromSnapshot(stored.data);
+    // A save of another version starts a new game.
+    if (stored?.schemaVersion === SAVE_VERSION) user.loadFromSnapshot(stored.data);
 
     return user;
   },

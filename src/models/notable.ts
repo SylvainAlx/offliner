@@ -138,8 +138,7 @@ export function applyNotableChanges(notable: Notable, changes: NotableChanges): 
   return true;
 }
 
-/** `homeColonyId` adopts the inhabitants of saves from before colonies. */
-export function loadNotables(value: unknown, homeColonyId: string): Notable[] {
+export function loadNotables(value: unknown): Notable[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item) => {
     if (!isRecord(item)) return [];
@@ -151,9 +150,9 @@ export function loadNotables(value: unknown, homeColonyId: string): Notable[] {
     if (!id || !seed || !name || !title || description === null) return [];
     if (item.role !== "leader" && item.role !== "notable") return [];
     if (!isFiniteNumber(item.featuredAt)) return [];
-    const colonyId = sanitizeId(item.colonyId) ?? homeColonyId;
-    // Saves from before this flag hold only leaders the player already saw.
-    const isCustomized = item.isCustomized !== false;
+    const colonyId = sanitizeId(item.colonyId);
+    if (!colonyId) return [];
+    const isCustomized = item.isCustomized === true;
     return [
       {
         id,

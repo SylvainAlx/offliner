@@ -2,6 +2,7 @@ import { useRef, useState, type ChangeEvent } from "react";
 import { useOnlineStatus } from "../stores/onlineStatusStore";
 import { useUser } from "../stores/userStore";
 import { userRepository } from "../services/userRepository";
+import { SAVE_VERSION } from "../models/user";
 import { MAX_BACKUP_FILE_BYTES } from "../utils/constants";
 import { downloadJson, getBackupFileName } from "../utils/download";
 
@@ -36,11 +37,9 @@ export function useDataBackup() {
       Number.isFinite(record.createdAt) &&
       isObject(record.periodList) &&
       Array.isArray(record.periodList.days) &&
-      // Version 2: a list of colonies; version 1: a single planet.
-      ((Array.isArray(record.colonies) && record.colonies.length > 0) ||
-        (isObject(record.planet) &&
-          isObject(record.planet.levels) &&
-          isObject(record.resources)))
+      record.saveVersion === SAVE_VERSION &&
+      Array.isArray(record.colonies) &&
+      record.colonies.length > 0
     );
   }
 

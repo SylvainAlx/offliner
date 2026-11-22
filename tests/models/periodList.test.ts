@@ -188,24 +188,13 @@ describe("PeriodList", () => {
       expect(restored.unconfirmedGaps).toHaveLength(1);
     });
 
-    it("treats an open period saved before the heartbeat as last seen at its start", () => {
+    it("treats an open period without a last observation as last seen at its start", () => {
       const list = new PeriodList();
       list.loadPeriods({ days: [], openPeriodStart: T0 });
 
       expect(list.openPeriodLastSeen).toBe(T0);
       list.recordObservation(T0 + 20 * HOUR);
       expect(list.unconfirmedGaps).toEqual([{ start: T0, end: T0 + 20 * HOUR }]);
-    });
-
-    it("migrates the legacy one-entry-per-session format", () => {
-      const list = new PeriodList();
-      list.loadPeriods([
-        { start: T0, end: T0 + HOUR },
-        { start: T0 + 2 * HOUR, end: null },
-      ]);
-
-      expect(list.computeCompletedMs()).toBe(HOUR);
-      expect(list.openPeriodStart).toBe(T0 + 2 * HOUR);
     });
 
     it("drops invalid days, exclusions and gaps", () => {

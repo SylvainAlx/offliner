@@ -26,12 +26,7 @@ import {
 } from "./expedition";
 import type { StarSystem, SystemPlanet } from "./starSystem";
 import { getConstructionMs, type BuildingType } from "./buildings";
-import {
-  hasResources,
-  sanitizeResources,
-  type ResourceAmounts,
-  type Resources,
-} from "./resources";
+import { hasResources, type ResourceAmounts, type Resources } from "./resources";
 import {
   COLONISTS_PER_SHIP,
   COLONIZATION_COST,
@@ -110,10 +105,7 @@ export interface ExpeditionReport {
 /** The latest reports are kept, newest first. */
 const MAX_REPORTS = 10;
 
-/**
- * Version of the saved data. 1: a single planet, whose metal, food and
- * population sat on the player. 2: the player owns a list of colonies.
- */
+/** Version of the saved data; a save of another version is not loaded. */
 export const SAVE_VERSION = 2;
 
 /**
@@ -592,39 +584,30 @@ export class User {
   }
 
   /**
-   * Imported data is validated field by field, never assigned wholesale.
-   * Saves of version 1 (a single planet) become a player with one colony.
+   * Imported data is validated field by field, never assigned wholesale. A
+   * save of another version, or without a planet, is ignored: the game
+   * starts afresh.
    */
   loadFromSnapshot(parsed: unknown): void {
-    if (!isRecord(parsed)) return;
+    if (!isRecord(parsed) || parsed.saveVersion !== SAVE_VERSION) return;
+    const colonies = Array.isArray(parsed.colonies)
+      ? parsed.colonies.flatMap((value) => Colony.fromSnapshot(value, Date.now()) ?? [])
+      : [];
+    if (colonies.length === 0) return;
+
     this.name = sanitizeName(parsed.name) ?? this.name;
     if (isFiniteNumber(parsed.createdAt)) this.createdAt = parsed.createdAt;
     if (parsed.periodList !== undefined && parsed.periodList !== null) {
       this.periodList.loadPeriods(parsed.periodList);
     }
 
-    const colonies = Array.isArray(parsed.colonies)
-      ? parsed.colonies.flatMap((value) => Colony.fromSnapshot(value, this.createdAt) ?? [])
-      : [];
-    if (colonies.length > 0) {
-      this.colonies = colonies;
-      if (isNonNegativeNumber(parsed.offlinium)) this.offlinium = parsed.offlinium;
-      const homeId = sanitizeId(parsed.homeColonyId);
-      this.homeColonyId = homeId && this.getColony(homeId) ? homeId : colonies[0].id;
-      const activeId = sanitizeId(parsed.activeColonyId);
-      this.activeColonyId = activeId && this.getColony(activeId) ? activeId : this.homeColonyId;
-    } else {
-      this.loadVersion1(parsed);
-    }
-
-    // Every colony has a leader, saves from before leaders included.
-    this.notables = loadNotables(parsed.notables, this.homeColonyId);
-    for (const colony of this.colonies) {
-      if (!this.getLeader(colony.id)) {
-        const foundedAt = colony.id === this.homeColonyId ? this.createdAt : colony.foundedAt;
-        this.notables.unshift(createLeader(colony.planet.name, foundedAt, colony.id));
-      }
-    }
+    this.colonies = colonies;
+    if (isNonNegativeNumber(parsed.offlinium)) this.offlinium = parsed.offlinium;
+    const homeId = sanitizeId(parsed.homeColonyId);
+    this.homeColonyId = homeId && this.getColony(homeId) ? homeId : colonies[0].id;
+    const activeId = sanitizeId(parsed.activeColonyId);
+    this.activeColonyId = activeId && this.getColony(activeId) ? activeId : this.homeColonyId;
+    this.notables = loadNotables(parsed.notables);
 
     // Expeditions only towards planets of the system, from known colonies.
     this.expeditions = loadExpeditions(parsed.expeditions).filter(
@@ -640,29 +623,6 @@ export class User {
     if (isNonNegativeNumber(parsed.settledOfflineMs)) {
       this.settledOfflineMs = parsed.settledOfflineMs;
     }
-  }
-
-  /** Version 1: the planet, its metal, food and population sat on the player. */
-  private loadVersion1(parsed: Record<string, unknown>): void {
-    const planet = new Planet();
-    planet.load(parsed.planet);
-    // As in version 1: a resource missing from a saved balance counts as 0.
-    const resources = isRecord(parsed.resources)
-      ? sanitizeResources(parsed.resources)
-      : { ...STARTING_RESOURCES };
-    const home = new Colony({
-      foundedAt: this.createdAt,
-      systemPlanetId: "home",
-      planet,
-      resources: { metal: resources.metal, food: resources.food },
-      population: isNonNegativeNumber(parsed.population)
-        ? parsed.population
-        : STARTING_POPULATION,
-    });
-    this.colonies = [home];
-    this.homeColonyId = home.id;
-    this.activeColonyId = home.id;
-    this.offlinium = resources.offlinium;
   }
 }
 
