@@ -1,9 +1,9 @@
-import { useActiveColony } from "../../stores/userStore";
+import { useActiveColony, useUser } from "../../stores/userStore";
 import {
   describeSettlement,
   getPopulationMax,
 } from "../../models/buildings";
-import { getPopulationTrend } from "../../models/economy";
+import { getPopulationTrend, predictFoodRunOutMs } from "../../models/economy";
 import { POPULATION_ICON, RESOURCE_ICONS, formatAmount } from "../../models/resources";
 import {
   FOOD_PER_INHABITANT_PER_HOUR,
@@ -31,6 +31,8 @@ export default function PopulationPanel() {
   const population = Math.floor(colony.population);
   const max = economy.populationMax;
   const trend = getPopulationTrend(economy, colony.population, colony.resources.food);
+  const now = useUser((state) => state.user.realTimeSettledAt);
+  const foodRunsOutInMs = predictFoodRunOutMs(colony, now);
   const share = max > 0 ? Math.min(100, (colony.population / max) * 100) : 0;
   const foodBalance = economy.foodPerHour - economy.foodEatenPerHour;
 
@@ -92,11 +94,11 @@ export default function PopulationPanel() {
             habitants.
           </p>
         )}
-        {trend.foodRunsOutInMs !== null && (
+        {foodRunsOutInMs !== null && (
           <p className={warningNote}>
             Les habitants mangent plus que ce qui est produit (
             {formatAmount(Math.abs(foodBalance))} {RESOURCE_ICONS.food}/h de
-            déficit) : réserves épuisées dans {formatLength(trend.foodRunsOutInMs)},
+            déficit) : réserves épuisées dans {formatLength(foodRunsOutInMs)},
             puis famine. Améliorez la ferme.
           </p>
         )}
