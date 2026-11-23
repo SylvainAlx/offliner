@@ -1,5 +1,6 @@
 import Button from "./ui/Button";
 import HomeIllustration from "./home/HomeIllustration";
+import LegalNoticeLink from "./legal/LegalNotice";
 import { useHomePage } from "../hooks/useHomePage";
 
 export default function HomePage({ onPlay }: { onPlay: () => void }) {
@@ -103,6 +104,9 @@ export default function HomePage({ onPlay }: { onPlay: () => void }) {
 
         <p className="px-0 pt-4.5 pb-1 text-center text-[0.68rem] text-(--gray-600)">
           Gratuit · Sans compte · Vos données restent sur votre appareil
+        </p>
+        <p className="m-0 pb-1 text-center text-[0.68rem] text-(--gray-600)">
+          <LegalNoticeLink />
         </p>
       </div>
     </main>
