@@ -1,5 +1,7 @@
 import { Period } from "./period";
 import {
+  NIGHT_CREDIT_CAP_MS,
+  NIGHT_END_HOUR,
   OPEN_PERIOD_HEARTBEAT_MS,
   UNOBSERVED_GAP_THRESHOLD_MS,
   UNOBSERVED_OFFLINE_CREDIT_CAP_MS,
@@ -8,7 +10,13 @@ import { isFiniteNumber, isRecord } from "../utils/sanitize";
 
 export interface OfflineDay {
   dayStart: number;
+  /** Credited offline time: the night part is capped (see nightMs). */
   durationMs: number;
+  /**
+   * Part of durationMs credited between midnight and NIGHT_END_HOUR; it never
+   * goes beyond NIGHT_CREDIT_CAP_MS.
+   */
+  nightMs: number;
   periodCount: number;
   firstStart: number;
   lastEnd: number;
@@ -95,17 +103,56 @@ export class PeriodList {
     );
   }
 
+  /**
+   * Offline time credited at `now`: the closed days, plus the open period
+   * without its excluded stretches, the night cap applied.
+   */
   computeTotalMs(now?: number): number {
-    const openDuration =
-      this.openPeriodStart === null
-        ? 0
-        : Math.max(
-            0,
-            (now ?? Date.now()) -
-              this.openPeriodStart -
-              this.getOpenPeriodExcludedMs(),
-          );
-    return this.computeCompletedMs() + openDuration;
+    const end = now ?? Date.now();
+    return this.computeCompletedMs() + this.creditOpenPeriod(end).credited;
+  }
+
+  /**
+   * Night time already credited for the night `now` belongs to, closed and
+   * open periods together; null outside the night (NIGHT_END_HOUR onwards).
+   */
+  getNightCreditUsedMs(now: number): number | null {
+    const date = new Date(now);
+    if (date.getHours() >= NIGHT_END_HOUR) return null;
+    const dayStart = getDayStart(now);
+    const closed = this.days.find((day) => day.dayStart === dayStart)?.nightMs ?? 0;
+    return this.creditOpenPeriod(now).nightUsed.get(dayStart) ?? closed;
+  }
+
+  /** What the open period credits up to `end`, and the night time per day. */
+  private creditOpenPeriod(end: number): { credited: number; nightUsed: Map<number, number> } {
+    // Night time the closed days already used, per day.
+    const nightUsed = new Map(this.days.map((day) => [day.dayStart, day.nightMs]));
+    let credited = 0;
+    for (const [start, stop] of this.getOpenIntervals(end)) {
+      forEachDaySegment(start, stop, (dayStart, segmentStart, segmentEnd) => {
+        const used = nightUsed.get(dayStart) ?? 0;
+        const credit = creditSegment(dayStart, segmentStart, segmentEnd, used);
+        nightUsed.set(dayStart, used + credit.nightMs);
+        credited += credit.durationMs;
+      });
+    }
+    return { credited, nightUsed };
+  }
+
+  /** The open period from its start to `end`, without its excluded stretches. */
+  private getOpenIntervals(end: number): Array<[number, number]> {
+    if (this.openPeriodStart === null) return [];
+    const exclusions = [...this.openPeriodExclusions].sort((left, right) => left.start - right.start);
+    const intervals: Array<[number, number]> = [];
+    let cursor = this.openPeriodStart;
+    for (const interval of exclusions) {
+      const stop = Math.min(interval.start, end);
+      if (stop > cursor) intervals.push([cursor, stop]);
+      cursor = Math.max(cursor, interval.end);
+    }
+    if (end > cursor) intervals.push([cursor, end]);
+    return intervals;
   }
 
   getOpenPeriod(): Period | null {
@@ -175,13 +222,13 @@ export class PeriodList {
         } else {
           this.openPeriodExclusions.splice(exclusionIndex, 1);
         }
+        credited += creditedEnd - gap.start;
       } else {
         // The period was closed meanwhile: add the time to its days.
         const countedDays = new Set(this.days.map((day) => day.dayStart));
-        this.aggregatePeriod(gap.start, creditedEnd, countedDays);
+        credited += this.aggregatePeriod(gap.start, creditedEnd, countedDays);
         this.sortDays();
       }
-      credited += creditedEnd - gap.start;
     }
     return credited;
   }
@@ -198,26 +245,15 @@ export class PeriodList {
 
     this.recordObservation(endTs);
     const start = this.openPeriodStart;
-    const exclusions = [...this.openPeriodExclusions].sort(
-      (left, right) => left.start - right.start,
-    );
     const countedDays = new Set<number>();
     let credited = 0;
-    let cursor = start;
-
-    for (const interval of exclusions) {
-      credited += this.aggregatePeriod(
-        cursor,
-        Math.min(interval.start, endTs),
-        countedDays,
-      );
-      cursor = Math.max(cursor, interval.end);
+    for (const [segmentStart, segmentEnd] of this.getOpenIntervals(endTs)) {
+      credited += this.aggregatePeriod(segmentStart, segmentEnd, countedDays);
     }
-    credited += this.aggregatePeriod(cursor, endTs, countedDays);
 
     // A period with no credited time is still recorded on its start day.
     if (countedDays.size === 0) {
-      this.addDaySegment(getDayStart(start), 0, start, start, true);
+      this.addDaySegment(getDayStart(start), 0, 0, start, start, true);
     }
 
     this.sortDays();
@@ -257,35 +293,37 @@ export class PeriodList {
       : [];
   }
 
-  /** Adds [start, end] to the daily totals and returns the added duration. */
+  /**
+   * Adds [start, end] to the daily totals, the night cap applied, and returns
+   * the credited duration.
+   */
   private aggregatePeriod(
     start: number,
     end: number,
     countedDays: Set<number>,
   ): number {
-    if (end <= start) return 0;
-
-    let cursor = start;
-    while (cursor < end) {
-      const dayStart = getDayStart(cursor);
-      const nextDayStart = getNextDayStart(dayStart);
-      const segmentEnd = Math.min(end, nextDayStart);
+    let credited = 0;
+    forEachDaySegment(start, end, (dayStart, segmentStart, segmentEnd) => {
+      const nightUsed = this.days.find((day) => day.dayStart === dayStart)?.nightMs ?? 0;
+      const credit = creditSegment(dayStart, segmentStart, segmentEnd, nightUsed);
       this.addDaySegment(
         dayStart,
-        segmentEnd - cursor,
-        cursor,
+        credit.durationMs,
+        credit.nightMs,
+        segmentStart,
         segmentEnd,
         !countedDays.has(dayStart),
       );
       countedDays.add(dayStart);
-      cursor = segmentEnd;
-    }
-    return end - start;
+      credited += credit.durationMs;
+    });
+    return credited;
   }
 
   private addDaySegment(
     dayStart: number,
     durationMs: number,
+    nightMs: number,
     segmentStart: number,
     segmentEnd: number,
     countAsNewPeriod: boolean,
@@ -293,6 +331,7 @@ export class PeriodList {
     const existing = this.days.find((day) => day.dayStart === dayStart);
     if (existing) {
       existing.durationMs += durationMs;
+      existing.nightMs += nightMs;
       if (countAsNewPeriod) existing.periodCount += 1;
       existing.firstStart = Math.min(existing.firstStart, segmentStart);
       existing.lastEnd = Math.max(existing.lastEnd, segmentEnd);
@@ -302,6 +341,7 @@ export class PeriodList {
     this.days.push({
       dayStart,
       durationMs,
+      nightMs,
       periodCount: countAsNewPeriod ? 1 : 0,
       firstStart: segmentStart,
       lastEnd: segmentEnd,
@@ -325,6 +365,44 @@ function getNextDayStart(dayStart: number): number {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1).getTime();
 }
 
+/** Calls `visit` with each part of [start, end) that falls within one local day. */
+function forEachDaySegment(
+  start: number,
+  end: number,
+  visit: (dayStart: number, segmentStart: number, segmentEnd: number) => void,
+): void {
+  let cursor = start;
+  while (cursor < end) {
+    const dayStart = getDayStart(cursor);
+    const segmentEnd = Math.min(end, getNextDayStart(dayStart));
+    visit(dayStart, cursor, segmentEnd);
+    cursor = segmentEnd;
+  }
+}
+
+/**
+ * Credit for [start, end) within the day starting at `dayStart`, given the
+ * night time that day already credited: the part between midnight and
+ * NIGHT_END_HOUR only counts up to NIGHT_CREDIT_CAP_MS per night.
+ */
+function creditSegment(
+  dayStart: number,
+  start: number,
+  end: number,
+  nightUsed: number,
+): { durationMs: number; nightMs: number } {
+  const date = new Date(dayStart);
+  const nightEnd = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    NIGHT_END_HOUR,
+  ).getTime();
+  const night = Math.max(0, Math.min(end, nightEnd) - Math.max(start, dayStart));
+  const nightMs = Math.min(night, Math.max(0, NIGHT_CREDIT_CAP_MS - nightUsed));
+  return { durationMs: end - start - night + nightMs, nightMs };
+}
+
 function isOfflineDay(value: unknown): value is OfflineDay {
   if (!isRecord(value)) return false;
   return (
@@ -342,6 +420,8 @@ function toOfflineDay(day: OfflineDay): OfflineDay {
   return {
     dayStart: day.dayStart,
     durationMs: day.durationMs,
+    // Days saved before the night cap have not used any of it.
+    nightMs: isFiniteNumber(day.nightMs) && day.nightMs >= 0 ? day.nightMs : 0,
     periodCount: Math.floor(day.periodCount),
     firstStart: day.firstStart,
     lastEnd: day.lastEnd,

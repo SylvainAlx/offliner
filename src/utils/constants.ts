@@ -10,6 +10,13 @@ export const OFFLINE_CONFIRMATION_DELAY_MS = 5 * 1000;
 // whether they stayed offline; if so, at most the cap is credited per gap.
 export const UNOBSERVED_GAP_THRESHOLD_MS = 15 * 60 * 1000;
 export const UNOBSERVED_OFFLINE_CREDIT_CAP_MS = 12 * 60 * 60 * 1000;
+/**
+ * Between midnight and NIGHT_END_HOUR (local time), at most
+ * NIGHT_CREDIT_CAP_MS of offline time is credited per night: a phone left
+ * offline all night would otherwise bring far more Offlinium than playing.
+ */
+export const NIGHT_END_HOUR = 7;
+export const NIGHT_CREDIT_CAP_MS = 3 * 60 * 60 * 1000;
 // How often an open offline period records that the app saw the device offline.
 export const OPEN_PERIOD_HEARTBEAT_MS = 30 * 1000;
 

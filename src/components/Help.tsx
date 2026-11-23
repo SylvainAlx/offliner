@@ -14,6 +14,8 @@ import {
   COLONIZATION_COST,
   COLONIZATION_FUEL_PER_AU,
   FLIGHT_MS_PER_AU,
+  NIGHT_CREDIT_CAP_MS,
+  NIGHT_END_HOUR,
   MAX_COLONIES,
   MIN_FLIGHT_MS,
   SPACEPORT_RANGE_AU_PER_LEVEL,
@@ -177,6 +179,12 @@ export default function Help() {
             </li>
             <li className={bullet}>
               Il n&apos;est jamais plafonné par le dépôt.
+            </li>
+            <li className={bullet}>
+              La nuit, entre minuit et {NIGHT_END_HOUR} h, seules{" "}
+              {NIGHT_CREDIT_CAP_MS / 3600000} h hors ligne sont comptées au
+              maximum : laisser son téléphone hors ligne toute la nuit ne
+              rapporte pas plus.
             </li>
           </ul>
           <p className={text}>

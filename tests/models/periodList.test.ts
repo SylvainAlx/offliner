@@ -27,6 +27,7 @@ describe("PeriodList", () => {
         {
           dayStart: local(2026, 1, 10),
           durationMs: 2 * HOUR,
+          nightMs: 0,
           periodCount: 1,
           firstStart: T0,
           lastEnd: T0 + 2 * HOUR,
@@ -176,6 +177,67 @@ describe("PeriodList", () => {
     });
   });
 
+  describe("night cap", () => {
+    const evening = local(2026, 1, 10, 23);
+    const midnight = local(2026, 1, 11, 0);
+
+    it("credits at most 3 hours between midnight and 7 am", () => {
+      // 23:00 → 09:00: 1 h the evening before, 3 h of night, 2 h after 7 am.
+      const list = observed(evening, local(2026, 1, 11, 9));
+      list.closeAnyOpenPeriod(local(2026, 1, 11, 9));
+      expect(list.computeTotalMs()).toBe(6 * HOUR);
+      const night = list.days.find((day) => day.dayStart === midnight)!;
+      expect(night).toMatchObject({ durationMs: 5 * HOUR, nightMs: 3 * HOUR });
+      expect(list.days.find((day) => day.dayStart === local(2026, 1, 10))!.durationMs).toBe(HOUR);
+    });
+
+    it("stops counting an open period once the night's 3 hours are used, then resumes at 7 am", () => {
+      const list = observed(evening, local(2026, 1, 11, 9));
+      // Reopened as a single open period observed all night long.
+      expect(list.computeTotalMs(local(2026, 1, 11, 2))).toBe(3 * HOUR);
+      expect(list.computeTotalMs(local(2026, 1, 11, 3))).toBe(4 * HOUR);
+      expect(list.computeTotalMs(local(2026, 1, 11, 6))).toBe(4 * HOUR);
+      expect(list.computeTotalMs(local(2026, 1, 11, 8))).toBe(5 * HOUR);
+      // Closing it gives the same credit as the open period showed.
+      list.closeAnyOpenPeriod(local(2026, 1, 11, 8));
+      expect(list.computeTotalMs()).toBe(5 * HOUR);
+    });
+
+    it("shares the 3 hours between all the periods of one night", () => {
+      const list = new PeriodList();
+      observeOffline(list, midnight, local(2026, 1, 11, 2));
+      list.closeAnyOpenPeriod(local(2026, 1, 11, 2));
+      observeOffline(list, local(2026, 1, 11, 3), local(2026, 1, 11, 5));
+      expect(list.computeTotalMs(local(2026, 1, 11, 5))).toBe(3 * HOUR);
+      list.closeAnyOpenPeriod(local(2026, 1, 11, 5));
+      expect(list.computeTotalMs()).toBe(3 * HOUR);
+      // The next night has its own 3 hours; daytime is never capped.
+      observeOffline(list, local(2026, 1, 12, 0), local(2026, 1, 12, 12));
+      list.closeAnyOpenPeriod(local(2026, 1, 12, 12));
+      expect(list.computeTotalMs()).toBe(3 * HOUR + 3 * HOUR + 5 * HOUR);
+    });
+
+    it("tells how much of the night is already counted", () => {
+      const list = observed(evening, local(2026, 1, 11, 9));
+      expect(list.getNightCreditUsedMs(local(2026, 1, 10, 23, 30))).toBeNull();
+      expect(list.getNightCreditUsedMs(local(2026, 1, 11, 1))).toBe(HOUR);
+      expect(list.getNightCreditUsedMs(local(2026, 1, 11, 5))).toBe(3 * HOUR);
+      expect(list.getNightCreditUsedMs(local(2026, 1, 11, 7))).toBeNull();
+      list.closeAnyOpenPeriod(local(2026, 1, 11, 2));
+      expect(list.getNightCreditUsedMs(local(2026, 1, 11, 4))).toBe(2 * HOUR);
+    });
+
+    it("applies to a confirmed absence too", () => {
+      const list = new PeriodList();
+      list.openPeriodIfNeeded(evening);
+      // The app could not see the device from 23:00 to 08:00.
+      list.closeAnyOpenPeriod(local(2026, 1, 11, 8));
+      expect(list.computeTotalMs()).toBe(0);
+      list.resolveUnconfirmedGaps(true);
+      expect(list.computeTotalMs()).toBe(HOUR + 3 * HOUR + HOUR);
+    });
+  });
+
   describe("loading saved data", () => {
     it("round-trips through JSON, exclusions and pending gaps included", () => {
       const list = observed(T0, T0 + HOUR);
@@ -216,8 +278,9 @@ describe("PeriodList", () => {
         unconfirmedGaps: [{ start: 5, end: 1 }, "x", { start: T0, end: T0 + HOUR }],
       });
 
+      // A day without its night time has not used any of the night cap.
       expect(list.days).toEqual([
-        { dayStart: 0, durationMs: 5, periodCount: 1, firstStart: 0, lastEnd: 5 },
+        { dayStart: 0, durationMs: 5, nightMs: 0, periodCount: 1, firstStart: 0, lastEnd: 5 },
       ]);
       expect(list.openPeriodExclusions).toEqual([]);
       expect(list.unconfirmedGaps).toEqual([{ start: T0, end: T0 + HOUR }]);
