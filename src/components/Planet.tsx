@@ -8,6 +8,7 @@ import PlanetSprite from "./PlanetSprite";
 import ConstructionInProgress from "./planet/ConstructionInProgress";
 import BuildingGrid from "./planet/BuildingGrid";
 import PlanetBalance from "./planet/PlanetBalance";
+import OffliniumExchange from "./planet/OffliniumExchange";
 import PopulationPanel from "./planet/PopulationPanel";
 import PlanetLeader from "./planet/PlanetLeader";
 import PlanetIdentity from "./planet/PlanetIdentity";
@@ -54,6 +55,7 @@ export default function Planet({ onOpenInhabitants }: { onOpenInhabitants: () =>
       {view === "list" && <BuildingGrid />}
       <PopulationPanel />
       <PlanetBalance />
+      <OffliniumExchange />
       <PlanetIdentity />
     </Card>
   );

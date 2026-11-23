@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { User, type ColonyCompletedConstruction, type SignalReception } from "../models/user";
 import type { SentSignal } from "../models/signal";
+import type { ExchangeResource } from "../models/exchange";
 import type { Colony } from "../models/colony";
 import type { ExpeditionCargo, ExpeditionKind } from "../models/expedition";
 import type { BuildingType } from "../models/buildings";
@@ -19,6 +20,8 @@ export interface UserStore {
   renamePlanet: (name: string) => boolean;
   /** Shows another of the player's planets. */
   setActiveColony: (id: string) => boolean;
+  /** Exchanges Offlinium for metal or food on the planet shown; returns the units received. */
+  exchangeOfflinium: (resource: ExchangeResource, offlinium: number) => number;
   /** Sends a radar signal; returns it with its code, or null. */
   emitSignal: (colonyId: string, authorId: string, message: string) => SentSignal | null;
   /** Decodes a code captured by the radar and keeps a new signal. */
@@ -146,6 +149,15 @@ export const useUser = create<UserStore>((set, get) => {
     renamePlanet: (name) => update((user) => user.renamePlanet(name)),
 
     setActiveColony: (id) => update((user) => user.setActiveColony(id)),
+
+    exchangeOfflinium: (resource, offlinium) => {
+      let received = 0;
+      update((user) => {
+        received = user.exchangeOfflinium(resource, offlinium);
+        return received > 0;
+      });
+      return received;
+    },
 
     emitSignal: (colonyId, authorId, message) => {
       let sent: SentSignal | null = null;
