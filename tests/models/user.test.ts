@@ -801,6 +801,25 @@ describe("expeditions", () => {
     expect(user.planExpedition("cargo", home.id, far.id, { metal: 1, food: 0 })!.blocker).toBe("notOwned");
   });
 
+  it("counts expeditions and cargo for the achievements, through a save", async () => {
+    const { user, near } = await userWithNeighbors();
+    const home = user.homeColony;
+    home.planet.levels.spaceport = 1;
+    user.launchExpedition("colonization", home.id, near.id, T0);
+    user.realTimeSettledAt = T0;
+    user.advance(T0 + 10 * HOUR, 0);
+    user.launchExpedition("cargo", home.id, near.id, T0 + 10 * HOUR, { metal: 700, food: 300 });
+    user.advance(T0 + 20 * HOUR, 0);
+    expect(user.stats).toEqual({ expeditionsLaunched: 2, cargoDeliveries: 1, cargoUnitsDelivered: 1000 });
+
+    const restored = new User();
+    restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
+    expect(restored.stats).toEqual(user.stats);
+    const copy = restored.clone();
+    copy.stats.cargoDeliveries = 9;
+    expect(restored.stats.cargoDeliveries).toBe(1);
+  });
+
   it("keeps expeditions in flight through a save, and sends back what cannot land", async () => {
     const { user, near } = await userWithNeighbors();
     const home = user.homeColony;

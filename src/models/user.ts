@@ -102,6 +102,14 @@ export interface ExpeditionReport {
   colonists: number;
 }
 
+/** Running totals of the game, for the achievements. */
+export interface GameStats {
+  expeditionsLaunched: number;
+  cargoDeliveries: number;
+  /** Metal and food units cargo flights have delivered. */
+  cargoUnitsDelivered: number;
+}
+
 /** The latest reports are kept, newest first. */
 const MAX_REPORTS = 10;
 
@@ -133,6 +141,7 @@ export class User {
   expeditions: Expedition[];
   /** What the last expeditions did on arrival, newest first. */
   expeditionReports: ExpeditionReport[];
+  stats: GameStats;
   /** Real time up to which every colony has been computed. */
   realTimeSettledAt: number;
   /** Offline time already turned into Offlinium. */
@@ -155,6 +164,7 @@ export class User {
     this.notables = [createLeader(home.planet.name, now, home.id)];
     this.expeditions = [];
     this.expeditionReports = [];
+    this.stats = { expeditionsLaunched: 0, cargoDeliveries: 0, cargoUnitsDelivered: 0 };
     this.realTimeSettledAt = now;
     this.settledOfflineMs = 0;
   }
@@ -449,6 +459,7 @@ export class User {
       cargo: { ...plan.cargo },
       colonists: plan.colonists,
     });
+    this.stats.expeditionsLaunched += 1;
     return true;
   }
 
@@ -461,6 +472,8 @@ export class User {
     if (expedition.kind === "cargo" && destination) {
       destination.resources.metal += expedition.cargo.metal;
       destination.resources.food += expedition.cargo.food;
+      this.stats.cargoDeliveries += 1;
+      this.stats.cargoUnitsDelivered += expedition.cargo.metal + expedition.cargo.food;
       outcome = "delivered";
     } else if (
       expedition.kind === "colonization" &&
@@ -578,6 +591,7 @@ export class User {
       ...item,
       cargo: { ...item.cargo },
     }));
+    copy.stats = { ...this.stats };
     copy.realTimeSettledAt = this.realTimeSettledAt;
     copy.settledOfflineMs = this.settledOfflineMs;
     return copy;
@@ -616,6 +630,10 @@ export class User {
         this.system.planets.some((planet) => planet.id === item.targetId),
     );
     this.expeditionReports = loadReports(parsed.expeditionReports);
+    const stats = isRecord(parsed.stats) ? parsed.stats : {};
+    for (const key of Object.keys(this.stats) as Array<keyof GameStats>) {
+      if (isNonNegativeNumber(stats[key])) this.stats[key] = Math.floor(stats[key]);
+    }
 
     if (isFiniteNumber(parsed.realTimeSettledAt)) {
       this.realTimeSettledAt = parsed.realTimeSettledAt;

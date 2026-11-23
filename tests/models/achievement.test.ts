@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { getAchievements } from "../../src/models/achievement";
+import { ACHIEVEMENT_DEFINITIONS, getAchievements } from "../../src/models/achievement";
+import { Colony } from "../../src/models/colony";
 import { User } from "../../src/models/user";
 import { HOUR, local } from "../helpers/time";
 import { observeOffline } from "../helpers/periods";
@@ -48,5 +49,50 @@ describe("achievements", () => {
       [2026, 2, 3],
     ]);
     expect(progressOf(user, "offline-streak-seven").progress).toBe(4);
+  });
+
+  it("keeps the ids of the first achievements, so unlocked ones stay unlocked", () => {
+    const ids = ACHIEVEMENT_DEFINITIONS.map((item) => item.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const id of [
+      "offline-hour", "offline-day", "offline-week", "offline-days-three",
+      "offline-streak-seven", "first-building", "village", "city",
+      "population-hundred", "mine-ten", "spaceport", "laboratory",
+    ]) {
+      expect(ids).toContain(id);
+    }
+  });
+
+  it("follows space exploration: expeditions, colonies and cargo", () => {
+    const user = new User();
+    expect(progressOf(user, "first-expedition").unlocked).toBe(false);
+    user.stats = { expeditionsLaunched: 3, cargoDeliveries: 2, cargoUnitsDelivered: 12_000 };
+    user.addColony(new Colony({ foundedAt: 0, systemPlanetId: "a" }));
+    user.addColony(new Colony({ foundedAt: 0, systemPlanetId: "b" }));
+    expect(progressOf(user, "first-expedition").unlocked).toBe(true);
+    expect(progressOf(user, "first-colony").unlocked).toBe(true);
+    expect(progressOf(user, "first-cargo").unlocked).toBe(true);
+    expect(progressOf(user, "star-empire")).toMatchObject({ progress: 2, unlocked: false });
+    expect(progressOf(user, "space-bridge")).toMatchObject({ progress: 12_000, unlocked: false });
+
+    // Only a colony counts for the distant city, not the starting planet.
+    user.homeColony.planet.levels.habitat = 8;
+    expect(progressOf(user, "distant-city").progress).toBe(0);
+    user.colonies[1].planet.levels.habitat = 6;
+    expect(progressOf(user, "distant-city").unlocked).toBe(true);
+  });
+
+  it("follows the notable inhabitants", () => {
+    const user = new User("Joueur", 0);
+    expect(progressOf(user, "leader-story").unlocked).toBe(false);
+    user.updateNotable(user.leader!.id, { name: "Ada", title: "Gouverneure", description: "" });
+    expect(progressOf(user, "leader-story").unlocked).toBe(true);
+
+    user.advance(3 * 7 * 24 * HOUR, 0);
+    expect(progressOf(user, "first-notable").unlocked).toBe(true);
+    expect(progressOf(user, "colony-memory").progress).toBe(3);
+    const [first] = user.weeklyNotables;
+    user.updateNotable(first.id, { name: "Lia", title: "Ingénieure", description: "" });
+    expect(progressOf(user, "chronicler").progress).toBe(1);
   });
 });

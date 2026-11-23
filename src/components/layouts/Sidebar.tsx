@@ -34,16 +34,16 @@ const menuItems: Array<{
     icon: "☀️",
   },
   {
-    id: "account",
-    label: "Compte",
-    description: "Profil, statut et suivi",
-    icon: "👤​",
-  },
-  {
     id: "achievements",
     label: "Succès",
     description: "Vos étapes et records",
     icon: "🏆",
+  },
+  {
+    id: "account",
+    label: "Compte",
+    description: "Profil, statut et suivi",
+    icon: "👤​",
   },
   {
     id: "help",
@@ -69,7 +69,9 @@ export default function Sidebar({
   // The star system opens once the spaceport is built.
   const isSystemUnlocked = useUser((state) => state.user.isSystemUnlocked);
   // Inhabitants who arrived and still wait for the player to tell their story.
-  const notablesToCustomize = useUser((state) => state.user.notablesToCustomize);
+  const notablesToCustomize = useUser(
+    (state) => state.user.notablesToCustomize,
+  );
   const { closeButtonRef, handleSelect } = useSideBar(
     isOpen,
     onClose,
@@ -133,7 +135,11 @@ export default function Sidebar({
           {menuItems.map((menuItem) => {
             const isLocked = menuItem.id === "system" && !isSystemUnlocked;
             const item = isLocked
-              ? { ...menuItem, icon: "🔒", description: "Construisez le spatioport" }
+              ? {
+                  ...menuItem,
+                  icon: "🔒",
+                  description: "Construisez le spatioport",
+                }
               : menuItem;
             const isActive = activeSection === item.id;
             const badge = item.id === "inhabitants" ? notablesToCustomize : 0;
