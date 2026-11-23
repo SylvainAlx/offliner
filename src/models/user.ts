@@ -25,6 +25,12 @@ import {
   type ExpeditionKind,
 } from "./expedition";
 import type { StarSystem, SystemPlanet } from "./starSystem";
+import {
+  getExchangeAmount,
+  getExchangeQuote,
+  type ExchangeQuote,
+  type ExchangeResource,
+} from "./exchange";
 import { getConstructionMs, getRadarMessageLength, type BuildingType } from "./buildings";
 import {
   decodeSignal,
@@ -549,6 +555,34 @@ export class User {
       },
       ...this.expeditionReports,
     ].slice(0, MAX_REPORTS);
+  }
+
+  // --- Exchange ------------------------------------------------------------
+
+  /** What Offlinium is worth on a planet, the active one by default. */
+  getExchangeQuote(resource: ExchangeResource, colony: Colony = this.activeColony): ExchangeQuote {
+    return getExchangeQuote(colony, resource, this.offlinium, this.offliniumMultiplier);
+  }
+
+  /**
+   * Exchanges whole Offlinium for metal or food on a planet, at one hour of
+   * Offlinium for one hour of production. Refused beyond the balance, beyond
+   * the room left in the depot, or when it would bring nothing. Returns the
+   * units received, or 0.
+   */
+  exchangeOfflinium(
+    resource: ExchangeResource,
+    offlinium: number,
+    colonyId = this.activeColonyId,
+  ): number {
+    const colony = this.getColony(colonyId);
+    if (!colony || !Number.isInteger(offlinium) || offlinium <= 0) return 0;
+    const quote = this.getExchangeQuote(resource, colony);
+    const received = getExchangeAmount(quote, offlinium);
+    if (offlinium > quote.maxOfflinium || received <= 0) return 0;
+    this.offlinium -= offlinium;
+    colony.resources[resource] += received;
+    return received;
   }
 
   // --- Radar ---------------------------------------------------------------

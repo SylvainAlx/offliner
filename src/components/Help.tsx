@@ -182,6 +182,12 @@ export default function Help() {
               Il n&apos;est jamais plafonné par le dépôt.
             </li>
             <li className={bullet}>
+              Au comptoir d&apos;échange de la page Planète, l&apos;Offlinium
+              s&apos;échange contre du métal ou de l&apos;alimentation : 1 h
+              d&apos;Offlinium vaut 1 h de production de la planète affichée,
+              dans la limite de la place au dépôt.
+            </li>
+            <li className={bullet}>
               La nuit, entre minuit et {NIGHT_END_HOUR} h, seules{" "}
               {NIGHT_CREDIT_CAP_MS / 3600000} h hors ligne sont comptées au
               maximum : laisser son téléphone hors ligne toute la nuit ne

@@ -4,6 +4,8 @@ export const OFFLINER_VERSION = 1.0;
 
 /** One Offlinium delivery every 10 s of offline time: 360 /h at the base rate. */
 export const OFFLINIUM_DELIVERY_INTERVAL = 10 * 1000;
+/** Offlinium earned per hour offline, before the laboratory bonus. */
+export const OFFLINIUM_PER_HOUR = (60 * 60 * 1000) / OFFLINIUM_DELIVERY_INTERVAL;
 export const OFFLINE_CONFIRMATION_DELAY_MS = 5 * 1000;
 // Time during which the app could not observe the device (background, closed,
 // device asleep) cannot be verified. Beyond this threshold, the player is asked

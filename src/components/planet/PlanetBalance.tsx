@@ -5,10 +5,8 @@ import {
   RESOURCE_LABELS,
   formatAmount,
 } from "../../models/resources";
-import { OFFLINIUM_DELIVERY_INTERVAL } from "../../utils/constants";
+import { OFFLINIUM_PER_HOUR } from "../../utils/constants";
 import PlanetSection from "../PlanetSection";
-
-const OFFLINIUM_PER_HOUR = (60 * 60 * 1000) / OFFLINIUM_DELIVERY_INTERVAL;
 
 function percent(value: number): string {
   return `${Math.round(value * 100)} %`;
