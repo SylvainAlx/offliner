@@ -19,7 +19,7 @@ export default function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`min-h-11 px-3.5 py-2.5 border-0 rounded-[10px] text-(--on-color) cursor-pointer text-[0.9rem] font-bold transition-[transform,box-shadow] duration-150 ease-out hover:shadow-[0_13px_24px_rgba(17,24,39,0.25)] hover:-translate-y-0.5 active:translate-y-px disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none disabled:active:translate-y-0 ${className}`.trim()}
+      className={`min-h-11 px-3.5 py-2.5 border-0 rounded-[10px] text-(--on-color) cursor-pointer text-[0.9rem] font-bold transition-all duration-300 ease-out hover:shadow-[0_13px_24px_rgba(17,24,39,0.25)] hover:-translate-y-0.5 active:translate-y-px disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none disabled:active:translate-y-0 ${className}`.trim()}
       style={{ background: color }}
       onClick={onClick}
       disabled={disabled}

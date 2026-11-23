@@ -13,18 +13,16 @@ import { Colony } from "./colony";
 import { advanceRealTime, type CompletedConstruction } from "./economy";
 import {
   getCargoCapacity,
-  getDistanceAu,
-  getFlightMs,
-  getFuelCost,
-  getHomeSystem,
-  getRequiredSpaceportLevel,
-  getSpaceportRange,
+  getGalaxy,
+  getTravel,
+  getTravelFuel,
   loadExpeditions,
   type Expedition,
   type ExpeditionCargo,
   type ExpeditionKind,
+  type Travel,
 } from "./expedition";
-import type { StarSystem, SystemPlanet } from "./starSystem";
+import type { Galaxy, GalaxySystem, StarSystem, SystemPlanet } from "./starSystem";
 import {
   getExchangeAmount,
   getExchangeQuote,
@@ -47,7 +45,6 @@ import {
   COLONISTS_PER_SHIP,
   COLONIZATION_COST,
   COLONY_STARTING_RESOURCES,
-  MAX_COLONIES,
   NOTABLE_INTERVAL_MS,
   OFFLINIUM_DELIVERY_INTERVAL,
   SPEED_UP_MS_PER_OFFLINIUM,
@@ -74,9 +71,7 @@ export interface ColonyCompletedConstruction extends CompletedConstruction {
 export type ExpeditionBlocker =
   | "noSpaceport"
   | "samePlanet"
-  | "notColonizable"
   | "occupied"
-  | "maxColonies"
   | "notOwned"
   | "outOfRange"
   | "colonists"
@@ -90,11 +85,12 @@ export interface ExpeditionPlan {
   kind: ExpeditionKind;
   from: Colony;
   target: SystemPlanet;
-  distanceAu: number;
-  /** How far the departure spaceport reaches, and the level the trip needs. */
-  rangeAu: number;
-  requiredLevel: number;
-  flightMs: number;
+  /** The destination's system. */
+  targetSystem: GalaxySystem;
+  /** Distance, unit, flight time and the spaceport level the trip needs. */
+  travel: Travel;
+  /** The departure planet's spaceport level. */
+  level: number;
   fuel: number;
   /** Paid at departure: metal and food by the planet, fuel by the player. */
   cost: ResourceAmounts;
@@ -390,14 +386,70 @@ export class User {
 
   // --- Expeditions ---------------------------------------------------------
 
-  /** The star system, drawn around the starting planet. */
-  get system(): StarSystem {
-    return getHomeSystem(this.homeColony.planet);
+  /** The star map, drawn around the starting planet: its system, then the neighbors. */
+  get galaxy(): Galaxy {
+    return getGalaxy(this.homeColony.planet);
   }
 
-  /** Where a colony sits in the star system. */
+  /** The player's own star system. */
+  get system(): StarSystem {
+    return this.galaxy.systems[0];
+  }
+
+  /** A planet of the star map, with its system. */
+  findSystemPlanet(id: string): { system: GalaxySystem; planet: SystemPlanet } | undefined {
+    for (const system of this.galaxy.systems) {
+      const planet = system.planets.find((item) => item.id === id);
+      if (planet) return { system, planet };
+    }
+    return undefined;
+  }
+
+  /** Where a colony sits on the star map. */
   getSystemPlanet(colony: Colony): SystemPlanet | undefined {
-    return this.system.planets.find((planet) => planet.id === colony.systemPlanetId);
+    return this.findSystemPlanet(colony.systemPlanetId ?? "")?.planet;
+  }
+
+  /** The system a colony belongs to. */
+  getColonySystem(colony: Colony): GalaxySystem {
+    return this.findSystemPlanet(colony.systemPlanetId ?? "")?.system ?? this.galaxy.systems[0];
+  }
+
+  /** The trip from a colony to a planet of the star map, if both exist. */
+  getTravel(colony: Colony, targetId: string): Travel | undefined {
+    const from = this.findSystemPlanet(colony.systemPlanetId ?? "");
+    const to = this.findSystemPlanet(targetId);
+    return from && to ? getTravel(from.system, from.planet, to.system, to.planet) : undefined;
+  }
+
+  /** Whether one of the player's spaceports reaches a planet of the star map. */
+  canReach(targetId: string): boolean {
+    return this.colonies.some((colony) => {
+      const level = colony.planet.levels.spaceport;
+      const travel = level > 0 ? this.getTravel(colony, targetId) : undefined;
+      return travel !== undefined && travel.requiredLevel <= level;
+    });
+  }
+
+  /**
+   * The lowest spaceport level, among the player's planets, that would reach
+   * a system: what to build to open it.
+   */
+  getLevelToReach(system: GalaxySystem): number {
+    const target = system.planets[0];
+    return this.colonies.reduce((best, colony) => {
+      const travel = this.getTravel(colony, target.id);
+      return travel ? Math.min(best, travel.requiredLevel) : best;
+    }, Number.POSITIVE_INFINITY);
+  }
+
+  /** A system is open once a spaceport reaches it, or a colony is there. */
+  isSystemOpen(system: GalaxySystem): boolean {
+    return (
+      system.isHome ||
+      this.colonies.some((colony) => this.getColonySystem(colony).id === system.id) ||
+      this.canReach(system.planets[0].id)
+    );
   }
 
   /** The player's colony on a planet of the system, if any. */
@@ -423,13 +475,14 @@ export class User {
     requestedCargo: ExpeditionCargo = { metal: 0, food: 0 },
   ): ExpeditionPlan | null {
     const from = this.getColony(fromColonyId);
-    const target = this.system.planets.find((planet) => planet.id === targetId);
+    const found = this.findSystemPlanet(targetId);
     const origin = from && this.getSystemPlanet(from);
-    if (!from || !target || !origin) return null;
+    const travel = from && this.getTravel(from, targetId);
+    if (!from || !found || !origin || !travel) return null;
+    const target = found.planet;
 
     const level = from.planet.levels.spaceport;
-    const distanceAu = getDistanceAu(origin, target);
-    const fuel = getFuelCost(kind, distanceAu);
+    const fuel = getTravelFuel(kind, travel);
     const capacity = getCargoCapacity(level);
     const isColonization = kind === "colonization";
     const cargo: ExpeditionCargo = isColonization
@@ -449,11 +502,9 @@ export class User {
     let blocker: ExpeditionBlocker = null;
     if (level <= 0) blocker = "noSpaceport";
     else if (target.id === origin.id) blocker = "samePlanet";
-    else if (isColonization && !target.isColonizable) blocker = "notColonizable";
     else if (isColonization && (this.getColonyAt(targetId) || flyingThere)) blocker = "occupied";
-    else if (isColonization && this.colonyCount >= MAX_COLONIES) blocker = "maxColonies";
     else if (!isColonization && !this.getColonyAt(targetId)) blocker = "notOwned";
-    else if (distanceAu > getSpaceportRange(level) + 1e-9) blocker = "outOfRange";
+    else if (travel.requiredLevel > level) blocker = "outOfRange";
     // The departure planet keeps at least one inhabitant.
     else if (isColonization && Math.floor(from.population) <= colonists) blocker = "colonists";
     else if (!isColonization && cargo.metal + cargo.food <= 0) blocker = "emptyCargo";
@@ -464,10 +515,9 @@ export class User {
       kind,
       from,
       target,
-      distanceAu,
-      rangeAu: getSpaceportRange(level),
-      requiredLevel: getRequiredSpaceportLevel(distanceAu),
-      flightMs: getFlightMs(distanceAu),
+      targetSystem: found.system,
+      travel,
+      level,
       fuel,
       cost,
       cargo,
@@ -495,7 +545,7 @@ export class User {
       fromColonyId,
       targetId,
       departAt: now,
-      arriveAt: now + plan.flightMs,
+      arriveAt: now + plan.travel.flightMs,
       cargo: { ...plan.cargo },
       colonists: plan.colonists,
     });
@@ -505,7 +555,7 @@ export class User {
 
   /** An expedition reaches its destination at `at`. */
   private land(expedition: Expedition, at: number): void {
-    const target = this.system.planets.find((planet) => planet.id === expedition.targetId);
+    const target = this.findSystemPlanet(expedition.targetId)?.planet;
     const destination = this.getColonyAt(expedition.targetId);
     let outcome: ExpeditionReport["outcome"];
 
@@ -517,9 +567,8 @@ export class User {
       outcome = "delivered";
     } else if (
       expedition.kind === "colonization" &&
-      target?.isColonizable &&
-      !destination &&
-      this.colonies.length - 1 < MAX_COLONIES
+      target &&
+      !destination
     ) {
       const planet = new Planet(target.name, target.seed);
       planet.kind = target.kind;
@@ -765,7 +814,7 @@ export class User {
     this.expeditions = loadExpeditions(parsed.expeditions).filter(
       (item) =>
         this.getColony(item.fromColonyId) !== undefined &&
-        this.system.planets.some((planet) => planet.id === item.targetId),
+        this.findSystemPlanet(item.targetId) !== undefined,
     );
     this.expeditionReports = loadReports(parsed.expeditionReports);
     const stats = isRecord(parsed.stats) ? parsed.stats : {};

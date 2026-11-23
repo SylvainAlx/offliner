@@ -1,10 +1,21 @@
-import { generateStarSystem, type StarSystem, type SystemPlanet } from "./starSystem";
+import {
+  LY_PER_SPACEPORT_LEVEL,
+  generateGalaxy,
+  getSystemDistanceLy,
+  type Galaxy,
+  type GalaxySystem,
+  type SystemPlanet,
+} from "./starSystem";
 import type { Planet } from "./planet";
 import {
   CARGO_CAPACITY_PER_LEVEL,
   CARGO_FUEL_PER_AU,
+  CARGO_FUEL_PER_LY,
   COLONIZATION_FUEL_PER_AU,
+  COLONIZATION_FUEL_PER_LY,
   FLIGHT_MS_PER_AU,
+  FLIGHT_MS_PER_LY,
+  INTERSTELLAR_BASE_LEVEL,
   MIN_FLIGHT_MS,
   SPACEPORT_RANGE_AU_PER_LEVEL,
 } from "../utils/constants";
@@ -70,19 +81,69 @@ export function getFuelCost(kind: ExpeditionKind, distanceAu: number): number {
   return Math.max(1, Math.ceil(distanceAu * perAu));
 }
 
-// The system is drawn again for each tick otherwise: it only depends on the
+/** A trip between two planets of the star map. */
+export interface Travel {
+  /** Between two systems, or within one. */
+  isInterstellar: boolean;
+  /** In astronomical units within a system, in light-years between systems. */
+  distance: number;
+  unit: "UA" | "al";
+  /** The spaceport level the trip needs at the departure planet. */
+  requiredLevel: number;
+  flightMs: number;
+}
+
+/** The spaceport level needed to reach another system `distanceLy` away. */
+export function getInterstellarLevel(distanceLy: number): number {
+  return INTERSTELLAR_BASE_LEVEL + Math.max(1, Math.ceil(distanceLy / LY_PER_SPACEPORT_LEVEL - 1e-9));
+}
+
+export function getTravel(
+  fromSystem: GalaxySystem,
+  from: SystemPlanet,
+  toSystem: GalaxySystem,
+  to: SystemPlanet,
+): Travel {
+  if (fromSystem.id === toSystem.id) {
+    const distance = getDistanceAu(from, to);
+    return {
+      isInterstellar: false,
+      distance,
+      unit: "UA",
+      requiredLevel: getRequiredSpaceportLevel(distance),
+      flightMs: getFlightMs(distance),
+    };
+  }
+  const distance = getSystemDistanceLy(fromSystem, toSystem);
+  return {
+    isInterstellar: true,
+    distance,
+    unit: "al",
+    requiredLevel: getInterstellarLevel(distance),
+    flightMs: Math.max(MIN_FLIGHT_MS, Math.round(distance * FLIGHT_MS_PER_LY)),
+  };
+}
+
+/** Offlinium burnt by a trip. */
+export function getTravelFuel(kind: ExpeditionKind, travel: Travel): number {
+  if (!travel.isInterstellar) return getFuelCost(kind, travel.distance);
+  const perLy = kind === "colonization" ? COLONIZATION_FUEL_PER_LY : CARGO_FUEL_PER_LY;
+  return Math.max(1, Math.ceil(travel.distance * perLy));
+}
+
+// The map is drawn again for each tick otherwise: it only depends on the
 // starting planet, so the last one is kept.
 let cachedKey = "";
-let cachedSystem: StarSystem | null = null;
+let cachedGalaxy: Galaxy | null = null;
 
-/** The star system drawn around the starting planet. */
-export function getHomeSystem(home: Pick<Planet, "seed" | "name" | "fields">): StarSystem {
+/** The star map drawn around the starting planet: its system, then the neighbors. */
+export function getGalaxy(home: Pick<Planet, "seed" | "name" | "fields">): Galaxy {
   const key = `${home.seed}\u0000${home.name}\u0000${home.fields}`;
-  if (!cachedSystem || cachedKey !== key) {
-    cachedSystem = generateStarSystem(home);
+  if (!cachedGalaxy || cachedKey !== key) {
+    cachedGalaxy = generateGalaxy(home);
     cachedKey = key;
   }
-  return cachedSystem;
+  return cachedGalaxy;
 }
 
 export function loadExpeditions(value: unknown): Expedition[] {

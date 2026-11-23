@@ -5,7 +5,11 @@ import CompanionSprite from "../CompanionSprite";
  * The planetary leader, in short. The full story, and the inhabitants of
  * each week, are in the Habitants section.
  */
-export default function PlanetLeader({ onOpenInhabitants }: { onOpenInhabitants: () => void }) {
+export default function PlanetLeader({
+  onOpenInhabitants,
+}: {
+  onOpenInhabitants: () => void;
+}) {
   const leader = useUser((state) => state.user.leader);
   const toCustomize = useUser((state) => state.user.notablesToCustomize);
 
@@ -14,7 +18,7 @@ export default function PlanetLeader({ onOpenInhabitants }: { onOpenInhabitants:
   return (
     <button
       type="button"
-      className="flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-(--accent-border) bg-(--accent-bg) p-2.5 text-left font-[inherit] transition-[transform] duration-150 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--accent)"
+      className="flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-(--accent-border) bg-(--accent-bg) p-2.5 text-left font-[inherit] transition-all duration-150 hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--accent)"
       onClick={onOpenInhabitants}
       aria-label={`${leader.title} : ${leader.name}. Voir les habitants célèbres${toCustomize > 0 ? `, ${toCustomize} à personnaliser` : ""}`}
     >
@@ -41,7 +45,10 @@ export default function PlanetLeader({ onOpenInhabitants }: { onOpenInhabitants:
           {toCustomize}
         </span>
       )}
-      <span className="shrink-0 text-[0.78rem] font-bold text-(--accent)" aria-hidden="true">
+      <span
+        className="shrink-0 text-[0.78rem] font-bold text-(--accent)"
+        aria-hidden="true"
+      >
         <span className="max-sm:hidden">Habitants </span>›
       </span>
     </button>

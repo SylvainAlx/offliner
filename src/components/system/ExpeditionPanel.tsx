@@ -11,11 +11,13 @@ import {
   missingResources,
   nonZeroResources,
 } from "../../models/resources";
-import { COLONISTS_PER_SHIP, MAX_COLONIES } from "../../utils/constants";
-import { formatLength } from "../../utils/format";
+import { COLONISTS_PER_SHIP } from "../../utils/constants";
+import { formatWait } from "../../utils/format";
+import type { Travel } from "../../models/expedition";
 
-function formatAu(value: number): string {
-  return `${value.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} UA`;
+/** "0,8 UA" within a system, "2,3 al" between systems. */
+function formatDistance(travel: Travel): string {
+  return `${travel.distance.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} ${travel.unit}`;
 }
 
 function describeBlocker(plan: ExpeditionPlan, user: User): string | null {
@@ -27,16 +29,12 @@ function describeBlocker(plan: ExpeditionPlan, user: User): string | null {
       return `Construisez un spatioport sur ${from} pour lancer des expéditions d'ici.`;
     case "samePlanet":
       return "C'est le point de départ.";
-    case "notColonizable":
-      return "Une géante gazeuse n'a pas de sol où s'installer.";
     case "occupied":
       return "Cette planète est déjà colonisée, ou une expédition est en route vers elle.";
-    case "maxColonies":
-      return `Vous avez atteint le maximum de ${MAX_COLONIES} colonies.`;
     case "notOwned":
       return "Le cargo ne livre que vos propres planètes.";
     case "outOfRange":
-      return `Hors de portée : ${formatAu(plan.distanceAu)} pour ${formatAu(plan.rangeAu)} de portée. Il faut un spatioport de niveau ${plan.requiredLevel} sur ${from}.`;
+      return `Hors de portée : ${formatDistance(plan.travel)}${plan.travel.isInterstellar ? `, dans le système ${plan.targetSystem.star.name}` : ""}. Il faut un spatioport de niveau ${plan.travel.requiredLevel} sur ${from} (niveau ${plan.level} aujourd'hui).`;
     case "colonists":
       return `Il faut plus de ${COLONISTS_PER_SHIP} habitants sur ${from} : ${COLONISTS_PER_SHIP} partent, au moins un reste.`;
     case "emptyCargo":
@@ -127,13 +125,6 @@ export default function ExpeditionPanel({ target }: { target: SystemPlanet }) {
   const plan = user.planExpedition(kind, fromId, target.id, cargo);
 
   if (!plan || plan.blocker === "samePlanet") return null;
-  if (kind === "colonization" && !target.isColonizable) {
-    return (
-      <p className="m-0 rounded-xl bg-(--gray-50) p-3 text-[0.78rem] text-(--gray-600)">
-        Une géante gazeuse n&apos;a pas de sol où s&apos;installer : on ne peut pas la coloniser.
-      </p>
-    );
-  }
 
   const blocker = describeBlocker(plan, user);
   if (plan.blocker === "noSpaceport") {
@@ -152,8 +143,8 @@ export default function ExpeditionPanel({ target }: { target: SystemPlanet }) {
     if (launchExpedition(kind, plan.from.id, target.id, cargo)) {
       setLaunched(
         kind === "colonization"
-          ? `Le vaisseau colonial est parti : arrivée dans ${formatLength(plan.flightMs)}.`
-          : `Le cargo est parti : livraison dans ${formatLength(plan.flightMs)}.`,
+          ? `Le vaisseau colonial est parti : arrivée dans ${formatWait(plan.travel.flightMs)}.`
+          : `Le cargo est parti : livraison dans ${formatWait(plan.travel.flightMs)}.`,
       );
       setCargo({ metal: 0, food: 0 });
     }
@@ -197,10 +188,12 @@ export default function ExpeditionPanel({ target }: { target: SystemPlanet }) {
         <dd className="m-0 text-(--gray-900)">{plan.from.planet.name}</dd>
         <dt className="text-(--gray-500)">Distance</dt>
         <dd className="m-0 font-(--mono) text-(--gray-900)">
-          {formatAu(plan.distanceAu)} · portée {formatAu(plan.rangeAu)}
+          {formatDistance(plan.travel)}
+          {plan.travel.isInterstellar ? " · vol interstellaire" : ""} · spatioport niv.{" "}
+          {plan.travel.requiredLevel}
         </dd>
         <dt className="text-(--gray-500)">Vol</dt>
-        <dd className="m-0 font-(--mono) text-(--gray-900)">⏱️ {formatLength(plan.flightMs)}</dd>
+        <dd className="m-0 font-(--mono) text-(--gray-900)">⏱️ {formatWait(plan.travel.flightMs)}</dd>
         <dt className="text-(--gray-500)">Coût</dt>
         <dd className="m-0 flex flex-wrap gap-x-2 font-(--mono)">
           {nonZeroResources(plan.cost).map(([resource, value]) => (

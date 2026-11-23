@@ -59,8 +59,14 @@ export const COLONIZATION_FUEL_PER_AU = 100;
 export const CARGO_FUEL_PER_AU = 40;
 /** Metal and food one cargo flight carries, per spaceport level. */
 export const CARGO_CAPACITY_PER_LEVEL = 2000;
-/** Colonies the player can own besides the starting planet. */
-export const MAX_COLONIES = 3;
+/**
+ * Between star systems: a spaceport reaches the neighbors once past the
+ * level that covers its own system; flights last longer and burn more.
+ */
+export const INTERSTELLAR_BASE_LEVEL = 6;
+export const FLIGHT_MS_PER_LY = 12 * 60 * 60 * 1000;
+export const COLONIZATION_FUEL_PER_LY = 500;
+export const CARGO_FUEL_PER_LY = 200;
 /** What a colony ship costs; part of it lands with the colonists. */
 export const COLONIZATION_COST = { metal: 2000, food: 300 } as const;
 export const COLONY_STARTING_RESOURCES = { metal: 500, food: 300 } as const;

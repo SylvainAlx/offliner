@@ -501,7 +501,6 @@ describe("star system", () => {
       expect(other.planets.filter((planet) => planet.isHome)).toHaveLength(1);
       other.planets.forEach((planet, orbit) => {
         expect(planet.orbit).toBe(orbit);
-        expect(planet.isColonizable).toBe(planet.kind !== "gas");
         // Every planet, the player's included, fits its distance to the star.
         expect(isKindPlausible(planet.kind, orbitTemperature(other.star.type, orbit))).toBe(true);
       });
@@ -691,7 +690,7 @@ describe("expeditions", () => {
       const seed = `expedition-${index}`;
       const system = generateStarSystem({ seed, name: "Base", fields: 163 });
       const home = system.planets.find((planet) => planet.isHome)!;
-      const others = system.planets.filter((planet) => !planet.isHome && planet.isColonizable);
+      const others = system.planets.filter((planet) => !planet.isHome);
       const near = others.find((planet) => getDistanceAu(home, planet) <= 0.5);
       const far = others.find((planet) => getDistanceAu(home, planet) > 1);
       if (!near || !far) continue;
@@ -724,7 +723,7 @@ describe("expeditions", () => {
     home.planet.levels.spaceport = 1;
     const tooFar = user.planExpedition("colonization", home.id, far.id)!;
     expect(tooFar.blocker).toBe("outOfRange");
-    expect(tooFar.requiredLevel).toBeGreaterThan(1);
+    expect(tooFar.travel.requiredLevel).toBeGreaterThan(1);
     expect(user.planExpedition("colonization", home.id, "home")!.blocker).toBe("samePlanet");
 
     const plan = user.planExpedition("colonization", home.id, near.id)!;
@@ -737,7 +736,7 @@ describe("expeditions", () => {
     expect(user.colonyCount).toBe(1);
     expect(user.planExpedition("colonization", home.id, near.id)!.blocker).toBe("occupied");
 
-    const arriveAt = T0 + plan.flightMs;
+    const arriveAt = T0 + plan.travel.flightMs;
     user.realTimeSettledAt = T0;
     user.advance(arriveAt - 1, 0);
     expect(user.colonies).toHaveLength(1);
@@ -753,7 +752,7 @@ describe("expeditions", () => {
     expect(user.activeColony).toBe(home);
   });
 
-  it("stops at 3 colonies and keeps one inhabitant at home", async () => {
+  it("has no colony limit, and keeps one inhabitant at home", async () => {
     const { user, near } = await userWithNeighbors();
     const home = user.homeColony;
     home.planet.levels.spaceport = 1;
@@ -766,7 +765,77 @@ describe("expeditions", () => {
       user.addColony(new Colony({ foundedAt: T0, systemPlanetId: `elsewhere-${index}` }));
     }
     expect(user.colonyCount).toBe(3);
-    expect(user.planExpedition("colonization", home.id, near.id)!.blocker).toBe("maxColonies");
+    expect(user.planExpedition("colonization", home.id, near.id)!.blocker).toBeNull();
+  });
+
+  it("opens the 4 neighbor systems at spaceport levels 7, 8, 9 and 10", async () => {
+    const { generateGalaxy, NEIGHBOR_SYSTEMS } = await import("../../src/models/starSystem");
+    const { getInterstellarLevel } = await import("../../src/models/expedition");
+    for (let index = 0; index < 60; index++) {
+      const galaxy = generateGalaxy({ seed: `galaxy-${index}`, name: "Base", fields: 163 });
+      expect(galaxy.systems).toHaveLength(1 + NEIGHBOR_SYSTEMS);
+      expect(galaxy.systems[0]).toMatchObject({ id: "home", isHome: true, distanceLy: 0 });
+      galaxy.systems.slice(1).forEach((system, rank) => {
+        expect(getInterstellarLevel(system.distanceLy)).toBe(7 + rank);
+        expect(system.planets.length).toBeGreaterThanOrEqual(3);
+        // Ids and looks never collide with another system's.
+        for (const planet of system.planets) {
+          expect(planet.id.startsWith(`${system.id}-`)).toBe(true);
+          expect(planet.systemId).toBe(system.id);
+          expect(planet.isHome).toBe(false);
+        }
+      });
+      const ids = galaxy.systems.flatMap((system) => system.planets.map((planet) => planet.id));
+      expect(new Set(ids).size).toBe(ids.length);
+    }
+    // Always the same map for the same planet.
+    expect(generateGalaxy({ seed: "a", name: "A", fields: 163 })).toEqual(
+      generateGalaxy({ seed: "a", name: "A", fields: 163 }),
+    );
+  });
+
+  it("flies to a neighbor system in light-years, and founds a colony there", async () => {
+    const { user } = await userWithNeighbors();
+    const home = user.homeColony;
+    const nearest = user.galaxy.systems[1];
+    const target = nearest.planets[0];
+    setBalance(user, { metal: 20_000, food: 5000, offlinium: 5000 });
+
+    home.planet.levels.spaceport = 6;
+    expect(user.isSystemOpen(nearest)).toBe(false);
+    expect(user.getLevelToReach(nearest)).toBe(7);
+    const tooLow = user.planExpedition("colonization", home.id, target.id)!;
+    expect(tooLow.blocker).toBe("outOfRange");
+    expect(tooLow.travel).toMatchObject({ isInterstellar: true, unit: "al", requiredLevel: 7 });
+
+    home.planet.levels.spaceport = 7;
+    expect(user.isSystemOpen(nearest)).toBe(true);
+    expect(user.isSystemOpen(user.galaxy.systems[2])).toBe(false);
+    const plan = user.planExpedition("colonization", home.id, target.id)!;
+    expect(plan.blocker).toBeNull();
+    expect(plan.travel.distance).toBe(nearest.distanceLy);
+    expect(plan.travel.flightMs).toBe(Math.round(nearest.distanceLy * 12 * HOUR));
+    expect(plan.fuel).toBe(Math.ceil(nearest.distanceLy * 500));
+    expect(user.planExpedition("cargo", home.id, "home", { metal: 1, food: 0 })!.blocker).toBe("samePlanet");
+
+    expect(user.launchExpedition("colonization", home.id, target.id, T0)).toBe(true);
+    user.realTimeSettledAt = T0;
+    user.advance(T0 + plan.travel.flightMs + HOUR, 0);
+    const colony = user.getColonyAt(target.id)!;
+    expect(colony.planet).toMatchObject({ name: target.name, kind: target.kind, fields: target.fields });
+    expect(user.getColonySystem(colony).id).toBe(nearest.id);
+
+    // Through a save, the colony keeps its place on the map.
+    const restored = new User();
+    restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
+    expect(restored.getColonySystem(restored.getColonyAt(target.id)!).id).toBe(nearest.id);
+
+    // Cargo back home crosses the same distance, cheaper in fuel.
+    colony.planet.levels.spaceport = 7;
+    colony.resources.metal = 1000;
+    const back = user.planExpedition("cargo", colony.id, "home", { metal: 500, food: 0 })!;
+    expect(back.blocker).toBeNull();
+    expect(back.fuel).toBe(Math.ceil(nearest.distanceLy * 200));
   });
 
   it("carries up to 2000 per spaceport level to one of the player's planets", async () => {
@@ -792,13 +861,35 @@ describe("expeditions", () => {
     const homeMetal = home.resources.metal;
     expect(user.launchExpedition("cargo", home.id, near.id, now, { metal: 1500, food: 500 })).toBe(true);
     expect(home.resources.metal).toBe(homeMetal - 1500);
-    user.advance(now + plan.flightMs, 0);
+    user.advance(now + plan.travel.flightMs, 0);
     expect(colony.resources.metal).toBeGreaterThan(metalBefore + 1500);
     expect(user.expeditionReports[0]).toMatchObject({ kind: "cargo", outcome: "delivered" });
 
     // From the colony, which has no spaceport yet.
     expect(user.planExpedition("cargo", colony.id, "home", { metal: 1, food: 0 })!.blocker).toBe("noSpaceport");
     expect(user.planExpedition("cargo", home.id, far.id, { metal: 1, food: 0 })!.blocker).toBe("notOwned");
+  });
+
+  it("colonizes every kind of planet, gas giants included", async () => {
+    const { generateStarSystem } = await import("../../src/models/starSystem");
+    for (let index = 0; ; index++) {
+      const seed = `gas-${index}`;
+      const system = generateStarSystem({ seed, name: "Base", fields: 163 });
+      const giant = system.planets.find((planet) => planet.kind === "gas" && !planet.isHome);
+      if (!giant) continue;
+      const user = newUser();
+      user.homeColony.planet.seed = seed;
+      user.homeColony.planet.name = "Base";
+      user.homeColony.planet.levels.spaceport = 6;
+      user.homeColony.population = 50;
+      setBalance(user, { metal: 20_000, food: 5000, offlinium: 5000 });
+      expect(user.planExpedition("colonization", user.homeColonyId, giant.id)!.blocker).toBeNull();
+      expect(user.launchExpedition("colonization", user.homeColonyId, giant.id, T0)).toBe(true);
+      user.realTimeSettledAt = T0;
+      user.advance(T0 + 24 * HOUR, 0);
+      expect(user.getColonyAt(giant.id)!.planet.kind).toBe("gas");
+      return;
+    }
   });
 
   it("counts expeditions and cargo for the achievements, through a save", async () => {

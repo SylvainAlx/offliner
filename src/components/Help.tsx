@@ -17,7 +17,10 @@ import {
   FLIGHT_MS_PER_AU,
   NIGHT_CREDIT_CAP_MS,
   NIGHT_END_HOUR,
-  MAX_COLONIES,
+  CARGO_FUEL_PER_LY,
+  COLONIZATION_FUEL_PER_LY,
+  FLIGHT_MS_PER_LY,
+  INTERSTELLAR_BASE_LEVEL,
   MIN_FLIGHT_MS,
   SPACEPORT_RANGE_AU_PER_LEVEL,
   BASE_FOOD_PER_HOUR,
@@ -326,12 +329,20 @@ export default function Help() {
               carte.
             </li>
             <li className={bullet}>
+              <strong>Systèmes voisins</strong> : la carte stellaire montre 4
+              systèmes autour du vôtre. Au-delà du niveau{" "}
+              {INTERSTELLAR_BASE_LEVEL}, chaque niveau de spatioport ouvre un
+              système de plus. Ces vols durent {FLIGHT_MS_PER_LY / 3600000} h par
+              année-lumière et coûtent {COLONIZATION_FUEL_PER_LY} ⬡ (colonisation)
+              ou {CARGO_FUEL_PER_LY} ⬡ (cargo) par année-lumière.
+            </li>
+            <li className={bullet}>
               <strong>Colonisation</strong> : {format(COLONIZATION_COST.metal)} de
               métal, {format(COLONIZATION_COST.food)} d&apos;alimentation,{" "}
               {COLONISTS_PER_SHIP} colons et {COLONIZATION_FUEL_PER_AU} ⬡ de
               carburant par UA. La colonie démarre avec ses colons, un petit stock
-              et son propre gouverneur. {MAX_COLONIES} colonies au maximum, en
-              plus de votre planète de départ.
+              et son propre gouverneur. Le nombre de colonies n&apos;est pas
+              limité.
             </li>
             <li className={bullet}>
               <strong>Cargo</strong> : transporte du métal et de

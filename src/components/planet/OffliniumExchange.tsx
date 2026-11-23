@@ -1,18 +1,15 @@
 import { useState } from "react";
 import { useUser } from "../../stores/userStore";
-import { RESOURCE_ICONS, RESOURCE_LABELS, formatAmount } from "../../models/resources";
-import { getExchangeAmount, type ExchangeResource } from "../../models/exchange";
+import {
+  RESOURCE_ICONS,
+  RESOURCE_LABELS,
+  formatAmount,
+} from "../../models/resources";
+import {
+  getExchangeAmount,
+  type ExchangeResource,
+} from "../../models/exchange";
 import PlanetSection from "../PlanetSection";
-
-/** Quick choices, in hours of Offlinium. */
-const DURATIONS = [
-  { label: "15 min", hours: 0.25 },
-  { label: "1 h", hours: 1 },
-  { label: "4 h", hours: 4 },
-];
-
-const chipClass =
-  "min-h-9 cursor-pointer rounded-full border px-3 text-[0.76rem] font-bold focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--accent) disabled:cursor-not-allowed disabled:opacity-40";
 
 /**
  * Exchanges Offlinium for metal or food on the planet shown: one hour of
@@ -44,7 +41,11 @@ export default function OffliniumExchange() {
       subtitle={`1 h d'Offlinium (${formatAmount(quote.offliniumPerHour)} ${RESOURCE_ICONS.offlinium}) vaut 1 h de production de ${user.activeColony.planet.name} (${formatAmount(quote.resourcePerHour)} ${icon}).`}
     >
       <div className="flex flex-col gap-3">
-        <div className="grid grid-cols-2 gap-1 rounded-xl bg-(--gray-50) p-1" role="radiogroup" aria-label="Ressource à obtenir">
+        <div
+          className="grid grid-cols-2 gap-1 rounded-xl bg-(--gray-50) p-1"
+          role="radiogroup"
+          aria-label="Ressource à obtenir"
+        >
           {(["metal", "food"] as const).map((type) => (
             <button
               key={type}
@@ -68,33 +69,9 @@ export default function OffliniumExchange() {
           ))}
         </div>
 
-        <div className="flex flex-wrap gap-1.5">
-          {DURATIONS.map((duration) => {
-            const value = Math.ceil(quote.offliniumPerHour * duration.hours);
-            return (
-              <button
-                key={duration.label}
-                type="button"
-                className={`${chipClass} border-(--gray-200) bg-(--surface) text-(--gray-700) hover:bg-(--gray-100)`}
-                disabled={value > quote.maxOfflinium}
-                onClick={() => choose(value)}
-              >
-                {duration.label}
-              </button>
-            );
-          })}
-          <button
-            type="button"
-            className={`${chipClass} border-(--accent-border) bg-(--accent-bg) text-(--accent)`}
-            disabled={quote.maxOfflinium <= 0}
-            onClick={() => choose(quote.maxOfflinium)}
-          >
-            Max
-          </button>
-        </div>
-
         <label className="flex flex-col gap-1 text-[0.74rem] font-bold text-(--gray-700)">
-          Offlinium à échanger (solde : {formatAmount(balance)} {RESOURCE_ICONS.offlinium})
+          Offlinium à échanger (solde : {formatAmount(balance)}{" "}
+          {RESOURCE_ICONS.offlinium})
           <input
             type="number"
             inputMode="numeric"
@@ -107,26 +84,34 @@ export default function OffliniumExchange() {
           />
         </label>
 
-        <p className="m-0 rounded-xl bg-(--gray-50) p-3 text-center font-(--mono) text-[0.9rem] text-(--gray-900)" aria-live="polite">
-          {formatAmount(offlinium)} {RESOURCE_ICONS.offlinium} → {formatAmount(received)} {icon}
+        <p
+          className="m-0 rounded-xl bg-(--gray-50) p-3 text-center font-(--mono) text-[0.9rem] text-(--gray-900)"
+          aria-live="polite"
+        >
+          {formatAmount(offlinium)} {RESOURCE_ICONS.offlinium} →{" "}
+          {formatAmount(received)} {icon}
         </p>
 
         {isDepotFull ? (
           <p className="m-0 text-[0.74rem] text-(--warning-text)">
-            Le dépôt est plein pour {RESOURCE_LABELS[resource].toLowerCase()} : améliorez-le pour
-            en stocker davantage.
+            Le dépôt est plein pour {RESOURCE_LABELS[resource].toLowerCase()} :
+            améliorez-le pour en stocker davantage.
           </p>
         ) : (
           limitedByDepot && (
             <p className="m-0 text-[0.72rem] text-(--gray-500)">
-              Le dépôt n&apos;a de place que pour {formatAmount(quote.freeCapacity)} {icon} : au
-              plus {formatAmount(quote.maxOfflinium)} {RESOURCE_ICONS.offlinium} peuvent être
-              échangés.
+              Le dépôt n&apos;a de place que pour{" "}
+              {formatAmount(quote.freeCapacity)} {icon} : au plus{" "}
+              {formatAmount(quote.maxOfflinium)} {RESOURCE_ICONS.offlinium}{" "}
+              peuvent être échangés.
             </p>
           )
         )}
         {done && (
-          <p className="m-0 text-[0.78rem] font-bold text-(--green-dark)" role="status">
+          <p
+            className="m-0 text-[0.78rem] font-bold text-(--green-dark)"
+            role="status"
+          >
             {done}
           </p>
         )}
