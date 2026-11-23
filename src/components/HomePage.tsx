@@ -58,16 +58,14 @@ export default function HomePage({ onPlay }: { onPlay: () => void }) {
             <p className="max-w-130 text-[clamp(0.92rem,1.5vw,1.04rem)] leading-[1.6] text-(--gray-600)">
               Offliner est un jeu de gestion de planète : mines, réacteur,
               fermes et habitats se construisent en temps réel. Votre temps
-              hors-ligne produit l'Offlinium, la ressource qui fait tout
-              avancer plus vite. Et grâce au radar, vos planètes échangent
-              des messages avec celles de vos amis, sans aucun serveur.
+              hors-ligne produit l'Offlinium, la ressource qui fait tout avancer
+              plus vite. Et grâce au radar, vos planètes échangent des messages
+              avec celles de vos amis, sans aucun serveur.
             </p>
             {/* <button type="button" className="home-page-play" onClick={onPlay}>
               Jouer <span aria-hidden="true">→</span>
             </button> */}
-            <Button onClick={onPlay}>
-              Jouer <span aria-hidden="true">→</span>
-            </Button>
+            <Button onClick={onPlay}>Jouer</Button>
           </div>
 
           <HomeIllustration scene={scene} onDrawAnother={drawAnotherScene} />
@@ -118,7 +116,8 @@ export default function HomePage({ onPlay }: { onPlay: () => void }) {
         </section>
 
         <p className="px-0 pt-4.5 pb-1 text-center text-[0.68rem] text-(--gray-600)">
-          Gratuit · Sans compte · Sans serveur · Vos données restent sur votre appareil
+          Gratuit · Sans compte · Sans serveur · Vos données restent sur votre
+          appareil
         </p>
         <p className="m-0 pb-1 text-center text-[0.68rem] text-(--gray-600)">
           <LegalNoticeLink />

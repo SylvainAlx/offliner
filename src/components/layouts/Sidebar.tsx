@@ -164,7 +164,7 @@ export default function Sidebar({
                   "flex items-center gap-2.75 w-full min-h-16.5 max-md:min-h-17.5",
                   "px-2.75 py-2.5 border rounded-[15px] bg-transparent",
                   "text-left cursor-pointer font-[inherit]",
-                  "transition-[background-color,border-color,transform] duration-180 ease-[ease]",
+                  "transition-all duration-180 ease-[ease]",
                   isLocked ? "opacity-60" : "",
                   isActive
                     ? "border-green-500/20 bg-(--green-bg) text-(--green-dark)"
