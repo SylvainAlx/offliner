@@ -250,6 +250,26 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     getProgress: (user) => bestLevel(user, "spaceport"),
   },
   {
+    id: "interstellar-colony",
+    title: "Au-delà de l'étoile",
+    description: "Fondez une colonie dans un système voisin.",
+    category: "Exploration spatiale",
+    icon: "✨",
+    target: 1,
+    getProgress: (user) =>
+      user.colonies.some((colony) => !user.getColonySystem(colony).isHome) ? 1 : 0,
+  },
+  {
+    id: "galaxy-wide",
+    title: "Maîtres de la carte",
+    description: "Possédez une planète dans chacun des 5 systèmes de la carte stellaire.",
+    category: "Exploration spatiale",
+    icon: "🗺️",
+    target: 5,
+    getProgress: (user) =>
+      new Set(user.colonies.map((colony) => user.getColonySystem(colony).id)).size,
+  },
+  {
     id: "star-empire",
     title: "Empire stellaire",
     description: "Possédez 3 colonies en plus de votre planète de départ.",

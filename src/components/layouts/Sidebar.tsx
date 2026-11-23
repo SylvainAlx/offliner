@@ -31,7 +31,7 @@ const menuItems: Array<{
   {
     id: "system",
     label: "Système",
-    description: "Les planètes voisines",
+    description: "Votre système et ses voisins",
     icon: "☀️",
   },
   {

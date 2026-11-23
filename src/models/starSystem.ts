@@ -7,9 +7,9 @@ import {
 import type { Planet } from "./planet";
 
 /**
- * The star system around the player's planet. Everything follows from the
- * planet's seed, so the system is always the same and needs no saving. It is
- * where expeditions will be launched from.
+ * The star system around the player's planet, and the neighbor systems
+ * around it. Everything follows from the planet's seed, so the map is always
+ * the same and needs no saving.
  */
 
 export type StarType = "yellow" | "orange" | "red" | "white";
@@ -26,6 +26,8 @@ export interface Star {
 
 export interface SystemPlanet {
   id: string;
+  /** The system it belongs to: "home", or a neighbor's id. */
+  systemId: string;
   /** Orbit rank from the star, starting at 0. */
   orbit: number;
   name: string;
@@ -38,12 +40,13 @@ export interface SystemPlanet {
   fields: number;
   /** Distance to the star, in astronomical units. */
   distanceAu: number;
-  /** Distance to the player's planet, in astronomical units. */
-  distanceFromHomeAu: number;
+  /**
+   * Distance to the player's planet, in astronomical units; null in a
+   * neighbor system.
+   */
+  distanceFromHomeAu: number | null;
   /** Average surface temperature, in °C. */
   temperatureC: number;
-  /** Gas giants have no ground to settle on. */
-  isColonizable: boolean;
   /** Angle on its orbit for the map, in degrees. */
   angle: number;
 }
@@ -52,6 +55,28 @@ export interface StarSystem {
   star: Star;
   planets: SystemPlanet[];
 }
+
+/** A system on the star map, positioned in light-years from the player's. */
+export interface GalaxySystem extends StarSystem {
+  id: string;
+  isHome: boolean;
+  x: number;
+  y: number;
+  /** Distance to the player's system, in light-years. */
+  distanceLy: number;
+}
+
+/** The player's system first, then its neighbors from the nearest. */
+export interface Galaxy {
+  systems: GalaxySystem[];
+}
+
+export const NEIGHBOR_SYSTEMS = 4;
+/**
+ * The neighbor of rank k (0 for the nearest) lies between k and k + 1 times
+ * this distance: its spaceport level follows (see getRequiredSpaceportLevel).
+ */
+export const LY_PER_SPACEPORT_LEVEL = 1.5;
 
 export const MIN_PLANETS = 3;
 export const MAX_PLANETS = 6;
@@ -170,6 +195,7 @@ export function generateStarSystem(
     const distanceAu = ORBIT_DISTANCES_AU[orbit];
     return {
       id: isHome ? "home" : `orbit-${orbit}`,
+      systemId: "home",
       orbit,
       name: isHome ? home.name : `${star.name} ${NUMERALS[orbit]}`,
       seed: isHome ? home.seed : `${home.seed}:orbit:${orbit}`,
@@ -181,10 +207,82 @@ export function generateStarSystem(
       temperatureC: Math.round(
         equilibrium + KIND_TEMPERATURE_OFFSETS[kind] + (random() - 0.5) * 20,
       ),
-      isColonizable: kind !== "gas",
       angle: Math.floor(random() * 360),
     };
   });
 
   return { star, planets };
+}
+
+/** A system without the player's planet, from its own seed. */
+function generateNeighborSystem(seed: string, systemId: string): StarSystem {
+  const random = createRandom(hashSeed(`${seed}:system`));
+  const count = MIN_PLANETS + Math.floor(random() * (MAX_PLANETS - MIN_PLANETS + 1));
+  const type = pick(STAR_TYPES, random);
+  const star: Star = {
+    name: `${pick(STAR_STARTS, random)}${pick(STAR_ENDS, random)}`,
+    type,
+    ...STARS[type],
+  };
+  const planets = Array.from({ length: count }, (_, orbit): SystemPlanet => {
+    const equilibrium = orbitTemperature(type, orbit);
+    const plausible = KINDS.filter((kind) => isKindPlausible(kind, equilibrium));
+    const kind = pick(plausible.length > 0 ? plausible : KINDS, random);
+    return {
+      id: `${systemId}-orbit-${orbit}`,
+      systemId,
+      orbit,
+      name: `${star.name} ${NUMERALS[orbit]}`,
+      seed: `${seed}:orbit:${orbit}`,
+      kind,
+      isHome: false,
+      fields: 80 + Math.floor(random() * 161),
+      distanceAu: ORBIT_DISTANCES_AU[orbit],
+      distanceFromHomeAu: null,
+      temperatureC: Math.round(
+        equilibrium + KIND_TEMPERATURE_OFFSETS[kind] + (random() - 0.5) * 20,
+      ),
+      angle: Math.floor(random() * 360),
+    };
+  });
+  return { star, planets };
+}
+
+/**
+ * The player's system and its NEIGHBOR_SYSTEMS neighbors. The neighbor of
+ * rank k stands between k and k + 1 times LY_PER_SPACEPORT_LEVEL away, in its
+ * own direction, so each one opens at the next spaceport level.
+ */
+export function generateGalaxy(home: Pick<Planet, "seed" | "name" | "fields">): Galaxy {
+  const random = createRandom(hashSeed(`${home.seed}:galaxy`));
+  const homeSystem: GalaxySystem = {
+    ...generateStarSystem(home),
+    id: "home",
+    isHome: true,
+    x: 0,
+    y: 0,
+    distanceLy: 0,
+  };
+  const turn = random() * 360;
+  const neighbors = Array.from({ length: NEIGHBOR_SYSTEMS }, (_, rank): GalaxySystem => {
+    const id = `n${rank + 1}`;
+    const distanceLy =
+      Math.round((LY_PER_SPACEPORT_LEVEL * (rank + 0.25 + random() * 0.65)) * 10) / 10;
+    // Around the player's system, a quarter turn apart, give or take.
+    const angle = ((turn + rank * 97 + random() * 40) * Math.PI) / 180;
+    return {
+      ...generateNeighborSystem(`${home.seed}:${id}`, id),
+      id,
+      isHome: false,
+      x: Math.round(Math.cos(angle) * distanceLy * 100) / 100,
+      y: Math.round(Math.sin(angle) * distanceLy * 100) / 100,
+      distanceLy,
+    };
+  });
+  return { systems: [homeSystem, ...neighbors] };
+}
+
+/** Distance between two systems of the map, in light-years. */
+export function getSystemDistanceLy(from: GalaxySystem, to: GalaxySystem): number {
+  return Math.round(Math.hypot(from.x - to.x, from.y - to.y) * 10) / 10;
 }

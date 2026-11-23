@@ -2,11 +2,11 @@ import { useMemo, useState, type KeyboardEvent } from "react";
 import Card from "../ui/Card";
 import PlanetSprite from "../PlanetSprite";
 import { useUser } from "../../stores/userStore";
-import type { StarSystem, SystemPlanet } from "../../models/starSystem";
+import type { GalaxySystem, StarSystem, SystemPlanet } from "../../models/starSystem";
 import type { User } from "../../models/user";
-import { getDistanceAu, getSpaceportRange } from "../../models/expedition";
 import ExpeditionPanel from "./ExpeditionPanel";
 import ExpeditionsOverview from "./ExpeditionsOverview";
+import StellarMap, { type SystemMarker } from "./StellarMap";
 import {
   PLANET_KIND_LABELS,
   generatePlanetSprite,
@@ -77,17 +77,7 @@ interface PlanetStatus {
 function getPlanetStatus(user: User, planet: SystemPlanet): PlanetStatus {
   const colony = user.getColonyAt(planet.id);
   const owner = colony ? (colony.id === user.homeColonyId ? "home" : "colony") : null;
-  const isReachable =
-    owner !== null ||
-    user.colonies.some((port) => {
-      const origin = user.getSystemPlanet(port);
-      const level = port.planet.levels.spaceport;
-      return (
-        origin !== undefined &&
-        level > 0 &&
-        getDistanceAu(origin, planet) <= getSpaceportRange(level) + 1e-9
-      );
-    });
+  const isReachable = owner !== null || user.canReach(planet.id);
   return {
     owner,
     name: colony?.planet.name ?? planet.name,
@@ -300,26 +290,34 @@ function SystemMap({
 function PlanetDetails({
   planet,
   status,
-  starName,
+  system,
   onOpenPlanet,
 }: {
   planet: SystemPlanet;
   status: PlanetStatus;
-  starName: string;
+  system: GalaxySystem;
   onOpenPlanet: () => void;
 }) {
+  const starName = system.star.name;
   const rows: Array<[string, React.ReactNode]> = [
     ["Type", PLANET_KIND_LABELS[planet.kind]],
     ["Taille", `${planet.fields} cases`],
     ["Distance à l'étoile", formatAu(planet.distanceAu)],
     ...(planet.isHome
       ? []
-      : ([
-          [
-            "Distance depuis votre planète",
-            formatAu(planet.distanceFromHomeAu),
-          ],
-        ] as Array<[string, React.ReactNode]>)),
+      : planet.distanceFromHomeAu !== null
+        ? ([
+            [
+              "Distance depuis votre planète",
+              formatAu(planet.distanceFromHomeAu),
+            ],
+          ] as Array<[string, React.ReactNode]>)
+        : ([
+            [
+              "Distance de votre système",
+              `${system.distanceLy.toLocaleString("fr-FR")} années-lumière`,
+            ],
+          ] as Array<[string, React.ReactNode]>)),
     [
       "Température moyenne",
       `${planet.temperatureC > 0 ? "+" : ""}${planet.temperatureC} °C`,
@@ -358,17 +356,6 @@ function PlanetDetails({
                 Colons en route
               </span>
             )}
-            {!status.owner && (
-              <span
-                className={`rounded-full px-2 py-0.5 text-[0.62rem] font-extrabold uppercase ${
-                  planet.isColonizable
-                    ? "bg-blue-50 text-blue-700"
-                    : "bg-orange-50 text-orange-700"
-                }`}
-              >
-                {planet.isColonizable ? "Colonisable" : "Non colonisable"}
-              </span>
-            )}
           </div>
         </div>
       </div>
@@ -397,28 +384,38 @@ function PlanetDetails({
 }
 
 /** The player's star system: where the next targets will be chosen. */
-export default function StarSystemView({
+/** A system of the map: its orbits, its planets and their sheets. */
+function SystemPanel({
+  system,
   onOpenPlanet,
 }: {
+  system: GalaxySystem;
   onOpenPlanet: (colonyId: string) => void;
 }) {
   const user = useUser((state) => state.user);
-  // Drawn around the starting planet, and kept between ticks.
-  const system = user.system;
-  const seed = user.homeColony.planet.seed;
+  const seed = `${user.homeColony.planet.seed}:${system.id}`;
   const statuses = Object.fromEntries(
     system.planets.map((planet) => [planet.id, getPlanetStatus(user, planet)]),
   );
-  const [selectedId, setSelectedId] = useState("home");
+  // The player's planet first, else one of their colonies, else the first one.
+  const [selectedId, setSelectedId] = useState(
+    () =>
+      system.planets.find((planet) => planet.isHome)?.id ??
+      system.planets.find((planet) => user.getColonyAt(planet.id))?.id ??
+      system.planets[0].id,
+  );
   const selected =
     system.planets.find((item) => item.id === selectedId) ?? system.planets[0];
 
   return (
-    <Card
-      ariaLabel="Système planétaire"
-      title={`Système ${system.star.name}`}
-      subtitle={`${system.star.label} · ${system.planets.length} planètes. Touchez une planète pour la coloniser ou y envoyer un cargo.`}
-    >
+    <section className="flex w-full flex-col gap-3" aria-label={`Système ${system.star.name}`}>
+      <h3 className="m-0 text-[0.95rem] font-extrabold text-(--gray-900)">
+        Système {system.star.name}
+        <span className="ml-2 text-[0.75rem] font-bold text-(--gray-500)">
+          {system.star.label} · {system.planets.length} planètes
+          {system.isHome ? "" : ` · ${system.distanceLy.toLocaleString("fr-FR")} al`}
+        </span>
+      </h3>
       <SystemMap
         system={system}
         seed={seed}
@@ -454,17 +451,85 @@ export default function StarSystemView({
         ))}
       </div>
 
-      <ExpeditionsOverview />
-
       <PlanetDetails
         planet={selected}
         status={statuses[selected.id]}
-        starName={system.star.name}
+        system={system}
         onOpenPlanet={() => {
           const colony = user.getColonyAt(selected.id);
           if (colony) onOpenPlanet(colony.id);
         }}
       />
+    </section>
+  );
+}
+
+/** A neighbor system the player's spaceports do not reach yet. */
+function LockedSystem({ system, levelToReach }: { system: GalaxySystem; levelToReach: number }) {
+  return (
+    <section
+      className="flex w-full flex-col items-center gap-2 rounded-2xl border border-dashed border-(--accent-border) bg-(--accent-bg) p-4 text-center"
+      aria-label={`Système ${system.star.name}, verrouillé`}
+    >
+      <span className="text-[1.6rem]" aria-hidden="true">
+        🔒
+      </span>
+      <strong className="text-[0.95rem] text-(--gray-900)">Système {system.star.name}</strong>
+      <p className="m-0 max-w-90 text-[0.8rem] leading-normal text-(--gray-600)">
+        {system.star.label}, à {system.distanceLy.toLocaleString("fr-FR")} années-lumière de
+        votre système. Montez un spatioport au niveau {levelToReach} pour l&apos;atteindre et
+        découvrir ses planètes.
+      </p>
+    </section>
+  );
+}
+
+export default function StarSystemView({
+  onOpenPlanet,
+}: {
+  onOpenPlanet: (colonyId: string) => void;
+}) {
+  const user = useUser((state) => state.user);
+  const { systems } = user.galaxy;
+  const markers: Record<string, SystemMarker> = Object.fromEntries(
+    systems.map((system) => [
+      system.id,
+      {
+        isOpen: user.isSystemOpen(system),
+        levelToReach: user.getLevelToReach(system),
+        colonies: user.colonies.filter((colony) => user.getColonySystem(colony).id === system.id)
+          .length,
+      },
+    ]),
+  );
+  // Where the planet shown is, to begin with.
+  const [systemId, setSystemId] = useState(() => user.getColonySystem(user.activeColony).id);
+  const selected = systems.find((system) => system.id === systemId) ?? systems[0];
+  const openNeighbors = systems.filter((system) => !system.isHome && markers[system.id].isOpen).length;
+
+  return (
+    <Card
+      ariaLabel="Carte stellaire"
+      title="Carte stellaire"
+      subtitle={`Votre système et ses ${systems.length - 1} voisins${
+        openNeighbors > 0 ? ` (${openNeighbors} à portée)` : ""
+      }. Touchez un système, puis une planète pour la coloniser ou y envoyer un cargo.`}
+    >
+      <StellarMap
+        systems={systems}
+        markers={markers}
+        seed={user.homeColony.planet.seed}
+        selectedId={selected.id}
+        onSelect={setSystemId}
+      />
+
+      <ExpeditionsOverview />
+
+      {markers[selected.id].isOpen ? (
+        <SystemPanel key={selected.id} system={selected} onOpenPlanet={onOpenPlanet} />
+      ) : (
+        <LockedSystem system={selected} levelToReach={markers[selected.id].levelToReach} />
+      )}
     </Card>
   );
 }

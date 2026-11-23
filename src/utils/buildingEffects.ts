@@ -8,6 +8,8 @@ import {
   type BuildingType,
 } from "../models/buildings";
 import { getCargoCapacity, getSpaceportRange } from "../models/expedition";
+import { NEIGHBOR_SYSTEMS } from "../models/starSystem";
+import { INTERSTELLAR_BASE_LEVEL } from "./constants";
 import {
   ENERGY_ICON,
   POPULATION_ICON,
@@ -31,7 +33,9 @@ export function describeBuildingEffect(type: BuildingType, level: number): strin
     case "depot":
       return `${formatAmount(getStorageCapacity(level))} ${RESOURCE_ICONS.metal} et ${RESOURCE_ICONS.food} max`;
     case "spaceport":
-      return `Portée ${getSpaceportRange(level).toLocaleString("fr-FR")} UA · cargo ${formatAmount(getCargoCapacity(level))}`;
+      return level <= INTERSTELLAR_BASE_LEVEL
+        ? `Portée ${getSpaceportRange(level).toLocaleString("fr-FR")} UA · cargo ${formatAmount(getCargoCapacity(level))}`
+        : `Tout le système + ${Math.min(NEIGHBOR_SYSTEMS, level - INTERSTELLAR_BASE_LEVEL)} voisin${level - INTERSTELLAR_BASE_LEVEL > 1 ? "s" : ""} · cargo ${formatAmount(getCargoCapacity(level))}`;
     case "radar":
       return `Messages de ${getRadarMessageLength(level)} caractères`;
     case "habitat":

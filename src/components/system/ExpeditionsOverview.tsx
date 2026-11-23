@@ -1,7 +1,7 @@
 import { useUser } from "../../stores/userStore";
 import type { ExpeditionReport } from "../../models/user";
 import { formatResources } from "../../models/resources";
-import { formatCountdown, formatDateTime } from "../../utils/format";
+import { formatDateTime, formatWait } from "../../utils/format";
 
 function describeReport(report: ExpeditionReport): string {
   switch (report.outcome) {
@@ -29,7 +29,7 @@ export default function ExpeditionsOverview() {
   if (inFlight.length === 0 && reports.length === 0) return null;
   const nameOf = (targetId: string) =>
     user.getColonyAt(targetId)?.planet.name ??
-    user.system.planets.find((planet) => planet.id === targetId)?.name ??
+    user.findSystemPlanet(targetId)?.planet.name ??
     "?";
 
   return (
@@ -53,7 +53,7 @@ export default function ExpeditionsOverview() {
                     {from} → <strong>{nameOf(expedition.targetId)}</strong>
                   </span>
                   <span className="shrink-0 font-(--mono) text-(--accent)">
-                    {formatCountdown(remaining)}
+                    {formatWait(remaining)}
                   </span>
                 </div>
                 <div

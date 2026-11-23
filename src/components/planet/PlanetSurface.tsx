@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState, type KeyboardEvent } from "react";
 import { usePlanet, type BuildingTileData } from "../../hooks/usePlanet";
 import type { BuildingType } from "../../models/buildings";
-import { generateStarSystem } from "../../models/starSystem";
 import { generateBuildingSprite } from "../../utils/buildingSprite";
 import { formatCountdown } from "../../utils/format";
 import type { PlanetKind } from "../../utils/planetSprite";
@@ -159,14 +158,8 @@ export default function PlanetSurface() {
   const { seed, name } = planet;
   const ground = useMemo(() => generateSurfaceGround(planetKind, seed), [planetKind, seed]);
   const stars = useMemo(() => generateSkyStars(seed), [seed]);
-  // Every colony shares the star of the system drawn around the starting planet.
-  const homeSeed = useUser((state) => state.user.homeColony.planet.seed);
-  const homeName = useUser((state) => state.user.homeColony.planet.name);
-  const homeFields = useUser((state) => state.user.homeColony.planet.fields);
-  const star = useMemo(
-    () => generateStarSystem({ seed: homeSeed, name: homeName, fields: homeFields }).star,
-    [homeSeed, homeName, homeFields],
-  );
+  // The star of the system the planet belongs to (the map is kept between ticks).
+  const star = useUser((state) => state.user.getColonySystem(state.user.activeColony).star);
   const starRuns = useMemo(() => generateStarSprite(star), [star]);
   const construction = planet.construction;
 

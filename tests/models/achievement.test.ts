@@ -106,4 +106,13 @@ describe("achievements", () => {
     expect(progressOf(user, "first-contact").unlocked).toBe(true);
     expect(progressOf(user, "galactic-network")).toMatchObject({ progress: 4, unlocked: false });
   });
+
+  it("follows the colonies beyond the player's system", () => {
+    const user = new User();
+    expect(progressOf(user, "galaxy-wide").progress).toBe(1);
+    const neighbor = user.galaxy.systems[1];
+    user.addColony(new Colony({ foundedAt: 0, systemPlanetId: neighbor.planets[0].id }));
+    expect(progressOf(user, "interstellar-colony").unlocked).toBe(true);
+    expect(progressOf(user, "galaxy-wide").progress).toBe(2);
+  });
 });
