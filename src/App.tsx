@@ -12,6 +12,8 @@ import Planet from "./components/Planet";
 import Inhabitants from "./components/inhabitants/Inhabitants";
 import StarSystemView from "./components/system/StarSystemView";
 import SystemLocked from "./components/system/SystemLocked";
+import RadarSection from "./components/radar/RadarSection";
+import BuildingLocked from "./components/BuildingLocked";
 import { useUser } from "./stores/userStore";
 import DataBackup from "./components/DataBackup";
 import Achievements from "./components/Achievements";
@@ -26,6 +28,7 @@ function AppContent() {
   const [activeSection, setActiveSection] = useState<AppSection>("planet");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isSystemUnlocked = useUser((state) => state.user.isSystemUnlocked);
+  const isRadarBuilt = useUser((state) => state.user.isRadarBuilt);
   // Forms of the planet screen start again from the planet shown.
   const activeColonyId = useUser((state) => state.user.activeColonyId);
 
@@ -59,6 +62,18 @@ function AppContent() {
           />
         ) : (
           <SystemLocked onGoToPlanet={() => setActiveSection("planet")} />
+        );
+      case "radar":
+        return isRadarBuilt ? (
+          <RadarSection />
+        ) : (
+          <BuildingLocked
+            type="radar"
+            title="Communications"
+            subtitle="Construisez le radar pour échanger des signaux avec d'autres joueurs."
+            purpose="Le radar émet des signaux vers l'espace et capte ceux des planètes d'autres joueurs, sans serveur."
+            onGoToPlanet={() => setActiveSection("planet")}
+          />
         );
       case "help":
         return <Help />;

@@ -173,8 +173,6 @@ export interface PopulationTrend {
   fullEnergyPerHour: number;
   /** Time until the maximum is reached, at the current pace. */
   timeToFullMs: number | null;
-  /** Time until the food stock runs out, when the planet eats more than it grows. */
-  foodRunsOutInMs: number | null;
 }
 
 /**
@@ -188,21 +186,17 @@ export function getPopulationTrend(
   food: number,
 ): PopulationTrend {
   const foodDeficit = economy.foodEatenPerHour - economy.foodPerHour;
-  const foodRunsOutInMs =
-    foodDeficit > 0 && food > 0 ? (food / foodDeficit) * HOUR_MS : null;
-
   if (food <= 0 && foodDeficit > 0) {
     return {
       status: "starving",
       perHour: -population * STARVATION_LOSS_PER_HOUR,
       fullEnergyPerHour: 0,
       timeToFullMs: null,
-      foodRunsOutInMs: null,
     };
   }
   const fullEnergyPerHour = Math.max(1, POPULATION_GROWTH_PER_HOUR * economy.populationMax);
   if (population >= economy.populationMax) {
-    return { status: "full", perHour: 0, fullEnergyPerHour, timeToFullMs: null, foodRunsOutInMs };
+    return { status: "full", perHour: 0, fullEnergyPerHour, timeToFullMs: null };
   }
   const perHour = fullEnergyPerHour * economy.energyFactor;
   return {
@@ -211,8 +205,46 @@ export function getPopulationTrend(
     fullEnergyPerHour,
     timeToFullMs:
       perHour > 0 ? ((economy.populationMax - population) / perHour) * HOUR_MS : null,
-    foodRunsOutInMs,
   };
+}
+
+/** How far ahead the food forecast simulates; beyond, it extrapolates. */
+const FOOD_FORECAST_HORIZON_MS = 48 * HOUR_MS;
+
+/**
+ * Time until the food stock runs out, when the planet eats more than it
+ * produces right now; null otherwise. The planet's future is simulated with
+ * the same steps as the real time (the population keeps growing and eating
+ * more, a construction in progress completes), so the forecast goes down at
+ * the pace of the clock instead of assuming today's deficit lasts.
+ */
+export function predictFoodRunOutMs(state: RealTimeState, now: number): number | null {
+  const start = computeEconomy(state.planet.levels, state.population);
+  if (state.resources.food <= 0 || start.foodEatenPerHour <= start.foodPerHour) return null;
+
+  const future: RealTimeState = {
+    planet: state.planet.clone(),
+    resources: { ...state.resources },
+    population: state.population,
+  };
+  let elapsed = 0;
+  while (elapsed < FOOD_FORECAST_HORIZON_MS) {
+    const economy = computeEconomy(future.planet.levels, future.population);
+    const deficit = economy.foodEatenPerHour - economy.foodPerHour;
+    const food = future.resources.food;
+    const stepHours = SIMULATION_STEP_MS / HOUR_MS;
+    // Runs out within this step: the exact moment, at this step's pace.
+    if (deficit > 0 && food <= deficit * stepHours) {
+      return elapsed + (food / deficit) * HOUR_MS;
+    }
+    // Construction times are absolute: the forecast runs on the real clock.
+    advanceRealTime(future, now + elapsed, now + elapsed + SIMULATION_STEP_MS);
+    elapsed += SIMULATION_STEP_MS;
+  }
+  // Still some food after the horizon: the remaining time at the last pace.
+  const economy = computeEconomy(future.planet.levels, future.population);
+  const deficit = economy.foodEatenPerHour - economy.foodPerHour;
+  return deficit > 0 ? elapsed + (future.resources.food / deficit) * HOUR_MS : null;
 }
 
 function applyStep(state: RealTimeState, hours: number): void {

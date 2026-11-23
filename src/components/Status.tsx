@@ -1,11 +1,18 @@
 import { useOnlineStatus } from "../stores/onlineStatusStore";
+import { useUser } from "../stores/userStore";
 import { formatDate, formatDuration } from "../utils/format";
+import { NIGHT_CREDIT_CAP_MS, NIGHT_END_HOUR } from "../utils/constants";
 import Card from "./ui/Card";
 
 export default function Status() {
   const isOnline = useOnlineStatus((state) => state.isOnline);
   const lastChecked = useOnlineStatus((state) => state.lastChecked);
   const totalOfflineMs = useOnlineStatus((state) => state.totalOfflineMs);
+  const periodList = useUser((state) => state.user.periodList);
+  // At night, offline time only counts up to the night cap.
+  const nightUsedMs =
+    isOnline || !lastChecked ? null : periodList.getNightCreditUsedMs(lastChecked.getTime());
+  const isNightCapReached = nightUsedMs !== null && nightUsedMs >= NIGHT_CREDIT_CAP_MS;
 
   return (
     <Card
@@ -34,6 +41,19 @@ export default function Status() {
             {formatDuration(totalOfflineMs)}
           </span>
         </div>
+        {nightUsedMs !== null && (
+          <p
+            className={`m-0 text-[0.8rem] leading-snug ${
+              isNightCapReached ? "font-bold text-(--gray-900)" : "text-(--gray-600)"
+            }`}
+            role="status"
+          >
+            🌙{" "}
+            {isNightCapReached
+              ? `Les ${NIGHT_CREDIT_CAP_MS / 3_600_000} h de cette nuit sont comptées : le temps hors ligne reprendra à ${NIGHT_END_HOUR} h.`
+              : `Cette nuit : ${formatDuration(nightUsedMs)} comptées sur ${NIGHT_CREDIT_CAP_MS / 3_600_000} h au maximum, jusqu'à ${NIGHT_END_HOUR} h.`}
+          </p>
+        )}
       </div>
     </Card>
   );

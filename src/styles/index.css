@@ -140,6 +140,9 @@
   --color-amber-50: rgba(245, 158, 11, 0.12);
   --color-amber-200: rgba(245, 158, 11, 0.35);
   --color-amber-900: #fcd34d;
+  --color-amber-700: #fbbf24;
+  --color-purple-50: rgba(168, 85, 247, 0.16);
+  --color-purple-700: #d8b4fe;
   --color-red-100: rgba(239, 68, 68, 0.18);
   --color-red-800: #fca5a5;
 }

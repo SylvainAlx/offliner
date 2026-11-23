@@ -67,7 +67,10 @@ Les règles chiffrées sont regroupées dans `src/models/buildings.ts` et
 - section Habitants : le chef planétaire et la galerie des habitants mis en
   avant chaque semaine, avec une pastille tant qu’un nouveau venu attend
   son histoire ;
-- succès regroupés par catégorie : planète, temps hors ligne, régularité ;
+- radar : signaux entre joueurs sans serveur, sous forme de code ou de QR code
+  à transmettre par le moyen de son choix, et journal des signaux captés ;
+- succès regroupés par catégorie : planète, exploration spatiale, habitants,
+  communauté, temps hors ligne, régularité ;
 - historique des périodes hors ligne ;
 - thème clair, sombre ou automatique (suit le réglage de l’appareil) ;
 - sauvegarde, export et import des données au format JSON ;
@@ -93,6 +96,14 @@ d’alimentation vers une de vos planètes. Chaque niveau de spatioport porte
 0,5 UA plus loin et ajoute 2 000 unités de capacité au cargo ; le carburant
 se paie en Offlinium. Les vaisseaux sont sous-entendus : on ne les construit
 pas, leur prix fait partie de celui de l’expédition.
+
+Le radar échange des signaux entre joueurs sans serveur. Un signal (planète,
+auteur, message) devient un code `OFFLINER1.<contenu>.<contrôle>` : le
+contenu est du JSON encodé en Base64 « url-safe », et une somme de contrôle
+détecte un code abîmé. Le code est aussi proposé en QR code (généré avec
+`uqr`). À la réception, un QR code photographié est lu par le lecteur du
+navigateur quand il existe, sinon par `jsqr`, chargé à la demande. Le code
+est encodé, pas chiffré.
 
 L’application enregistre la partie toutes les 30 secondes lorsqu’elle est
 ouverte, à chaque action et à chaque construction terminée. Le choix du thème

@@ -18,7 +18,7 @@ import {
   STARTING_POPULATION,
   STARTING_RESOURCES,
 } from "../../src/utils/constants";
-import { HOUR } from "../helpers/time";
+import { HOUR, MINUTE } from "../helpers/time";
 import { setBalance } from "../helpers/user";
 
 const T0 = 1_800_000_000_000;
@@ -363,8 +363,35 @@ describe("depot and population trend", () => {
     expect(hungry.status).toBe("starving");
     expect(hungry.perHour).toBe(-1);
 
-    const deficit = getPopulationTrend(computeEconomy(levels, 40), 40, 60);
-    expect(deficit.foodRunsOutInMs).toBe(2 * HOUR); // eats 40, produces 10
+  });
+
+  it("forecasts when the food runs out, at the pace of the clock", async () => {
+    const { predictFoodRunOutMs } = await import("../../src/models/economy");
+    const user = newUser();
+    const colony = user.homeColony;
+    colony.planet.levels = { ...emptyLevels(), habitat: 2, reactor: 3 };
+    // Full planet (50 inhabitants, max 50): eats 50, produces 10, no growth.
+    colony.population = 50;
+    colony.resources.food = 80;
+    expect(predictFoodRunOutMs(colony, T0)).toBeCloseTo(2 * HOUR, -3);
+
+    // A growing planet eats more every minute: sooner than today's deficit says.
+    colony.population = 30;
+    colony.resources.food = 100;
+    const linear = (100 / (30 - 10)) * HOUR;
+    const forecast = predictFoodRunOutMs(colony, T0)!;
+    expect(forecast).toBeLessThan(linear);
+
+    // Half an hour later, the forecast is half an hour shorter, not more.
+    user.realTimeSettledAt = T0;
+    user.advance(T0 + HOUR / 2, 0);
+    const later = predictFoodRunOutMs(colony, T0 + HOUR / 2)!;
+    expect(Math.abs(forecast - later - HOUR / 2)).toBeLessThan(2 * MINUTE);
+
+    // No deficit, no forecast.
+    colony.resources.food = 500;
+    colony.population = 5;
+    expect(predictFoodRunOutMs(colony, T0)).toBeNull();
   });
 });
 
@@ -772,6 +799,25 @@ describe("expeditions", () => {
     // From the colony, which has no spaceport yet.
     expect(user.planExpedition("cargo", colony.id, "home", { metal: 1, food: 0 })!.blocker).toBe("noSpaceport");
     expect(user.planExpedition("cargo", home.id, far.id, { metal: 1, food: 0 })!.blocker).toBe("notOwned");
+  });
+
+  it("counts expeditions and cargo for the achievements, through a save", async () => {
+    const { user, near } = await userWithNeighbors();
+    const home = user.homeColony;
+    home.planet.levels.spaceport = 1;
+    user.launchExpedition("colonization", home.id, near.id, T0);
+    user.realTimeSettledAt = T0;
+    user.advance(T0 + 10 * HOUR, 0);
+    user.launchExpedition("cargo", home.id, near.id, T0 + 10 * HOUR, { metal: 700, food: 300 });
+    user.advance(T0 + 20 * HOUR, 0);
+    expect(user.stats).toMatchObject({ expeditionsLaunched: 2, cargoDeliveries: 1, cargoUnitsDelivered: 1000 });
+
+    const restored = new User();
+    restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
+    expect(restored.stats).toEqual(user.stats);
+    const copy = restored.clone();
+    copy.stats.cargoDeliveries = 9;
+    expect(restored.stats.cargoDeliveries).toBe(1);
   });
 
   it("keeps expeditions in flight through a save, and sends back what cannot land", async () => {

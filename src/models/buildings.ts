@@ -8,6 +8,7 @@ export const BUILDING_TYPES = [
   "laboratory",
   "habitat",
   "spaceport",
+  "radar",
 ] as const;
 
 export type BuildingType = (typeof BUILDING_TYPES)[number];
@@ -124,7 +125,27 @@ export const BUILDINGS: Record<BuildingType, BuildingDefinition> = {
     energyConsumed: (level) => growing(20, level),
     staff: (level) => 8 * level,
   },
+  radar: {
+    type: "radar",
+    label: "Radar",
+    icon: "📡",
+    description:
+      "Émet des signaux vers l'espace et capte ceux des autres planètes : chaque niveau permet un message plus long.",
+    cost: { metal: 300, offlinium: 120, factor: 1.8 },
+    production: () => ({}),
+    energyProduced: () => 0,
+    energyConsumed: (level) => growing(12, level),
+    staff: (level) => 2 * level,
+  },
 };
+
+/** Characters a radar signal can carry per radar level, up to a maximum. */
+export const RADAR_MESSAGE_CHARS_PER_LEVEL = 100;
+export const RADAR_MESSAGE_MAX_CHARS = 500;
+
+export function getRadarMessageLength(level: number): number {
+  return Math.min(RADAR_MESSAGE_MAX_CHARS, Math.max(0, level) * RADAR_MESSAGE_CHARS_PER_LEVEL);
+}
 
 /** Every level of every building carries solar panels. */
 export const SOLAR_ENERGY_PER_LEVEL = 2;
@@ -151,6 +172,7 @@ export function emptyLevels(): BuildingLevels {
     laboratory: 0,
     habitat: 0,
     spaceport: 0,
+    radar: 0,
   };
 }
 
