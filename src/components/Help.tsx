@@ -3,6 +3,7 @@ import {
   BASE_STORAGE_CAPACITY,
   BUILDINGS,
   BUILDING_TYPES,
+  getRadarMessageLength,
   LABORATORY_BONUS_PER_LEVEL,
   SOLAR_ENERGY_PER_LEVEL,
   STORAGE_CAPACITY_FACTOR,
@@ -340,6 +341,30 @@ export default function Help() {
               Chaque planète a ses propres réserves, sa population et son
               chantier ; l&apos;Offlinium est commun. Passez de l&apos;une à
               l&apos;autre avec le sélecteur au-dessus des ressources.
+            </li>
+          </ul>
+        </HelpSection>
+
+        <HelpSection icon="📡" title="Radar et signaux">
+          <ul className={list}>
+            <li className={bullet}>
+              Le radar ouvre l&apos;onglet Communications. Émettez un signal : choisissez
+              la planète, l&apos;auteur parmi vos habitants célèbres et écrivez
+              votre message ({getRadarMessageLength(1)} caractères par niveau de
+              radar).
+            </li>
+            <li className={bullet}>
+              Le signal devient un code et un QR code. Transmettez-les comme vous
+              voulez : message, e-mail, réseau social, écran montré à un ami…
+            </li>
+            <li className={bullet}>
+              Pour capter le signal d&apos;un autre joueur, collez son code ou
+              photographiez son QR code dans l&apos;onglet Recevoir. Il rejoint
+              votre journal, avec le portrait de son auteur.
+            </li>
+            <li className={bullet}>
+              Aucun serveur n&apos;intervient. Le code est encodé, pas chiffré :
+              ne mettez rien de personnel dans un message.
             </li>
           </ul>
         </HelpSection>

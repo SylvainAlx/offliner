@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { User, type ColonyCompletedConstruction } from "../models/user";
+import { User, type ColonyCompletedConstruction, type SignalReception } from "../models/user";
+import type { SentSignal } from "../models/signal";
 import type { Colony } from "../models/colony";
 import type { ExpeditionCargo, ExpeditionKind } from "../models/expedition";
 import type { BuildingType } from "../models/buildings";
@@ -18,6 +19,11 @@ export interface UserStore {
   renamePlanet: (name: string) => boolean;
   /** Shows another of the player's planets. */
   setActiveColony: (id: string) => boolean;
+  /** Sends a radar signal; returns it with its code, or null. */
+  emitSignal: (colonyId: string, authorId: string, message: string) => SentSignal | null;
+  /** Decodes a code captured by the radar and keeps a new signal. */
+  receiveSignal: (code: string) => SignalReception;
+  deleteReceivedSignal: (id: string) => boolean;
   /** Sends an expedition from a colony's spaceport to a planet of the system. */
   launchExpedition: (
     kind: ExpeditionKind,
@@ -140,6 +146,26 @@ export const useUser = create<UserStore>((set, get) => {
     renamePlanet: (name) => update((user) => user.renamePlanet(name)),
 
     setActiveColony: (id) => update((user) => user.setActiveColony(id)),
+
+    emitSignal: (colonyId, authorId, message) => {
+      let sent: SentSignal | null = null;
+      update((user, now) => {
+        sent = user.emitSignal(colonyId, authorId, message, now);
+        return sent !== null;
+      });
+      return sent;
+    },
+
+    receiveSignal: (code) => {
+      let reception: SignalReception = { status: "noRadar" };
+      update((user, now) => {
+        reception = user.receiveSignal(code, now);
+        return reception.status === "received";
+      });
+      return reception;
+    },
+
+    deleteReceivedSignal: (id) => update((user) => user.deleteReceivedSignal(id)),
 
     launchExpedition: (kind, fromColonyId, targetId, cargo) =>
       update((user, now) => user.launchExpedition(kind, fromColonyId, targetId, now, cargo)),

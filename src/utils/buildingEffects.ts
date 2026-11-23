@@ -3,6 +3,7 @@ import {
   LABORATORY_BONUS_PER_LEVEL,
   describeSettlement,
   getPopulationMax,
+  getRadarMessageLength,
   getStorageCapacity,
   type BuildingType,
 } from "../models/buildings";
@@ -31,6 +32,8 @@ export function describeBuildingEffect(type: BuildingType, level: number): strin
       return `${formatAmount(getStorageCapacity(level))} ${RESOURCE_ICONS.metal} et ${RESOURCE_ICONS.food} max`;
     case "spaceport":
       return `Portée ${getSpaceportRange(level).toLocaleString("fr-FR")} UA · cargo ${formatAmount(getCargoCapacity(level))}`;
+    case "radar":
+      return `Messages de ${getRadarMessageLength(level)} caractères`;
     case "habitat":
       return `${formatAmount(getPopulationMax(level))} ${POPULATION_ICON} max (${describeSettlement(level)})`;
   }

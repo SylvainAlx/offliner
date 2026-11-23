@@ -25,7 +25,17 @@ import {
   type ExpeditionKind,
 } from "./expedition";
 import type { StarSystem, SystemPlanet } from "./starSystem";
-import { getConstructionMs, type BuildingType } from "./buildings";
+import { getConstructionMs, getRadarMessageLength, type BuildingType } from "./buildings";
+import {
+  decodeSignal,
+  encodeSignal,
+  loadSignals,
+  type RadarSignal,
+  type ReceivedSignal,
+  type SentSignal,
+  type SignalError,
+} from "./signal";
+import { getPlanetKind } from "./planet";
 import { hasResources, type ResourceAmounts, type Resources } from "./resources";
 import {
   COLONISTS_PER_SHIP,
@@ -108,7 +118,20 @@ export interface GameStats {
   cargoDeliveries: number;
   /** Metal and food units cargo flights have delivered. */
   cargoUnitsDelivered: number;
+  signalsSent: number;
+  /** Signals from other players' planets (the player's own ones excluded). */
+  signalsReceived: number;
 }
+
+/** What happened to a code given to the radar. */
+export type SignalReception =
+  | { status: "received" | "duplicate" | "own"; signal: RadarSignal }
+  | { status: "noRadar" }
+  | { status: "error"; error: SignalError };
+
+/** Signals kept in the radar's journals, newest first. */
+const MAX_SENT_SIGNALS = 30;
+const MAX_RECEIVED_SIGNALS = 50;
 
 /** The latest reports are kept, newest first. */
 const MAX_REPORTS = 10;
@@ -142,6 +165,9 @@ export class User {
   /** What the last expeditions did on arrival, newest first. */
   expeditionReports: ExpeditionReport[];
   stats: GameStats;
+  /** The radar's journals, newest first. */
+  sentSignals: SentSignal[];
+  receivedSignals: ReceivedSignal[];
   /** Real time up to which every colony has been computed. */
   realTimeSettledAt: number;
   /** Offline time already turned into Offlinium. */
@@ -164,7 +190,15 @@ export class User {
     this.notables = [createLeader(home.planet.name, now, home.id)];
     this.expeditions = [];
     this.expeditionReports = [];
-    this.stats = { expeditionsLaunched: 0, cargoDeliveries: 0, cargoUnitsDelivered: 0 };
+    this.stats = {
+      expeditionsLaunched: 0,
+      cargoDeliveries: 0,
+      cargoUnitsDelivered: 0,
+      signalsSent: 0,
+      signalsReceived: 0,
+    };
+    this.sentSignals = [];
+    this.receivedSignals = [];
     this.realTimeSettledAt = now;
     this.settledOfflineMs = 0;
   }
@@ -517,6 +551,74 @@ export class User {
     ].slice(0, MAX_REPORTS);
   }
 
+  // --- Radar ---------------------------------------------------------------
+
+  /** The radar opens once any planet has one. */
+  get isRadarBuilt(): boolean {
+    return this.maxOverColonies((colony) => colony.planet.levels.radar) > 0;
+  }
+
+  /**
+   * Sends a signal from a colony's radar, signed by one of the player's
+   * notable inhabitants. Returns the signal and its code, or null when the
+   * colony has no radar, the author is unknown or the message is empty or too
+   * long for the radar's level.
+   */
+  emitSignal(colonyId: string, authorId: string, message: string, now: number): SentSignal | null {
+    const colony = this.getColony(colonyId);
+    const author = this.notables.find((notable) => notable.id === authorId);
+    const level = colony?.planet.levels.radar ?? 0;
+    const text = message.trim();
+    if (!colony || !author || level <= 0) return null;
+    if (!text || text.length > getRadarMessageLength(level)) return null;
+
+    const content = {
+      planetName: colony.planet.name,
+      planetSeed: colony.planet.seed,
+      planetKind: getPlanetKind(colony.planet),
+      authorName: author.name,
+      authorTitle: author.title,
+      authorSeed: author.seed,
+      message: text,
+      sentAt: now,
+    };
+    const code = encodeSignal(content);
+    const decoded = decodeSignal(code);
+    if (!decoded.ok) return null;
+    const sent: SentSignal = { ...decoded.signal, code };
+    this.sentSignals = [sent, ...this.sentSignals].slice(0, MAX_SENT_SIGNALS);
+    this.stats.signalsSent += 1;
+    return sent;
+  }
+
+  /**
+   * Decodes a code captured by the radar. A new signal from another player's
+   * planet joins the journal; the player's own signals and those already
+   * received are recognized but not added again.
+   */
+  receiveSignal(code: string, now: number): SignalReception {
+    if (!this.isRadarBuilt) return { status: "noRadar" };
+    const decoded = decodeSignal(code);
+    if (!decoded.ok) return { status: "error", error: decoded.error };
+    const { signal } = decoded;
+    if (this.sentSignals.some((sent) => sent.id === signal.id)) return { status: "own", signal };
+    if (this.receivedSignals.some((received) => received.id === signal.id)) {
+      return { status: "duplicate", signal };
+    }
+    this.receivedSignals = [{ ...signal, receivedAt: now }, ...this.receivedSignals].slice(
+      0,
+      MAX_RECEIVED_SIGNALS,
+    );
+    this.stats.signalsReceived += 1;
+    return { status: "received", signal };
+  }
+
+  deleteReceivedSignal(id: string): boolean {
+    const before = this.receivedSignals.length;
+    this.receivedSignals = this.receivedSignals.filter((signal) => signal.id !== id);
+    return this.receivedSignals.length < before;
+  }
+
   // --- Notable inhabitants ------------------------------------------------
 
   /** The leader of a colony, the active one by default. */
@@ -592,6 +694,8 @@ export class User {
       cargo: { ...item.cargo },
     }));
     copy.stats = { ...this.stats };
+    copy.sentSignals = this.sentSignals.map((signal) => ({ ...signal }));
+    copy.receivedSignals = this.receivedSignals.map((signal) => ({ ...signal }));
     copy.realTimeSettledAt = this.realTimeSettledAt;
     copy.settledOfflineMs = this.settledOfflineMs;
     return copy;
@@ -634,6 +738,16 @@ export class User {
     for (const key of Object.keys(this.stats) as Array<keyof GameStats>) {
       if (isNonNegativeNumber(stats[key])) this.stats[key] = Math.floor(stats[key]);
     }
+    this.sentSignals = loadSignals<SentSignal>(
+      parsed.sentSignals,
+      (item) => (typeof item.code === "string" && item.code.length < 4000 ? { code: item.code } : null),
+      MAX_SENT_SIGNALS,
+    );
+    this.receivedSignals = loadSignals<ReceivedSignal>(
+      parsed.receivedSignals,
+      (item) => (isFiniteNumber(item.receivedAt) ? { receivedAt: item.receivedAt } : null),
+      MAX_RECEIVED_SIGNALS,
+    );
 
     if (isFiniteNumber(parsed.realTimeSettledAt)) {
       this.realTimeSettledAt = parsed.realTimeSettledAt;

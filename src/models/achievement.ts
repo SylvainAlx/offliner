@@ -5,6 +5,7 @@ export type AchievementCategory =
   | "Planète"
   | "Exploration spatiale"
   | "Habitants"
+  | "Communauté"
   | "Temps hors ligne"
   | "Régularité";
 
@@ -256,6 +257,53 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
     icon: "🌌",
     target: 3,
     getProgress: colonyCount,
+  },
+
+  // --- Communauté ----------------------------------------------------------
+  {
+    id: "radar",
+    title: "À l'écoute",
+    description: "Construisez le radar.",
+    category: "Communauté",
+    icon: "📡",
+    target: 1,
+    getProgress: (user) => bestLevel(user, "radar"),
+  },
+  {
+    id: "first-signal",
+    title: "Premier signal",
+    description: "Émettez un signal vers l'espace.",
+    category: "Communauté",
+    icon: "✉️",
+    target: 1,
+    getProgress: (user) => user.stats.signalsSent,
+  },
+  {
+    id: "first-contact",
+    title: "Contact établi",
+    description: "Captez le signal de la planète d'un autre joueur.",
+    category: "Communauté",
+    icon: "🤝",
+    target: 1,
+    getProgress: (user) => user.stats.signalsReceived,
+  },
+  {
+    id: "galactic-network",
+    title: "Réseau galactique",
+    description: "Captez 10 signaux venus d'autres planètes.",
+    category: "Communauté",
+    icon: "🕸️",
+    target: 10,
+    getProgress: (user) => user.stats.signalsReceived,
+  },
+  {
+    id: "voice-of-the-stars",
+    title: "Voix des étoiles",
+    description: "Émettez 25 signaux.",
+    category: "Communauté",
+    icon: "📻",
+    target: 25,
+    getProgress: (user) => user.stats.signalsSent,
   },
 
   // --- Habitants -------------------------------------------------------------

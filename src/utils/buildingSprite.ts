@@ -315,6 +315,35 @@ function drawSpaceport(canvas: Canvas, tier: number): void {
   }
 }
 
+function drawRadar(canvas: Canvas, tier: number): void {
+  // A dish on a lattice mast, turned to the sky.
+  canvas.rect(15, 9, 2, 8, "#64748b");
+  canvas.rect(15, 9, 1, 8, "#94a3b8");
+  canvas.dots([[14, 12], [17, 12], [14, 15], [17, 15]], "#475569");
+  canvas.rect(11, 16, 10, 1, "#475569");
+  // The dish: a wide bowl, lit from the left.
+  canvas.rect(9, 6, 14, 1, "#e2e8f0");
+  canvas.rect(10, 7, 12, 1, "#cbd5e1");
+  canvas.rect(11, 8, 10, 1, "#94a3b8");
+  canvas.rect(9, 6, 3, 1, "#f8fafc");
+  // The receiver above the bowl, and its blinking light.
+  canvas.rect(15, 3, 2, 3, "#64748b");
+  canvas.dots([[15, 2], [16, 2]], "#a855f7");
+  if (tier >= 1) {
+    // A control hut with a lit screen.
+    canvas.wall(22, 11, 8, 6, "#cbd5e1", "#94a3b8", "#64748b");
+    canvas.rect(22, 10, 8, 1, "#e2e8f0");
+    canvas.rect(24, 13, 4, 2, "#22d3ee");
+  }
+  if (tier >= 2) {
+    // A second, smaller dish and radio waves.
+    canvas.rect(5, 12, 1, 5, "#64748b");
+    canvas.rect(2, 10, 7, 1, "#e2e8f0");
+    canvas.rect(3, 11, 5, 1, "#cbd5e1");
+    canvas.dots([[20, 2], [21, 1], [22, 2], [24, 1], [25, 0], [26, 1]], "#c084fc");
+  }
+}
+
 const DRAWERS: Record<BuildingType, (canvas: Canvas, tier: number) => void> = {
   metalMine: drawMine,
   farm: drawFarm,
@@ -323,6 +352,7 @@ const DRAWERS: Record<BuildingType, (canvas: Canvas, tier: number) => void> = {
   laboratory: drawLaboratory,
   habitat: drawHabitat,
   spaceport: drawSpaceport,
+  radar: drawRadar,
 };
 
 /** 0, 1 or 2: the look a building has at this level. */

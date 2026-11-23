@@ -51,13 +51,14 @@ interface Slot {
 }
 
 /**
- * Where each building stands: three in the back row, four in the front row,
+ * Where each building stands: four in the back row, four in the front row,
  * so that every building stays large enough to be read and tapped.
  */
 const SLOTS: Record<BuildingType, Slot> = {
-  habitat: { x: 25, row: 0 },
-  laboratory: { x: 68, row: 0 },
-  spaceport: { x: 111, row: 0 },
+  habitat: { x: 17, row: 0 },
+  laboratory: { x: 51, row: 0 },
+  spaceport: { x: 85, row: 0 },
+  radar: { x: 119, row: 0 },
   metalMine: { x: 17, row: 1 },
   farm: { x: 51, row: 1 },
   reactor: { x: 85, row: 1 },

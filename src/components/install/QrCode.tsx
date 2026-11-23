@@ -6,6 +6,8 @@ interface QrCodeProps {
   size?: number;
   color?: string;
   background?: string;
+  /** What the QR code holds, for screen readers. */
+  label?: string;
 }
 
 /** QR code drawn as one SVG path (no canvas, no inline HTML). */
@@ -14,6 +16,7 @@ export default function QrCode({
   size = 168,
   color = "#1A1033",
   background = "#FFFFFF",
+  label,
 }: QrCodeProps) {
   const { path, modules } = useMemo(() => {
     // A 4-module quiet zone is required by the QR specification for scanners.
@@ -34,7 +37,7 @@ export default function QrCode({
       viewBox={`0 0 ${modules} ${modules}`}
       shapeRendering="crispEdges"
       role="img"
-      aria-label={`QR code pour ouvrir ${value}`}
+      aria-label={label ?? `QR code pour ouvrir ${value}`}
     >
       <rect width={modules} height={modules} fill={background} />
       <path d={path} fill={color} />

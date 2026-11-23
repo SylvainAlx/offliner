@@ -11,6 +11,7 @@ const CATEGORY_CLASSES: Record<AchievementCategory, string> = {
   "Planète": "bg-green-50 text-green-700",
   "Exploration spatiale": "bg-purple-50 text-purple-700",
   "Habitants": "bg-amber-50 text-amber-700",
+  "Communauté": "bg-blue-50 text-blue-700",
 };
 
 /** Display order of the categories, with the icon of their heading. */
@@ -18,6 +19,7 @@ const CATEGORIES: Array<{ name: AchievementCategory; icon: string; description: 
   { name: "Planète", icon: "🪐", description: "Bâtiments et population" },
   { name: "Exploration spatiale", icon: "🚀", description: "Expéditions, colonies et cargos" },
   { name: "Habitants", icon: "👑", description: "Le chef et les habitants de la semaine" },
+  { name: "Communauté", icon: "📡", description: "Signaux échangés avec d'autres joueurs" },
   { name: "Temps hors ligne", icon: "⏱️", description: "Temps passé déconnecté" },
   { name: "Régularité", icon: "📅", description: "Déconnexions jour après jour" },
 ];

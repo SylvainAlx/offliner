@@ -66,7 +66,7 @@ describe("achievements", () => {
   it("follows space exploration: expeditions, colonies and cargo", () => {
     const user = new User();
     expect(progressOf(user, "first-expedition").unlocked).toBe(false);
-    user.stats = { expeditionsLaunched: 3, cargoDeliveries: 2, cargoUnitsDelivered: 12_000 };
+    Object.assign(user.stats, { expeditionsLaunched: 3, cargoDeliveries: 2, cargoUnitsDelivered: 12_000 });
     user.addColony(new Colony({ foundedAt: 0, systemPlanetId: "a" }));
     user.addColony(new Colony({ foundedAt: 0, systemPlanetId: "b" }));
     expect(progressOf(user, "first-expedition").unlocked).toBe(true);
@@ -94,5 +94,16 @@ describe("achievements", () => {
     const [first] = user.weeklyNotables;
     user.updateNotable(first.id, { name: "Lia", title: "Ingénieure", description: "" });
     expect(progressOf(user, "chronicler").progress).toBe(1);
+  });
+
+  it("follows the radar signals", () => {
+    const user = new User();
+    expect(progressOf(user, "radar").unlocked).toBe(false);
+    user.homeColony.planet.levels.radar = 1;
+    Object.assign(user.stats, { signalsSent: 2, signalsReceived: 4 });
+    expect(progressOf(user, "radar").unlocked).toBe(true);
+    expect(progressOf(user, "first-signal").unlocked).toBe(true);
+    expect(progressOf(user, "first-contact").unlocked).toBe(true);
+    expect(progressOf(user, "galactic-network")).toMatchObject({ progress: 4, unlocked: false });
   });
 });

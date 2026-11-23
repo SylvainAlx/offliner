@@ -6,6 +6,7 @@ export type AppSection =
   | "planet"
   | "inhabitants"
   | "system"
+  | "radar"
   | "achievements"
   | "help";
 
@@ -32,6 +33,12 @@ const menuItems: Array<{
     label: "Système",
     description: "Les planètes voisines",
     icon: "☀️",
+  },
+  {
+    id: "radar",
+    label: "Communications",
+    description: "Signaux entre joueurs",
+    icon: "📡",
   },
   {
     id: "achievements",
@@ -68,6 +75,7 @@ export default function Sidebar({
 }: SidebarProps) {
   // The star system opens once the spaceport is built.
   const isSystemUnlocked = useUser((state) => state.user.isSystemUnlocked);
+  const isRadarBuilt = useUser((state) => state.user.isRadarBuilt);
   // Inhabitants who arrived and still wait for the player to tell their story.
   const notablesToCustomize = useUser(
     (state) => state.user.notablesToCustomize,
@@ -133,12 +141,19 @@ export default function Sidebar({
         {/* Nav items */}
         <nav className="grid gap-1.75">
           {menuItems.map((menuItem) => {
-            const isLocked = menuItem.id === "system" && !isSystemUnlocked;
+            // A section opens once the building it needs exists.
+            const lockedBy =
+              menuItem.id === "system" && !isSystemUnlocked
+                ? "le spatioport"
+                : menuItem.id === "radar" && !isRadarBuilt
+                  ? "le radar"
+                  : null;
+            const isLocked = lockedBy !== null;
             const item = isLocked
               ? {
                   ...menuItem,
                   icon: "🔒",
-                  description: "Construisez le spatioport",
+                  description: `Construisez ${lockedBy}`,
                 }
               : menuItem;
             const isActive = activeSection === item.id;
@@ -159,7 +174,7 @@ export default function Sidebar({
                 aria-current={isActive ? "page" : undefined}
                 aria-label={
                   isLocked
-                    ? `${item.label} : verrouillé, construisez le spatioport`
+                    ? `${item.label} : verrouillé, construisez ${lockedBy}`
                     : badge > 0
                       ? `${item.label} : ${badge} à personnaliser`
                       : undefined

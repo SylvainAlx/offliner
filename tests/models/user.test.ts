@@ -810,7 +810,7 @@ describe("expeditions", () => {
     user.advance(T0 + 10 * HOUR, 0);
     user.launchExpedition("cargo", home.id, near.id, T0 + 10 * HOUR, { metal: 700, food: 300 });
     user.advance(T0 + 20 * HOUR, 0);
-    expect(user.stats).toEqual({ expeditionsLaunched: 2, cargoDeliveries: 1, cargoUnitsDelivered: 1000 });
+    expect(user.stats).toMatchObject({ expeditionsLaunched: 2, cargoDeliveries: 1, cargoUnitsDelivered: 1000 });
 
     const restored = new User();
     restored.loadFromSnapshot(JSON.parse(JSON.stringify(user)));
