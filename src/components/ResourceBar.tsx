@@ -1,5 +1,5 @@
-import { useOnlineStatus } from "../stores/onlineStatusStore";
 import { useUser } from "../stores/userStore";
+import OffliniumChip from "./OffliniumChip";
 import {
   ENERGY_ICON,
   POPULATION_ICON,
@@ -14,7 +14,6 @@ const chipClass =
 
 /** Stocks, energy balance and population, always in sight. */
 export default function ResourceBar() {
-  const isOnline = useOnlineStatus((state) => state.isOnline);
   const user = useUser((state) => state.user);
   // Metal, food, energy and population are the planet's; Offlinium, the player's.
   const colony = user.activeColony;
@@ -28,29 +27,18 @@ export default function ResourceBar() {
       aria-label="Ressources"
     >
       {RESOURCE_TYPES.map((type) => {
-        // Offlinium is never capped; metal and food stop at the depot's capacity.
-        const capped = type !== "offlinium";
-        const isFull = capped && resources[type] >= economy.storageCapacity;
+        // Offlinium has its own chip, which comes alive offline.
+        if (type === "offlinium") return <OffliniumChip key={type} />;
+        // Metal and food stop at the depot's capacity.
+        const isFull = resources[type] >= economy.storageCapacity;
         const amount = formatAmount(resources[type]);
         const capacity = formatAmount(economy.storageCapacity);
         return (
           <span
             key={type}
-            className={`${chipClass} ${
-              type === "offlinium" && !isOnline
-                ? "border-(--accent-border) bg-(--accent-bg) shadow-[0_0_12px_rgba(170,59,255,0.2)]"
-                : ""
-            } ${isFull ? "border-(--warning-border) bg-(--warning-bg) text-(--warning-text)" : ""}`}
-            title={
-              capped
-                ? `${RESOURCE_LABELS[type]} : ${amount} / ${capacity}${isFull ? " (dépôt plein)" : ""}`
-                : RESOURCE_LABELS[type]
-            }
-            aria-label={
-              capped
-                ? `${amount} ${RESOURCE_LABELS[type]} sur ${capacity}${isFull ? ", dépôt plein" : ""}`
-                : `${amount} ${RESOURCE_LABELS[type]}`
-            }
+            className={`${chipClass} ${isFull ? "border-(--warning-border) bg-(--warning-bg) text-(--warning-text)" : ""}`}
+            title={`${RESOURCE_LABELS[type]} : ${amount} / ${capacity}${isFull ? " (dépôt plein)" : ""}`}
+            aria-label={`${amount} ${RESOURCE_LABELS[type]} sur ${capacity}${isFull ? ", dépôt plein" : ""}`}
           >
             <span aria-hidden="true">{RESOURCE_ICONS[type]}</span>
             {amount}
