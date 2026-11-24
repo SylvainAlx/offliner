@@ -29,7 +29,12 @@ import {
   type ExchangeQuote,
   type ExchangeResource,
 } from "./exchange";
-import { getConstructionMs, getRadarMessageLength, type BuildingType } from "./buildings";
+import {
+  getBuildingCost,
+  getConstructionMs,
+  getRadarMessageLength,
+  type BuildingType,
+} from "./buildings";
 import {
   decodeSignal,
   encodeSignal,
@@ -61,6 +66,9 @@ import {
 
 /** Why a building level cannot be started right now. */
 export type ConstructionBlocker = "busy" | "noField" | "resources" | null;
+
+/** Why a level cannot be demolished: nothing built, or the level is being built. */
+export type DemolitionBlocker = "notBuilt" | "underConstruction" | null;
 
 /** A level reached, and on which planet. */
 export interface ColonyCompletedConstruction extends CompletedConstruction {
@@ -351,6 +359,35 @@ export class User {
     if (!colony || !construction) return false;
     this.applyAmounts(colony, construction.cost, 1);
     colony.planet.construction = null;
+    return true;
+  }
+
+  getDemolitionBlocker(
+    type: BuildingType,
+    colony: Colony = this.activeColony,
+  ): DemolitionBlocker {
+    if (colony.planet.levels[type] <= 0) return "notBuilt";
+    if (colony.planet.construction?.type === type) return "underConstruction";
+    return null;
+  }
+
+  /** What demolishing a building's current level gives back: what that level cost. */
+  getDemolitionRefund(type: BuildingType, colony: Colony = this.activeColony): ResourceAmounts {
+    return getBuildingCost(type, colony.planet.levels[type]);
+  }
+
+  /**
+   * Takes a building back to its previous level at once and refunds what that
+   * level cost: metal to the colony, Offlinium to the player. The field is
+   * freed. Inhabitants without a home leave the planet. Call advance() first.
+   */
+  demolishBuilding(type: BuildingType, colonyId = this.activeColonyId): boolean {
+    const colony = this.getColony(colonyId);
+    if (!colony || this.getDemolitionBlocker(type, colony) !== null) return false;
+    const refund = this.getDemolitionRefund(type, colony);
+    colony.planet.levels[type] -= 1;
+    this.applyAmounts(colony, refund, 1);
+    colony.population = Math.min(colony.population, colony.economy.populationMax);
     return true;
   }
 

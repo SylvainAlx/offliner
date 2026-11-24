@@ -40,6 +40,8 @@ export interface UserStore {
   tick: (now: number) => void;
   startConstruction: (type: BuildingType) => boolean;
   cancelConstruction: () => boolean;
+  /** Takes a building of the planet shown back one level, refunding that level. */
+  demolishBuilding: (type: BuildingType) => boolean;
   speedUpConstruction: (ms: number) => boolean;
   openPeriodIfNeeded: (startTs: number) => void;
   closeAnyOpenPeriod: (endTs: number) => void;
@@ -210,6 +212,8 @@ export const useUser = create<UserStore>((set, get) => {
     },
 
     cancelConstruction: () => update((user) => user.cancelConstruction()),
+
+    demolishBuilding: (type) => update((user) => user.demolishBuilding(type)),
 
     speedUpConstruction: (ms) =>
       update((user, now) => user.speedUpConstruction(ms, now)),

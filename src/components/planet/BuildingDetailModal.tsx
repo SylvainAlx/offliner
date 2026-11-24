@@ -14,6 +14,7 @@ import {
 } from "../../utils/buildingEffects";
 import { formatDuration } from "../../utils/format";
 import BuildingActions from "./BuildingActions";
+import DemolishBuilding from "./DemolishBuilding";
 
 /** How many upcoming levels the table shows. */
 const LEVELS_SHOWN = 5;
@@ -100,6 +101,7 @@ export default function BuildingDetailModal({
             Chaque niveau occupe une case et porte aussi des panneaux solaires :
             +{SOLAR_ENERGY_PER_LEVEL} {ENERGY_ICON}.
           </p>
+          <DemolishBuilding key={type} type={type} />
         </>
       )}
       <div className="mt-5 flex justify-end">

@@ -935,3 +935,77 @@ describe("expeditions", () => {
     expect(restored.expeditionReports[0].cargo.metal).toBe(500);
   });
 });
+
+describe("demolition", () => {
+  it("takes a building back one level and refunds that level", () => {
+    const user = newUser();
+    const colony = user.homeColony;
+    colony.planet.levels.metalMine = 3;
+    setBalance(user, { metal: 100, food: 50, offlinium: 10 });
+    const refund = getBuildingCost("metalMine", 3);
+
+    expect(user.getDemolitionRefund("metalMine")).toEqual(refund);
+    expect(user.demolishBuilding("metalMine")).toBe(true);
+    expect(colony.planet.levels.metalMine).toBe(2);
+    expect(colony.planet.usedFields).toBe(2);
+    expect(user.getResources()).toEqual({
+      metal: 100 + (refund.metal ?? 0),
+      food: 50,
+      offlinium: 10 + (refund.offlinium ?? 0),
+    });
+  });
+
+  it("gives back exactly what building the level cost", () => {
+    const user = newUser();
+    setBalance(user, { metal: 5000, food: 0, offlinium: 5000 });
+    user.startConstruction("farm", T0);
+    user.advance(T0 + getConstructionMs("farm", 1), 0);
+    expect(user.homeColony.planet.levels.farm).toBe(1);
+
+    const metal = user.homeColony.resources.metal;
+    expect(user.demolishBuilding("farm")).toBe(true);
+    expect(user.homeColony.resources.metal).toBe(metal + (getBuildingCost("farm", 1).metal ?? 0));
+    expect(user.offlinium).toBe(5000);
+  });
+
+  it("refuses what is not built, or the level being built", () => {
+    const user = newUser();
+    expect(user.getDemolitionBlocker("radar")).toBe("notBuilt");
+    expect(user.demolishBuilding("radar")).toBe(false);
+
+    user.homeColony.planet.levels.farm = 1;
+    setBalance(user, { metal: 5000, food: 0, offlinium: 5000 });
+    user.startConstruction("farm", T0);
+    expect(user.getDemolitionBlocker("farm")).toBe("underConstruction");
+    expect(user.getDemolitionBlocker("metalMine")).toBe("notBuilt");
+    user.homeColony.planet.levels.metalMine = 1;
+    expect(user.getDemolitionBlocker("metalMine")).toBeNull();
+  });
+
+  it("sends away the inhabitants left without a home", () => {
+    const user = newUser();
+    const colony = user.homeColony;
+    colony.planet.levels.habitat = 3;
+    colony.population = getPopulationMax(3);
+    const preview = colony.previewDemolition("habitat");
+
+    expect(preview.level).toBe(2);
+    expect(preview.inhabitantsLeaving).toBe(
+      Math.floor(getPopulationMax(3)) - Math.floor(getPopulationMax(2)),
+    );
+    user.demolishBuilding("habitat");
+    expect(colony.population).toBe(getPopulationMax(2));
+  });
+
+  it("warns when the buildings would lack energy", () => {
+    const user = newUser();
+    const colony = user.homeColony;
+    colony.planet.levels.metalMine = 6;
+    colony.planet.levels.reactor = 3;
+    colony.planet.levels.habitat = 10;
+    colony.population = getPopulationMax(10);
+    const preview = colony.previewDemolition("reactor");
+    expect(preview.productionFactorAfter).toBeLessThan(preview.productionFactorBefore);
+    expect(preview.shortage).toBe("energy");
+  });
+});

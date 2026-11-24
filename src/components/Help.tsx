@@ -224,6 +224,11 @@ export default function Help() {
               gagnées : une heure hors ligne paie une heure de construction.
             </li>
             <li className={bullet}>Annuler rembourse tout le coût.</li>
+            <li className={bullet}>
+              Depuis la fiche d&apos;un bâtiment, « Démolir un niveau » le fait
+              redescendre d&apos;un niveau, tout de suite : le coût de ce niveau
+              est rendu et sa case libérée.
+            </li>
           </ul>
           <p className={text}>
             En vue Surface, touchez un bâtiment pour le construire ou
