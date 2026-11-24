@@ -7,6 +7,7 @@ import type { ExpeditionCargo, ExpeditionKind } from "../models/expedition";
 import type { BuildingType } from "../models/buildings";
 import type { NotableChanges } from "../models/notable";
 import { userRepository } from "../services/userRepository";
+import { useBackup } from "./backupStore";
 import { AUTOSAVE_INTERVAL_MS } from "../utils/constants";
 import { sanitizeName } from "../utils/sanitize";
 
@@ -201,8 +202,12 @@ export const useUser = create<UserStore>((set, get) => {
       }
     },
 
-    startConstruction: (type) =>
-      update((user, now) => user.startConstruction(type, now)),
+    startConstruction: (type) => {
+      const started = update((user, now) => user.startConstruction(type, now));
+      // Once the player has invested in the game, ask the browser to keep it.
+      if (started) void useBackup.getState().requestProtection();
+      return started;
+    },
 
     cancelConstruction: () => update((user) => user.cancelConstruction()),
 

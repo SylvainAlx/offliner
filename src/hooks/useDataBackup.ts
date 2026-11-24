@@ -1,16 +1,26 @@
 import { useRef, useState, type ChangeEvent } from "react";
+import { useBackup } from "../stores/backupStore";
 import { useOnlineStatus } from "../stores/onlineStatusStore";
 import { useUser } from "../stores/userStore";
 import { userRepository } from "../services/userRepository";
 import { SAVE_VERSION } from "../models/user";
 import { MAX_BACKUP_FILE_BYTES } from "../utils/constants";
-import { downloadJson, getBackupFileName } from "../utils/download";
+import {
+  canShareBackupFile,
+  downloadJson,
+  getBackupFileName,
+  getShareableBackupFile,
+} from "../utils/download";
 
 export function useDataBackup() {
   const saveUser = useUser((state) => state.saveUser);
   const importFromSnapshot = useUser((state) => state.importFromSnapshot);
   const resetAll = useUser((state) => state.resetAll);
   const refreshOnlineStatus = useOnlineStatus((state) => state.refreshFromUser);
+  const markBackedUp = useBackup((state) => state.markBackedUp);
+  const clearBackupHistory = useBackup((state) => state.clearBackupHistory);
+  const requestProtection = useBackup((state) => state.requestProtection);
+  const [canShare] = useState(canShareBackupFile);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
@@ -58,11 +68,48 @@ export function useDataBackup() {
     }
 
     downloadJson(data, getBackupFileName());
+    markBackedUp(Date.now());
+    void requestProtection();
 
     setFeedback({
       kind: "success",
       message: "Sauvegarde exportée. Conservez ce fichier précieusement.",
     });
+  }
+
+  // Shares the game in memory without waiting: browsers only open the share
+  // sheet right after the tap.
+  async function handleShare() {
+    const file = getShareableBackupFile(
+      userRepository.snapshot(useUser.getState().user),
+      getBackupFileName(),
+    );
+    void saveUser();
+
+    if (!file) {
+      setFeedback({
+        kind: "error",
+        message: "Le partage n'est pas disponible : utilisez l'export.",
+      });
+      return;
+    }
+
+    try {
+      await navigator.share({ files: [file], title: "Sauvegarde Offliner" });
+      markBackedUp(Date.now());
+      void requestProtection();
+      setFeedback({
+        kind: "success",
+        message: "Sauvegarde partagée. Gardez-la à l'abri, hors de ce navigateur.",
+      });
+    } catch (error) {
+      // Closing the share sheet is not a failure.
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      setFeedback({
+        kind: "error",
+        message: "Partage impossible. Essayez l'export à la place.",
+      });
+    }
   }
 
   async function handleImport(event: ChangeEvent<HTMLInputElement>) {
@@ -88,6 +135,7 @@ export function useDataBackup() {
       await saveUser();
       await importFromSnapshot(parsedData);
       refreshOnlineStatus();
+      markBackedUp(Date.now());
       setFeedback({
         kind: "success",
         message: "Compte restauré avec succès.",
@@ -113,6 +161,7 @@ export function useDataBackup() {
 
     await resetAll();
     refreshOnlineStatus();
+    clearBackupHistory();
     setFeedback({
       kind: "success",
       message: "Compte effacé avec succès.",
@@ -123,6 +172,8 @@ export function useDataBackup() {
     feedback,
     fileInputRef,
     handleExport,
+    handleShare,
+    canShare,
     handleImport,
     handleClearAll,
     isResetModalOpen,

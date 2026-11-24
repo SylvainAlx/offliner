@@ -2,10 +2,13 @@ import Card from "./ui/Card";
 import Button from "./ui/Button";
 import { useDataBackup } from "../hooks/useDataBackup";
 import ConfirmModal from "./ui/ConfirmModal";
+import StorageProtectionStatus from "./StorageProtectionStatus";
 
 export default function DataBackup() {
   const {
     handleExport,
+    handleShare,
+    canShare,
     handleImport,
     handleClearAll,
     fileInputRef,
@@ -25,9 +28,12 @@ export default function DataBackup() {
       subtitle="Exportez, importez ou effacez vos données Offliner."
     >
       <div className="w-full">
-        <p className="text-[0.85rem] leading-[1.55] text-(--gray-600)">
-          Enregistrez votre compte dans un fichier JSON pour conserver votre
-          progression ou la transférer sur un autre appareil.
+        <StorageProtectionStatus />
+
+        <p className="mt-4 text-[0.85rem] leading-[1.55] text-(--gray-600)">
+          Enregistrez votre compte dans un fichier pour conserver votre
+          progression ou la transférer sur un autre appareil. Gardez-le hors du
+          navigateur : effacer ses données efface aussi la partie.
         </p>
 
         <div className="mt-4 grid gap-2.25 [&>button]:w-full">
@@ -37,6 +43,11 @@ export default function DataBackup() {
           >
             Exporter mes données
           </Button>
+          {canShare && (
+            <Button onClick={handleShare} color="var(--accent-solid)">
+              Partager une sauvegarde
+            </Button>
+          )}
           <Button
             onClick={() => setIsImportModalOpen(true)}
             color="var(--green-solid)"
@@ -53,7 +64,7 @@ export default function DataBackup() {
             ref={fileInputRef}
             className="absolute h-px w-px overflow-hidden [clip:rect(0_0_0_0)] [clip-path:inset(50%)] whitespace-nowrap"
             type="file"
-            accept="application/json,.json"
+            accept="application/json,.json,text/plain,.txt"
             onChange={handleImport}
             aria-label="Choisir une sauvegarde JSON"
           />
