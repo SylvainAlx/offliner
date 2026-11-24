@@ -25,6 +25,11 @@ export const userRepository = {
     });
   },
 
+  /** The save of a game in memory, read at once (sharing needs the tap's activation). */
+  snapshot(user: User): Record<string, unknown> {
+    return serializeUser(user);
+  },
+
   async exportSnapshot(): Promise<unknown | null> {
     const stored = await db.profiles.get("current");
     return stored?.data ?? null;

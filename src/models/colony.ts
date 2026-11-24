@@ -10,6 +10,23 @@ export interface ColonyResources {
   food: number;
 }
 
+/** What the planet would look like with one level less of a building. */
+export interface DemolitionPreview {
+  /** The level the building goes back to. */
+  level: number;
+  /** Inhabitants who would have no home left and leave the planet. */
+  inhabitantsLeaving: number;
+  /** How fast the buildings would run (1 = full speed), before and after. */
+  productionFactorBefore: number;
+  productionFactorAfter: number;
+  /** The weaker link after demolition, when the buildings slow down. */
+  shortage: "energy" | "staff" | null;
+  /** Whether more food would be eaten than produced, while it was not before. */
+  startsFoodDeficit: boolean;
+  /** The depot's new capacity, when a stock would be above it. */
+  storageCapacityExceeded: number | null;
+}
+
 export interface ColonyOptions {
   id?: string;
   foundedAt: number;
@@ -54,6 +71,27 @@ export class Colony {
 
   getNextCost(type: BuildingType): ResourceAmounts {
     return getBuildingCost(type, this.getNextLevel(type));
+  }
+
+  previewDemolition(type: BuildingType): DemolitionPreview {
+    const before = this.economy;
+    const levels = { ...this.planet.levels, [type]: Math.max(0, this.planet.levels[type] - 1) };
+    const population = Math.min(this.population, computeEconomy(levels, this.population).populationMax);
+    const after = computeEconomy(levels, population);
+    const slowsDown = after.productionFactor < before.productionFactor - 1e-9;
+    const exceeded =
+      Math.max(this.resources.metal, this.resources.food) > after.storageCapacity &&
+      after.storageCapacity < before.storageCapacity;
+    return {
+      level: levels[type],
+      inhabitantsLeaving: Math.floor(this.population) - Math.floor(population),
+      productionFactorBefore: before.productionFactor,
+      productionFactorAfter: after.productionFactor,
+      shortage: slowsDown ? (after.energyFactor <= after.staffFactor ? "energy" : "staff") : null,
+      startsFoodDeficit:
+        before.foodPerHour >= before.foodEatenPerHour && after.foodPerHour < after.foodEatenPerHour,
+      storageCapacityExceeded: exceeded ? after.storageCapacity : null,
+    };
   }
 
   clone(): Colony {

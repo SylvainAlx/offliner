@@ -254,3 +254,78 @@ code {
     transform: translateY(-4px);
   }
 }
+
+/* The Offlinium counter while the device is offline. */
+@keyframes offlinium-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes offlinium-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.14);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes offlinium-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(170, 59, 255, 0.55);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 10px rgba(170, 59, 255, 0);
+  }
+}
+
+@keyframes offlinium-gain {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-22px);
+  }
+}
+
+.offlinium-producing {
+  animation:
+    offlinium-pop 0.5s ease-out,
+    offlinium-pulse 2.4s ease-out 0.5s infinite;
+}
+
+.offlinium-spin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: offlinium-spin 4s linear infinite;
+}
+
+.offlinium-spin-slow {
+  animation-duration: 10s;
+}
+
+.offlinium-gain {
+  animation: offlinium-gain 1.6s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .offlinium-producing,
+  .offlinium-spin,
+  .offlinium-gain {
+    animation: none;
+  }
+
+  .offlinium-gain {
+    opacity: 0;
+  }
+}

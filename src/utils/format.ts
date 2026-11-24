@@ -33,6 +33,18 @@ function formatMonth(ts: number): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+/** "aujourd'hui", "hier", "il y a 3 jours": calendar days, local time. */
+function formatDaysAgo(ts: number, now: number): string {
+  const startOfDay = (value: number) => {
+    const date = new Date(value);
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  };
+  const days = Math.round((startOfDay(now) - startOfDay(ts)) / (24 * 60 * 60 * 1000));
+  if (days <= 0) return "aujourd'hui";
+  if (days === 1) return "hier";
+  return `il y a ${days} jours`;
+}
+
 function formatDuration(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
@@ -80,4 +92,13 @@ function formatWait(ms: number): string {
   return hours === 0 ? `${days} j` : `${days} j ${String(hours).padStart(2, "0")} h`;
 }
 
-export { formatWait, formatLength, formatDate, formatDateTime, formatDay, formatMonth, formatDuration };
+export {
+  formatWait,
+  formatLength,
+  formatDate,
+  formatDateTime,
+  formatDay,
+  formatMonth,
+  formatDuration,
+  formatDaysAgo,
+};

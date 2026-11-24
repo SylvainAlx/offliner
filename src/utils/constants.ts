@@ -77,3 +77,12 @@ export const NOTABLE_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 export const MAX_NAME_LENGTH = 40;
 export const MAX_DESCRIPTION_LENGTH = 200;
 export const MAX_BACKUP_FILE_BYTES = 5 * 1024 * 1024;
+
+// --- Keeping the save safe ---------------------------------------------------
+
+/** A backup is suggested once the last one (or the game's start) is this old. */
+export const BACKUP_REMINDER_MS = 7 * 24 * 60 * 60 * 1000;
+/** "Plus tard" hides the backup reminder for this long. */
+export const BACKUP_SNOOZE_MS = 3 * 24 * 60 * 60 * 1000;
+/** A refused request for persistent storage is not repeated before this delay. */
+export const STORAGE_PROTECTION_RETRY_MS = 7 * 24 * 60 * 60 * 1000;

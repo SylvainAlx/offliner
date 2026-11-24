@@ -224,6 +224,11 @@ export default function Help() {
               gagnées : une heure hors ligne paie une heure de construction.
             </li>
             <li className={bullet}>Annuler rembourse tout le coût.</li>
+            <li className={bullet}>
+              Depuis la fiche d&apos;un bâtiment, « Démolir un niveau » le fait
+              redescendre d&apos;un niveau, tout de suite : le coût de ce niveau
+              est rendu et sa case libérée.
+            </li>
           </ul>
           <p className={text}>
             En vue Surface, touchez un bâtiment pour le construire ou
@@ -393,6 +398,17 @@ export default function Help() {
             <li className={bullet}>
               Depuis l&apos;onglet Compte, exportez une sauvegarde pour la garder
               ou la transférer sur un autre appareil.
+            </li>
+            <li className={bullet}>
+              Effacer les données du navigateur efface aussi la partie, et un
+              navigateur à court de place peut en supprimer. Offliner demande
+              au navigateur de protéger vos données ; l&apos;onglet Compte
+              indique s&apos;il l&apos;a accepté.
+            </li>
+            <li className={bullet}>
+              Un rappel apparaît après 7 jours sans sauvegarde. Sur téléphone,
+              « Partager une sauvegarde » l&apos;envoie vers votre cloud, vos
+              e-mails ou une messagerie.
             </li>
           </ul>
         </HelpSection>

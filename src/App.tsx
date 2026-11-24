@@ -20,6 +20,8 @@ import Achievements from "./components/Achievements";
 import Sidebar, { type AppSection } from "./components/layouts/Sidebar";
 import InstallGuide from "./components/install/InstallGuide";
 import InstallBanner from "./components/install/InstallBanner";
+import BackupReminder from "./components/BackupReminder";
+import { useBackup } from "./stores/backupStore";
 import UnobservedGapPrompt from "./components/UnobservedGapPrompt";
 import { useInstall } from "./stores/installStore";
 
@@ -32,7 +34,16 @@ function AppContent() {
   // Forms of the planet screen start again from the planet shown.
   const activeColonyId = useUser((state) => state.user.activeColonyId);
 
+  const hasBuilt = useUser((state) =>
+    state.user.colonies.some((colony) => colony.planet.usedFields > 0),
+  );
+
   useEffect(() => useOnlineStatus.getState().initialize(), []);
+
+  // A game under way is worth keeping: ask the browser not to evict it.
+  useEffect(() => {
+    if (hasBuilt) void useBackup.getState().requestProtection();
+  }, [hasBuilt]);
 
   useEffect(() => {
     document.body.style.overflow = isMenuOpen ? "hidden" : "";
@@ -103,6 +114,7 @@ function AppContent() {
     >
       <Header isMenuOpen={isMenuOpen} onMenuOpen={() => setIsMenuOpen(true)} />
       <InstallBanner />
+      <BackupReminder onOpenAccount={() => setActiveSection("account")} />
       <div className="flex items-start gap-5 w-[min(calc(100%-32px),1080px)] mx-auto flex-1 max-md:block max-md:w-full">
         <Sidebar
           activeSection={activeSection}
@@ -120,26 +132,45 @@ function AppContent() {
   );
 }
 
+/** Kept on the device: once the player has pressed "Jouer", the app opens directly. */
 const WELCOME_DISMISSED_KEY = "offliner:welcome-dismissed";
 const INSTALL_GUIDE_SEEN_KEY = "offliner:install-guide-seen";
+
+function hasDismissedWelcome(): boolean {
+  try {
+    return localStorage.getItem(WELCOME_DISMISSED_KEY) === "1";
+  } catch {
+    // Storage blocked (private browsing…): the welcome page shows again.
+    return false;
+  }
+}
+
+function rememberWelcomeDismissed(): void {
+  try {
+    localStorage.setItem(WELCOME_DISMISSED_KEY, "1");
+  } catch {
+    // Not kept: only this visit skips the welcome page.
+  }
+}
 
 type Stage = "welcome" | "install" | "app";
 
 function App() {
   const isStandalone = useInstall((state) => state.isStandalone);
   const [stage, setStage] = useState<Stage>(() => {
-    if (!sessionStorage.getItem(WELCOME_DISMISSED_KEY)) return "welcome";
+    if (!hasDismissedWelcome()) return "welcome";
     if (!sessionStorage.getItem(INSTALL_GUIDE_SEEN_KEY)) return "install";
     return "app";
   });
 
-  // In a browser tab, every new session goes through the install guide;
-  // once installed, the app opens directly after the welcome page.
+  // The welcome page shows until the player presses "Jouer" once. In a
+  // browser tab, every new session goes through the install guide; once
+  // installed, the app opens directly.
   if (stage === "welcome") {
     return (
       <HomePage
         onPlay={() => {
-          sessionStorage.setItem(WELCOME_DISMISSED_KEY, "1");
+          rememberWelcomeDismissed();
           setStage("install");
         }}
       />
