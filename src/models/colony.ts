@@ -1,6 +1,11 @@
 import { Planet } from "./planet";
 import { computeEconomy, type Economy } from "./economy";
-import { getBuildingCost, type BuildingType } from "./buildings";
+import { getBuildingCost, getConstructionMs, type BuildingType } from "./buildings";
+import {
+  emptySpecialists,
+  getSpecialtyFactor,
+  type SpecialistCounts,
+} from "./specialty";
 import type { ResourceAmounts } from "./resources";
 import { isFiniteNumber, isNonNegativeNumber, isRecord, sanitizeId } from "../utils/sanitize";
 
@@ -35,6 +40,7 @@ export interface ColonyOptions {
   systemPlanetId?: string | null;
   resources?: ColonyResources;
   population?: number;
+  specialists?: SpecialistCounts;
 }
 
 /**
@@ -51,6 +57,11 @@ export class Colony {
   resources: ColonyResources;
   /** Inhabitants, fractions included while the population grows or shrinks. */
   population: number;
+  /**
+   * The notable inhabitants' specialties on this planet. Not saved: the
+   * player's User works them out from the notables (User.syncSpecialists).
+   */
+  specialists: SpecialistCounts;
 
   constructor(options: ColonyOptions) {
     this.id = options.id ?? crypto.randomUUID();
@@ -59,10 +70,16 @@ export class Colony {
     this.planet = options.planet ?? new Planet();
     this.resources = { metal: 0, food: 0, ...options.resources };
     this.population = options.population ?? 0;
+    this.specialists = { ...emptySpecialists(), ...options.specialists };
   }
 
   get economy(): Economy {
-    return computeEconomy(this.planet.levels, this.population);
+    return computeEconomy(this.planet.levels, this.population, this.specialists);
+  }
+
+  /** Real time to build a level here: engineers speed the site up. */
+  getConstructionMs(type: BuildingType, level: number): number {
+    return Math.round(getConstructionMs(type, level) / getSpecialtyFactor(this.specialists, "engineer"));
   }
 
   getNextLevel(type: BuildingType): number {
@@ -76,8 +93,11 @@ export class Colony {
   previewDemolition(type: BuildingType): DemolitionPreview {
     const before = this.economy;
     const levels = { ...this.planet.levels, [type]: Math.max(0, this.planet.levels[type] - 1) };
-    const population = Math.min(this.population, computeEconomy(levels, this.population).populationMax);
-    const after = computeEconomy(levels, population);
+    const population = Math.min(
+      this.population,
+      computeEconomy(levels, this.population, this.specialists).populationMax,
+    );
+    const after = computeEconomy(levels, population, this.specialists);
     const slowsDown = after.productionFactor < before.productionFactor - 1e-9;
     const exceeded =
       Math.max(this.resources.metal, this.resources.food) > after.storageCapacity &&
@@ -102,6 +122,7 @@ export class Colony {
       planet: this.planet.clone(),
       resources: { ...this.resources },
       population: this.population,
+      specialists: { ...this.specialists },
     });
   }
 

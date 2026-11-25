@@ -1,3 +1,4 @@
+import { getSpecialtyFactor, type SpecialistCounts } from "./specialty";
 import {
   BUILDINGS,
   BUILDING_TYPES,
@@ -43,9 +44,19 @@ export interface Economy {
    * the bonuses of all their planets (User.offliniumMultiplier).
    */
   offliniumMultiplier: number;
+  /** Population growth factor: 1 + the medics' bonus. */
+  growthFactor: number;
 }
 
-export function computeEconomy(levels: BuildingLevels, population: number): Economy {
+/**
+ * The economy of a planet: its buildings, its inhabitants and the specialists
+ * living there (geologists, agronomists, physicists, logisticians, medics).
+ */
+export function computeEconomy(
+  levels: BuildingLevels,
+  population: number,
+  specialists?: SpecialistCounts,
+): Economy {
   let energyProduced = 0;
   let energyConsumed = 0;
   let staffRequired = 0;
@@ -66,6 +77,7 @@ export function computeEconomy(levels: BuildingLevels, population: number): Econ
     food += production.food ?? 0;
   }
   energyProduced += SOLAR_ENERGY_PER_LEVEL * totalLevels;
+  energyProduced *= getSpecialtyFactor(specialists, "physicist");
 
   const energyFactor =
     energyConsumed <= 0 ? 1 : Math.min(1, energyProduced / energyConsumed);
@@ -80,13 +92,18 @@ export function computeEconomy(levels: BuildingLevels, population: number): Econ
     staffRequired,
     staffFactor,
     productionFactor,
-    metalPerHour: BASE_METAL_PER_HOUR + metal * productionFactor,
-    foodPerHour: BASE_FOOD_PER_HOUR + food * productionFactor,
+    metalPerHour:
+      (BASE_METAL_PER_HOUR + metal * productionFactor) * getSpecialtyFactor(specialists, "geologist"),
+    foodPerHour:
+      (BASE_FOOD_PER_HOUR + food * productionFactor) * getSpecialtyFactor(specialists, "agronomist"),
     foodEatenPerHour: population * FOOD_PER_INHABITANT_PER_HOUR,
     populationMax: getPopulationMax(levels.habitat),
-    storageCapacity: getStorageCapacity(levels.depot),
+    storageCapacity: Math.floor(
+      getStorageCapacity(levels.depot) * getSpecialtyFactor(specialists, "logistician"),
+    ),
     offliniumMultiplier:
       1 + LABORATORY_BONUS_PER_LEVEL * levels.laboratory * productionFactor,
+    growthFactor: getSpecialtyFactor(specialists, "medic"),
   };
 }
 
@@ -95,6 +112,8 @@ export interface RealTimeState {
   planet: Planet;
   resources: ColonyResources;
   population: number;
+  /** The specialists living there; none when left out. */
+  specialists?: SpecialistCounts;
 }
 
 export interface CompletedConstruction {
@@ -194,7 +213,10 @@ export function getPopulationTrend(
       timeToFullMs: null,
     };
   }
-  const fullEnergyPerHour = Math.max(1, POPULATION_GROWTH_PER_HOUR * economy.populationMax);
+  const fullEnergyPerHour = Math.max(
+    1,
+    POPULATION_GROWTH_PER_HOUR * economy.populationMax * economy.growthFactor,
+  );
   if (population >= economy.populationMax) {
     return { status: "full", perHour: 0, fullEnergyPerHour, timeToFullMs: null };
   }
@@ -219,17 +241,18 @@ const FOOD_FORECAST_HORIZON_MS = 48 * HOUR_MS;
  * the pace of the clock instead of assuming today's deficit lasts.
  */
 export function predictFoodRunOutMs(state: RealTimeState, now: number): number | null {
-  const start = computeEconomy(state.planet.levels, state.population);
+  const start = computeEconomy(state.planet.levels, state.population, state.specialists);
   if (state.resources.food <= 0 || start.foodEatenPerHour <= start.foodPerHour) return null;
 
   const future: RealTimeState = {
     planet: state.planet.clone(),
     resources: { ...state.resources },
     population: state.population,
+    specialists: state.specialists,
   };
   let elapsed = 0;
   while (elapsed < FOOD_FORECAST_HORIZON_MS) {
-    const economy = computeEconomy(future.planet.levels, future.population);
+    const economy = computeEconomy(future.planet.levels, future.population, future.specialists);
     const deficit = economy.foodEatenPerHour - economy.foodPerHour;
     const food = future.resources.food;
     const stepHours = SIMULATION_STEP_MS / HOUR_MS;
@@ -242,14 +265,14 @@ export function predictFoodRunOutMs(state: RealTimeState, now: number): number |
     elapsed += SIMULATION_STEP_MS;
   }
   // Still some food after the horizon: the remaining time at the last pace.
-  const economy = computeEconomy(future.planet.levels, future.population);
+  const economy = computeEconomy(future.planet.levels, future.population, future.specialists);
   const deficit = economy.foodEatenPerHour - economy.foodPerHour;
   return deficit > 0 ? elapsed + (future.resources.food / deficit) * HOUR_MS : null;
 }
 
 function applyStep(state: RealTimeState, hours: number): void {
   if (hours <= 0) return;
-  const economy = computeEconomy(state.planet.levels, state.population);
+  const economy = computeEconomy(state.planet.levels, state.population, state.specialists);
   const capacity = economy.storageCapacity;
 
   state.resources.metal = store(state.resources.metal, economy.metalPerHour * hours, capacity);

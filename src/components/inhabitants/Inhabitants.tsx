@@ -4,6 +4,7 @@ import CompanionSprite from "../CompanionSprite";
 import NotableEditModal from "./NotableEditModal";
 import { useUser } from "../../stores/userStore";
 import { getNotableWeek, type Notable } from "../../models/notable";
+import { SPECIALTIES, describeSpecialtyBonus, getSpecialty } from "../../models/specialty";
 import { NOTABLE_INTERVAL_MS } from "../../utils/constants";
 import { formatWait } from "../../utils/format";
 
@@ -107,13 +108,17 @@ function NextNotable({ nextAt, now }: { nextAt: number; now: number }) {
 function NotableTile({
   notable,
   label,
+  planetName,
   onEdit,
 }: {
   notable: Notable;
   /** "Semaine 3", or the planet a colony leader runs. */
   label: string;
+  /** Where a weekly inhabitant lives, shown once the player has colonies. */
+  planetName?: string;
   onEdit: () => void;
 }) {
+  const specialty = getSpecialty(notable);
   return (
     <li>
       <button
@@ -124,7 +129,7 @@ function NotableTile({
           notable.isCustomized ? "border-(--gray-200)" : "border-(--accent-border) shadow-(--shadow-sm)",
         ].join(" ")}
         onClick={onEdit}
-        aria-label={`${notable.name}, ${notable.title}, ${label}${notable.isCustomized ? "" : ", à personnaliser"}`}
+        aria-label={`${notable.name}, ${notable.title}, ${label}${specialty ? `, ${SPECIALTIES[specialty].label}` : ""}${notable.isCustomized ? "" : ", à personnaliser"}`}
       >
         <div className="flex w-full items-center justify-between gap-1">
           <span className="font-(--mono) text-[0.62rem] font-bold text-(--gray-500) [overflow-wrap:anywhere] text-left">
@@ -141,6 +146,19 @@ function NotableTile({
         <span className="text-[0.68rem] font-bold text-(--accent) [overflow-wrap:anywhere]">
           {notable.title}
         </span>
+        {specialty && (
+          <span
+            className="rounded-full bg-(--accent-bg) px-2 py-0.5 text-[0.64rem] font-bold text-(--gray-800)"
+            title={describeSpecialtyBonus(specialty)}
+          >
+            {SPECIALTIES[specialty].icon} {SPECIALTIES[specialty].label}
+          </span>
+        )}
+        {planetName && (
+          <span className="text-[0.62rem] text-(--gray-500) [overflow-wrap:anywhere]">
+            📍 {planetName}
+          </span>
+        )}
         <p className="m-0 line-clamp-3 text-[0.72rem] leading-snug text-(--gray-600) [overflow-wrap:anywhere]">
           {notable.description || (notable.isCustomized ? "" : "Touchez pour raconter son histoire.")}
         </p>
@@ -204,6 +222,11 @@ export default function Inhabitants() {
                 key={notable.id}
                 notable={notable}
                 label={`Semaine ${getNotableWeek(notable, user.createdAt)}`}
+                planetName={
+                  user.colonies.length > 1
+                    ? user.getColony(notable.colonyId)?.planet.name
+                    : undefined
+                }
                 onEdit={() => setEditingId(notable.id)}
               />
             ))}

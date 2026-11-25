@@ -29,10 +29,14 @@ import {
   type ExchangeQuote,
   type ExchangeResource,
 } from "./exchange";
+import {
+  countSpecialists,
+  getSpecialtyFactor,
+  SPECIALTY_BONUS,
+} from "./specialty";
 import { getScore } from "./score";
 import {
   getBuildingCost,
-  getConstructionMs,
   getRadarMessageLength,
   type BuildingType,
 } from "./buildings";
@@ -233,6 +237,7 @@ export class User {
     if (this.getColony(colony.id)) return;
     this.colonies.push(colony);
     this.notables.push(createLeader(colony.planet.name, colony.foundedAt, colony.id));
+    this.syncSpecialists();
   }
 
   setActiveColony(id: string): boolean {
@@ -275,7 +280,12 @@ export class User {
 
   /** The laboratories of every planet add up their bonuses. */
   get offliniumMultiplier(): number {
-    return 1 + this.sumOverColonies((colony) => colony.economy.offliniumMultiplier - 1);
+    const researchers = this.sumOverColonies((colony) => colony.specialists.researcher);
+    return (
+      1 +
+      this.sumOverColonies((colony) => colony.economy.offliniumMultiplier - 1) +
+      SPECIALTY_BONUS * researchers
+    );
   }
 
   // --- Clocks -------------------------------------------------------------
@@ -352,7 +362,7 @@ export class User {
       type,
       targetLevel,
       startedAt: now,
-      endsAt: now + getConstructionMs(type, targetLevel),
+      endsAt: now + colony.getConstructionMs(type, targetLevel),
       cost,
     };
     return true;
@@ -462,7 +472,11 @@ export class User {
   getTravel(colony: Colony, targetId: string): Travel | undefined {
     const from = this.findSystemPlanet(colony.systemPlanetId ?? "");
     const to = this.findSystemPlanet(targetId);
-    return from && to ? getTravel(from.system, from.planet, to.system, to.planet) : undefined;
+    if (!from || !to) return undefined;
+    const travel = getTravel(from.system, from.planet, to.system, to.planet);
+    // Pilots fly faster from their planet.
+    const speed = getSpecialtyFactor(colony.specialists, "pilot");
+    return { ...travel, flightMs: Math.round(travel.flightMs / speed) };
   }
 
   /** Whether one of the player's spaceports reaches a planet of the star map. */
@@ -526,7 +540,9 @@ export class User {
 
     const level = from.planet.levels.spaceport;
     const fuel = getTravelFuel(kind, travel);
-    const capacity = getCargoCapacity(level);
+    const capacity = Math.floor(
+      getCargoCapacity(level) * getSpecialtyFactor(from.specialists, "logistician"),
+    );
     const isColonization = kind === "colonization";
     const cargo: ExpeditionCargo = isColonization
       ? { ...COLONY_STARTING_RESOURCES }
@@ -761,7 +777,7 @@ export class User {
 
   /**
    * Puts one more inhabitant in the spotlight for every week completed. They
-   * live on the starting planet for now.
+   * arrive on the starting planet; the player can then send them elsewhere.
    */
   welcomeNotables(now: number): void {
     const weeks = countWeeksSince(this.createdAt, now);
@@ -771,6 +787,27 @@ export class User {
       const notable = createWeeklyNotable(home.planet.seed, this.createdAt, week, home.id);
       if (!known.has(notable.id)) this.notables.push(notable);
     }
+    this.syncSpecialists();
+  }
+
+  /** Tells every planet which specialists live there. */
+  syncSpecialists(): void {
+    for (const colony of this.colonies) {
+      colony.specialists = countSpecialists(this.notables, colony.id);
+    }
+  }
+
+  /**
+   * Sends a weekly inhabitant to live on another of the player's planets,
+   * where their specialty now helps. Leaders stay with their colony.
+   */
+  assignNotable(id: string, colonyId: string): boolean {
+    const notable = this.notables.find((item) => item.id === id);
+    if (!notable || notable.role !== "notable" || !this.getColony(colonyId)) return false;
+    if (notable.colonyId === colonyId) return false;
+    notable.colonyId = colonyId;
+    this.syncSpecialists();
+    return true;
   }
 
   /** The weekly inhabitants, newest first. */
@@ -882,6 +919,11 @@ export class User {
     if (isNonNegativeNumber(parsed.settledOfflineMs)) {
       this.settledOfflineMs = parsed.settledOfflineMs;
     }
+    // An inhabitant of a planet that no longer exists goes home.
+    for (const notable of this.notables) {
+      if (!this.getColony(notable.colonyId)) notable.colonyId = this.homeColonyId;
+    }
+    this.syncSpecialists();
   }
 }
 

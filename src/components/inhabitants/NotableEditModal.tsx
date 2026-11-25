@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useUser } from "../../stores/userStore";
 import type { Notable } from "../../models/notable";
 import { MAX_DESCRIPTION_LENGTH, MAX_NAME_LENGTH } from "../../utils/constants";
+import { SPECIALTIES, describeSpecialtyBonus, getSpecialty } from "../../models/specialty";
 import CompanionSprite from "../CompanionSprite";
 import Modal from "../ui/Modal";
 
@@ -18,6 +19,9 @@ export default function NotableEditModal({
   onClose: () => void;
 }) {
   const updateNotable = useUser((state) => state.updateNotable);
+  const assignNotable = useUser((state) => state.assignNotable);
+  const colonies = useUser((state) => state.user.colonies);
+  const specialty = getSpecialty(notable);
   const [name, setName] = useState(notable.name);
   const [title, setTitle] = useState(notable.title);
   const [description, setDescription] = useState(notable.description);
@@ -44,6 +48,39 @@ export default function NotableEditModal({
           />
         </div>
       </div>
+      {specialty && (
+        <div className="mt-3 rounded-xl border border-(--accent-border) bg-(--accent-bg) p-3 text-[0.8rem] text-(--gray-800)">
+          <p className="m-0">
+            <strong>
+              {SPECIALTIES[specialty].icon} {SPECIALTIES[specialty].label}
+            </strong>{" "}
+            : {describeSpecialtyBonus(specialty)}
+            {SPECIALTIES[specialty].isEmpireWide ? "" : ", sur la planète où il vit"}.
+          </p>
+          {colonies.length > 1 && (
+            <div className="mt-2.5">
+              <label className={labelClass} htmlFor={`${idPrefix}-colony`}>
+                Planète où il vit
+              </label>
+              <select
+                id={`${idPrefix}-colony`}
+                className={inputClass}
+                value={notable.colonyId}
+                onChange={(event) => assignNotable(notable.id, event.target.value)}
+              >
+                {colonies.map((colony) => (
+                  <option key={colony.id} value={colony.id}>
+                    {colony.planet.name}
+                  </option>
+                ))}
+              </select>
+              <span className="mt-1 block text-[0.7rem] text-(--gray-600)">
+                Le déménagement est immédiat : son bonus suit l&apos;habitant.
+              </span>
+            </div>
+          )}
+        </div>
+      )}
       <form className="mt-3 flex flex-col gap-3" onSubmit={handleSubmit}>
         <div>
           <label className={labelClass} htmlFor={`${idPrefix}-name`}>

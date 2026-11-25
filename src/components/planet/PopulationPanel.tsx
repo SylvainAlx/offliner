@@ -1,5 +1,6 @@
 import { useActiveColony, useUser } from "../../stores/userStore";
 import { getPopulationMax } from "../../models/buildings";
+import SpecialistsSummary from "./SpecialistsSummary";
 import { getPopulationTrend, predictFoodRunOutMs } from "../../models/economy";
 import { POPULATION_ICON, RESOURCE_ICONS, formatAmount } from "../../models/resources";
 import {
@@ -99,6 +100,8 @@ export default function PopulationPanel() {
             puis famine. Améliorez la ferme.
           </p>
         )}
+
+        <SpecialistsSummary colony={colony} />
 
         <details className="rounded-lg border border-(--gray-200) bg-(--surface) px-2.5 py-2 text-[0.76rem] text-(--gray-700)">
           <summary className="cursor-pointer font-bold text-(--gray-900)">

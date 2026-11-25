@@ -1,5 +1,5 @@
 import { useUser } from "../../stores/userStore";
-import { BUILDINGS, getConstructionMs, type BuildingType } from "../../models/buildings";
+import { BUILDINGS, type BuildingType } from "../../models/buildings";
 import {
   RESOURCE_ICONS,
   RESOURCE_LABELS,
@@ -47,7 +47,7 @@ export default function BuildingActions({ type }: { type: BuildingType }) {
           </span>
         ))}
         <span className="text-(--gray-600)">
-          ⏱️ {formatDuration(getConstructionMs(type, nextLevel))}
+          ⏱️ {formatDuration(colony.getConstructionMs(type, nextLevel))}
         </span>
       </div>
       {reason && <p className="m-0 text-[0.76rem] text-(--gray-700)">{reason}</p>}
