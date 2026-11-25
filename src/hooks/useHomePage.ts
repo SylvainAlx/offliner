@@ -18,7 +18,7 @@ export interface HomeScene {
 const SAMPLE_MESSAGES = [
   "Ici {planet} ! Nos fermes débordent : qui veut échanger contre du métal ? 🌾",
   "Bonjour, voisins des étoiles ! {planet} vient de lancer son premier vaisseau colonial. 🚀",
-  "{planet} appelle toutes les planètes : qui a déjà atteint la mégalopole ? 🌆",
+  "{planet} appelle toutes les planètes : qui a déjà dépassé les 1 000 habitants ? 🌆",
   "Belle nuit hors ligne sur {planet}. Le réacteur ronronne, la colonie dort. 🌙",
 ];
 

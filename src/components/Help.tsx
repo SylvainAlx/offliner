@@ -313,8 +313,8 @@ export default function Help() {
         <HelpSection icon="👥" title="Population">
           <ul className={list}>
             <li className={bullet}>
-              L&apos;habitat fixe le nombre maximum d&apos;habitants : campement,
-              village, ville au niveau 6, puis mégalopole au niveau 11.
+              L&apos;habitat fixe le nombre maximum d&apos;habitants : chaque
+              niveau en loge davantage.
             </li>
             <li className={bullet}>
               Tant qu&apos;il reste de la place et de quoi manger, la population

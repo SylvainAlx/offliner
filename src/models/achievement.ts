@@ -96,8 +96,8 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: "village",
-    title: "Un village",
-    description: "Construisez l'habitat : vos colons fondent un village.",
+    title: "Premiers foyers",
+    description: "Construisez l'habitat pour loger vos colons.",
     category: "Planète",
     icon: "🏘️",
     target: 1,
@@ -114,8 +114,8 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: "city",
-    title: "La ville",
-    description: "Faites passer l'habitat au niveau 6 : le village devient une ville.",
+    title: "Quartiers animés",
+    description: "Montez l'habitat au niveau 6.",
     category: "Planète",
     icon: "🏙️",
     target: 6,
@@ -186,8 +186,8 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: "metropolis",
-    title: "Mégalopole",
-    description: "Faites passer l'habitat au niveau 11 : la ville devient une mégalopole.",
+    title: "Horizon urbain",
+    description: "Montez l'habitat au niveau 11.",
     category: "Planète",
     icon: "🌆",
     target: 11,
@@ -260,8 +260,8 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
   },
   {
     id: "distant-city",
-    title: "Ville lointaine",
-    description: "Faites grandir une colonie jusqu'à la ville (habitat niveau 6).",
+    title: "Colonie prospère",
+    description: "Montez l'habitat d'une colonie au niveau 6.",
     category: "Exploration spatiale",
     icon: "🌃",
     target: 6,

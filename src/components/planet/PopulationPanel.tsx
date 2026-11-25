@@ -1,8 +1,5 @@
 import { useActiveColony, useUser } from "../../stores/userStore";
-import {
-  describeSettlement,
-  getPopulationMax,
-} from "../../models/buildings";
+import { getPopulationMax } from "../../models/buildings";
 import { getPopulationTrend, predictFoodRunOutMs } from "../../models/economy";
 import { POPULATION_ICON, RESOURCE_ICONS, formatAmount } from "../../models/resources";
 import {
@@ -39,7 +36,7 @@ export default function PopulationPanel() {
   return (
     <PlanetSection
       title="Population"
-      subtitle={`${describeSettlement(habitatLevel)} · les habitants font tourner les bâtiments.`}
+      subtitle="Les habitants font tourner les bâtiments."
     >
       <div className="flex flex-col gap-2.5">
         <div className="flex items-baseline justify-between gap-2">
@@ -110,8 +107,7 @@ export default function PopulationPanel() {
           <ul className="mt-2 mb-0 flex list-disc flex-col gap-1 pl-4 leading-snug">
             <li>
               Le <strong>maximum</strong> dépend de l&apos;habitat : 10 au
-              campement, puis il augmente à chaque niveau (village, ville au
-              niveau 6, mégalopole au niveau 11).
+              départ, puis il augmente à chaque niveau.
             </li>
             <li>
               Tant que le maximum n&apos;est pas atteint, la population{" "}
