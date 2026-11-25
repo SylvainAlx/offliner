@@ -48,7 +48,7 @@ describe("score", () => {
     const user = new User("Joueur", T0);
     user.homeColony.planet.levels.radar = 1;
     user.homeColony.planet.levels.laboratory = 5;
-    const sent = user.emitSignal(user.homeColonyId, user.leader.id, "Bonjour", T0);
+    const sent = user.emitSignal(user.homeColonyId, user.leader!.id, "Bonjour", T0);
     expect(sent?.score).toBe(user.score);
   });
 });
