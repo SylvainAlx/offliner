@@ -78,6 +78,13 @@ export const MAX_NAME_LENGTH = 40;
 export const MAX_DESCRIPTION_LENGTH = 200;
 export const MAX_BACKUP_FILE_BYTES = 5 * 1024 * 1024;
 
+// --- Score ---------------------------------------------------------------------
+
+/** Resources spent for one point, as in OGame. */
+export const RESOURCES_PER_POINT = 1000;
+/** Offlinium is only earned offline: each unit spent counts twice. */
+export const OFFLINIUM_SCORE_WEIGHT = 2;
+
 // --- Keeping the save safe ---------------------------------------------------
 
 /** A backup is suggested once the last one (or the game's start) is this old. */

@@ -2,6 +2,7 @@ import { useUser } from "../../stores/userStore";
 import ResourceBar from "../ResourceBar";
 import ColonySelector from "./ColonySelector";
 import { useOnlineStatus } from "../../stores/onlineStatusStore";
+import { formatAmount } from "../../models/resources";
 
 export default function Header({
   isMenuOpen,
@@ -11,6 +12,7 @@ export default function Header({
   onMenuOpen: () => void;
 }) {
   const notablesToCustomize = useUser((state) => state.user.notablesToCustomize);
+  const score = useUser((state) => state.user.score);
   const offlineCountdownMs = useOnlineStatus(
     (state) => state.offlineCountdownMs,
   );
@@ -39,6 +41,13 @@ export default function Header({
             />
           )}
         </button>
+        <span
+          className="rounded-full border border-(--gray-200) bg-yellow-50 px-3 py-1 font-(--mono) text-[0.8rem] font-bold whitespace-nowrap text-yellow-700"
+          title="Score : 1 point pour 1000 ressources investies (l'Offlinium compte double)"
+          aria-label={`Score : ${formatAmount(score)} points`}
+        >
+          🏆 {formatAmount(score)} pts
+        </span>
         <div className="flex items-center gap-2">
           <h1 className="text-[2rem] max-md:text-[1.7rem] font-extrabold m-0">
             Offliner

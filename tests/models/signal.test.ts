@@ -12,6 +12,7 @@ const SIGNAL: Omit<RadarSignal, "id"> = {
   authorSeed: "lia-seed",
   message: "Bonjour, voisins ! On a réparé le réacteur 🚀 — à bientôt.",
   sentAt: 1_795_000_000_000,
+  score: 1234,
 };
 
 describe("radar signals", () => {
@@ -21,6 +22,12 @@ describe("radar signals", () => {
     const decoded = decodeSignal(code);
     expect(decoded.ok).toBe(true);
     if (decoded.ok) expect(decoded.signal).toMatchObject(SIGNAL);
+  });
+
+  it("reads codes made before scores existed", () => {
+    const code = encodeSignal({ ...SIGNAL, score: null });
+    const decoded = decodeSignal(code);
+    expect(decoded.ok && decoded.signal.score).toBeNull();
   });
 
   it("ignores spaces and line breaks added on the way", () => {

@@ -29,6 +29,7 @@ import {
   type ExchangeQuote,
   type ExchangeResource,
 } from "./exchange";
+import { getScore } from "./score";
 import {
   getBuildingCost,
   getConstructionMs,
@@ -265,6 +266,11 @@ export class User {
   /** The star system opens once any planet has a spaceport. */
   get isSystemUnlocked(): boolean {
     return this.maxOverColonies((colony) => colony.planet.levels.spaceport) > 0;
+  }
+
+  /** 1 point per 1000 resources the empire is worth (Offlinium counts twice). */
+  get score(): number {
+    return getScore(this);
   }
 
   /** The laboratories of every planet add up their bonuses. */
@@ -701,6 +707,7 @@ export class User {
       authorSeed: author.seed,
       message: text,
       sentAt: now,
+      score: this.score,
     };
     const code = encodeSignal(content);
     const decoded = decodeSignal(code);

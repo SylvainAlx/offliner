@@ -236,6 +236,28 @@ export default function Help() {
             améliorer tout de suite.
           </p>
         </HelpSection>
+
+        <HelpSection icon="🏆" title="Score">
+          <ul className={list}>
+            <li className={bullet}>
+              1 point pour 1000 ressources investies dans votre empire :
+              chaque niveau de bâtiment construit, sur toutes vos planètes, et
+              chaque colonie fondée.
+            </li>
+            <li className={bullet}>
+              L&apos;Offlinium, plus rare, compte double : 1000 ⬡ valent 2
+              points.
+            </li>
+            <li className={bullet}>
+              Le score suit ce que vous possédez : un niveau démoli, donc
+              remboursé, retire ses points.
+            </li>
+            <li className={bullet}>
+              Vos signaux radar portent votre score du moment, pour comparer
+              votre progression avec d&apos;autres joueurs.
+            </li>
+          </ul>
+        </HelpSection>
       </HelpGroup>
 
       <HelpGroup title="Votre planète">

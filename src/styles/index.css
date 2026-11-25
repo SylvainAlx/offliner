@@ -143,6 +143,8 @@
   --color-amber-700: #fbbf24;
   --color-purple-50: rgba(168, 85, 247, 0.16);
   --color-purple-700: #d8b4fe;
+  --color-yellow-50: rgba(234, 179, 8, 0.15);
+  --color-yellow-700: #fde047;
   --color-red-100: rgba(239, 68, 68, 0.18);
   --color-red-800: #fca5a5;
 }

@@ -7,7 +7,8 @@ export type AchievementCategory =
   | "Habitants"
   | "Communauté"
   | "Temps hors ligne"
-  | "Régularité";
+  | "Régularité"
+  | "Score";
 
 export interface AchievementDefinition {
   id: string;
@@ -36,6 +37,53 @@ const totalPopulation = (user: User) =>
 const colonyCount = (user: User) => user.colonies.length - 1;
 
 export const ACHIEVEMENT_DEFINITIONS: AchievementDefinition[] = [
+  // --- Score -------------------------------------------------------------------
+  {
+    id: "score-ten",
+    title: "Premiers points",
+    description: "Atteignez 10 points de score.",
+    category: "Score",
+    icon: "🥉",
+    target: 10,
+    getProgress: (user) => user.score,
+  },
+  {
+    id: "score-hundred",
+    title: "Empire naissant",
+    description: "Atteignez 100 points de score.",
+    category: "Score",
+    icon: "🥈",
+    target: 100,
+    getProgress: (user) => user.score,
+  },
+  {
+    id: "score-thousand",
+    title: "Puissance planétaire",
+    description: "Atteignez 1 000 points de score.",
+    category: "Score",
+    icon: "🥇",
+    target: 1000,
+    getProgress: (user) => user.score,
+  },
+  {
+    id: "score-ten-thousand",
+    title: "Légende des étoiles",
+    description: "Atteignez 10 000 points de score.",
+    category: "Score",
+    icon: "🏆",
+    target: 10000,
+    getProgress: (user) => user.score,
+  },
+  {
+    id: "score-hundred-thousand",
+    title: "Hégémonie galactique",
+    description: "Atteignez 100 000 points de score.",
+    category: "Score",
+    icon: "👑",
+    target: 100000,
+    getProgress: (user) => user.score,
+  },
+
   // --- Planète ---------------------------------------------------------------
   {
     id: "first-building",
