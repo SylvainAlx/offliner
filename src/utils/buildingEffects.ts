@@ -1,7 +1,6 @@
 import {
   BUILDINGS,
   LABORATORY_BONUS_PER_LEVEL,
-  describeSettlement,
   getPopulationMax,
   getRadarMessageLength,
   getStorageCapacity,
@@ -39,7 +38,7 @@ export function describeBuildingEffect(type: BuildingType, level: number): strin
     case "radar":
       return `Messages de ${getRadarMessageLength(level)} caractères`;
     case "habitat":
-      return `${formatAmount(getPopulationMax(level))} ${POPULATION_ICON} max (${describeSettlement(level)})`;
+      return `${formatAmount(getPopulationMax(level))} ${POPULATION_ICON} max`;
   }
 }
 

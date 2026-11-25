@@ -38,8 +38,8 @@ une apparence générés au hasard, 10 colons et quelques ressources.
 - **Énergie et personnel.** Les bâtiments consomment de l’énergie et ont
   besoin d’habitants pour tourner. S’il en manque, ils tournent au ralenti,
   dans la même proportion, comme dans OGame.
-- **Population.** L’habitat fixe le maximum d’habitants (campement, village,
-  ville, puis mégalopole). La population grandit en temps réel, mange de
+- **Population.** L’habitat fixe le maximum d’habitants, qui augmente à
+  chaque niveau. La population grandit en temps réel, mange de
   l’alimentation, et diminue en cas de famine.
 - **Habitants célèbres.** Un chef planétaire guide la colonie dès le premier
   jour, puis un nouvel habitant se distingue chaque semaine. Le joueur leur

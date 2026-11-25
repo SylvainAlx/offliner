@@ -4,7 +4,6 @@ import { getPlanetKind } from "../models/planet";
 import {
   BUILDINGS,
   BUILDING_TYPES,
-  getConstructionMs,
   type BuildingDefinition,
   type BuildingType,
 } from "../models/buildings";
@@ -44,7 +43,7 @@ export function usePlanet() {
       nextLevel,
       cost,
       missing: missingResources(resources, cost),
-      constructionMs: getConstructionMs(type, nextLevel),
+      constructionMs: colony.getConstructionMs(type, nextLevel),
       blocker: user.getConstructionBlocker(type, colony),
       isUnderConstruction: planet.construction?.type === type,
     };

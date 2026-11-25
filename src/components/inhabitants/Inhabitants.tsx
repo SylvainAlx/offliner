@@ -4,6 +4,7 @@ import CompanionSprite from "../CompanionSprite";
 import NotableEditModal from "./NotableEditModal";
 import { useUser } from "../../stores/userStore";
 import { getNotableWeek, type Notable } from "../../models/notable";
+import { SPECIALTIES, describeSpecialtyBonus, getSpecialty } from "../../models/specialty";
 import { NOTABLE_INTERVAL_MS } from "../../utils/constants";
 import { formatWait } from "../../utils/format";
 
@@ -106,13 +107,18 @@ function NextNotable({ nextAt, now }: { nextAt: number; now: number }) {
 
 function NotableTile({
   notable,
-  week,
+  label,
+  planetName,
   onEdit,
 }: {
   notable: Notable;
-  week: number;
+  /** "Semaine 3", or the planet a colony leader runs. */
+  label: string;
+  /** Where a weekly inhabitant lives, shown once the player has colonies. */
+  planetName?: string;
   onEdit: () => void;
 }) {
+  const specialty = getSpecialty(notable);
   return (
     <li>
       <button
@@ -123,11 +129,11 @@ function NotableTile({
           notable.isCustomized ? "border-(--gray-200)" : "border-(--accent-border) shadow-(--shadow-sm)",
         ].join(" ")}
         onClick={onEdit}
-        aria-label={`${notable.name}, ${notable.title}, semaine ${week}${notable.isCustomized ? "" : ", à personnaliser"}`}
+        aria-label={`${notable.name}, ${notable.title}, ${label}${specialty ? `, ${SPECIALTIES[specialty].label}` : ""}${notable.isCustomized ? "" : ", à personnaliser"}`}
       >
         <div className="flex w-full items-center justify-between gap-1">
-          <span className="font-(--mono) text-[0.62rem] font-bold text-(--gray-500)">
-            Semaine {week}
+          <span className="font-(--mono) text-[0.62rem] font-bold text-(--gray-500) [overflow-wrap:anywhere] text-left">
+            {label}
           </span>
           {!notable.isCustomized && <NewBadge />}
         </div>
@@ -140,6 +146,19 @@ function NotableTile({
         <span className="text-[0.68rem] font-bold text-(--accent) [overflow-wrap:anywhere]">
           {notable.title}
         </span>
+        {specialty && (
+          <span
+            className="rounded-full bg-(--accent-bg) px-2 py-0.5 text-[0.64rem] font-bold text-(--gray-800)"
+            title={describeSpecialtyBonus(specialty)}
+          >
+            {SPECIALTIES[specialty].icon} {SPECIALTIES[specialty].label}
+          </span>
+        )}
+        {planetName && (
+          <span className="text-[0.62rem] text-(--gray-500) [overflow-wrap:anywhere]">
+            📍 {planetName}
+          </span>
+        )}
         <p className="m-0 line-clamp-3 text-[0.72rem] leading-snug text-(--gray-600) [overflow-wrap:anywhere]">
           {notable.description || (notable.isCustomized ? "" : "Touchez pour raconter son histoire.")}
         </p>
@@ -158,6 +177,12 @@ export default function Inhabitants() {
   const editing = user.notables.find((notable) => notable.id === editingId);
   const colony = user.activeColony;
   const population = Math.floor(colony.population);
+  // Every planet has its leader: those of the other planets stay reachable
+  // here, or a leader waiting for a story could never be found.
+  const otherLeaders = user.colonies.flatMap((other) => {
+    const otherLeader = other.id === colony.id ? undefined : user.getLeader(other.id);
+    return otherLeader ? [{ leader: otherLeader, planetName: other.planet.name }] : [];
+  });
 
   return (
     <Card
@@ -165,6 +190,17 @@ export default function Inhabitants() {
       title="Habitants célèbres"
       subtitle={`${population} habitant${population > 1 ? "s" : ""} sur ${colony.planet.name} · un nouveau mis en avant chaque semaine`}
     >
+      {user.notablesToCustomize > 0 && (
+        <p className="m-0 w-full rounded-xl bg-(--green-bg) px-3.5 py-2.5 text-[0.8rem] leading-snug text-(--green-dark)">
+          <strong>
+            {user.notablesToCustomize} habitant{user.notablesToCustomize > 1 ? "s" : ""} à
+            personnaliser
+          </strong>{" "}
+          : touchez ceux marqués « Nouveau », puis « Enregistrer » (même sans rien changer)
+          pour retirer la pastille.
+        </p>
+      )}
+
       {leader && <LeaderHero leader={leader} onEdit={() => setEditingId(leader.id)} />}
 
       <NextNotable nextAt={user.getNextNotableAt(now)} now={now} />
@@ -185,13 +221,37 @@ export default function Inhabitants() {
               <NotableTile
                 key={notable.id}
                 notable={notable}
-                week={getNotableWeek(notable, user.createdAt)}
+                label={`Semaine ${getNotableWeek(notable, user.createdAt)}`}
+                planetName={
+                  user.colonies.length > 1
+                    ? user.getColony(notable.colonyId)?.planet.name
+                    : undefined
+                }
                 onEdit={() => setEditingId(notable.id)}
               />
             ))}
           </ul>
         )}
       </section>
+
+      {otherLeaders.length > 0 && (
+        <section className="w-full" aria-label="Chefs de vos autres planètes">
+          <h3 className="m-0 mb-2.5 flex items-baseline justify-between text-[0.95rem] font-extrabold text-(--gray-900)">
+            Chefs de vos autres planètes
+            <span className="text-[0.75rem] font-bold text-(--gray-500)">{otherLeaders.length}</span>
+          </h3>
+          <ul className="m-0 grid list-none grid-cols-2 gap-2.5 p-0 sm:grid-cols-3">
+            {otherLeaders.map(({ leader: other, planetName }) => (
+              <NotableTile
+                key={other.id}
+                notable={other}
+                label={`👑 ${planetName}`}
+                onEdit={() => setEditingId(other.id)}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
 
       {editing && <NotableEditModal notable={editing} onClose={() => setEditingId(null)} />}
     </Card>

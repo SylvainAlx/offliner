@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import Card from "./ui/Card";
 import { useActiveColony } from "../stores/userStore";
-import { describeSettlement } from "../models/buildings";
 import { getPlanetKind } from "../models/planet";
 import { PLANET_KIND_LABELS } from "../utils/planetSprite";
 import PlanetSprite from "./PlanetSprite";
@@ -36,7 +35,7 @@ export default function Planet({ onOpenInhabitants }: { onOpenInhabitants: () =>
     <Card
       ariaLabel="Planète"
       title={planet.name}
-      subtitle={`${PLANET_KIND_LABELS[kind]} · ${describeSettlement(planet.levels.habitat)} · ${planet.usedFields} / ${planet.fields} cases`}
+      subtitle={`${PLANET_KIND_LABELS[kind]} · ${planet.usedFields} / ${planet.fields} cases`}
     >
       <PlanetViewToggle view={view} onChange={changeView} />
       {view === "surface" ? (

@@ -3,7 +3,6 @@ import {
   BUILDINGS,
   SOLAR_ENERGY_PER_LEVEL,
   getBuildingCost,
-  getConstructionMs,
   type BuildingType,
 } from "../../models/buildings";
 import { ENERGY_ICON, formatResources } from "../../models/resources";
@@ -14,6 +13,7 @@ import {
 } from "../../utils/buildingEffects";
 import { formatDuration } from "../../utils/format";
 import BuildingActions from "./BuildingActions";
+import { useUser } from "../../stores/userStore";
 import DemolishBuilding from "./DemolishBuilding";
 
 /** How many upcoming levels the table shows. */
@@ -32,6 +32,7 @@ export default function BuildingDetailModal({
   level,
   onClose,
 }: BuildingDetailModalProps) {
+  const colony = useUser((state) => state.user.activeColony);
   const definition = type ? BUILDINGS[type] : null;
   const levels = Array.from({ length: LEVELS_SHOWN }, (_, index) => level + 1 + index);
 
@@ -88,7 +89,7 @@ export default function BuildingDetailModal({
                   >
                     <td className={cellClass}>{next}</td>
                     <td className={cellClass}>{formatResources(getBuildingCost(type, next))}</td>
-                    <td className={cellClass}>{formatDuration(getConstructionMs(type, next))}</td>
+                    <td className={cellClass}>{formatDuration(colony.getConstructionMs(type, next))}</td>
                     <td className={cellClass}>{describeBuildingEffect(type, next)}</td>
                     <td className={cellClass}>{describeEnergyUse(type, next)}</td>
                     <td className={cellClass}>{describeStaff(type, next)}</td>

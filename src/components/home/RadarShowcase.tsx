@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { HomeScene } from "../../hooks/useHomePage";
 import { decodeSignal, encodeSignal } from "../../models/signal";
-import { generatePlanetSprite } from "../../utils/planetSprite";
+import { generatePlanetSprite, hashSeed } from "../../utils/planetSprite";
 import SignalCard from "../radar/SignalCard";
 import QrCode from "../install/QrCode";
 
@@ -39,6 +39,8 @@ export default function RadarShowcase({ scene }: { scene: HomeScene }) {
       authorSeed: scene.inhabitantIds[0],
       message: scene.message,
       sentAt: scene.drawnAt,
+      // A plausible score for a game a few weeks old.
+      score: 40 + (hashSeed(scene.planetSeed) % 460),
     });
     const decoded = decodeSignal(code);
     return decoded.ok ? { code, signal: decoded.signal } : null;

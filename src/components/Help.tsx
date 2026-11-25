@@ -236,6 +236,28 @@ export default function Help() {
             améliorer tout de suite.
           </p>
         </HelpSection>
+
+        <HelpSection icon="🏆" title="Score">
+          <ul className={list}>
+            <li className={bullet}>
+              1 point pour 1000 ressources investies dans votre empire :
+              chaque niveau de bâtiment construit, sur toutes vos planètes, et
+              chaque colonie fondée.
+            </li>
+            <li className={bullet}>
+              L&apos;Offlinium, plus rare, compte double : 1000 ⬡ valent 2
+              points.
+            </li>
+            <li className={bullet}>
+              Le score suit ce que vous possédez : un niveau démoli, donc
+              remboursé, retire ses points.
+            </li>
+            <li className={bullet}>
+              Vos signaux radar portent votre score du moment, pour comparer
+              votre progression avec d&apos;autres joueurs.
+            </li>
+          </ul>
+        </HelpSection>
       </HelpGroup>
 
       <HelpGroup title="Votre planète">
@@ -291,8 +313,8 @@ export default function Help() {
         <HelpSection icon="👥" title="Population">
           <ul className={list}>
             <li className={bullet}>
-              L&apos;habitat fixe le nombre maximum d&apos;habitants : campement,
-              village, ville au niveau 6, puis mégalopole au niveau 11.
+              L&apos;habitat fixe le nombre maximum d&apos;habitants : chaque
+              niveau en loge davantage.
             </li>
             <li className={bullet}>
               Tant qu&apos;il reste de la place et de quoi manger, la population
@@ -316,6 +338,25 @@ export default function Help() {
             donner un nom, un titre et une histoire. Une pastille verte signale
             ceux qui attendent encore la leur.
           </p>
+          <ul className={list}>
+            <li className={bullet}>
+              Chaque habitant de la semaine a une spécialité qui donne +5 % à
+              sa planète : géologue (métal), agronome (aliments), physicien·ne
+              (énergie), ingénieur·e (vitesse des chantiers), logisticien·ne
+              (dépôt et cargos), médecin (croissance), pilote (vitesse des
+              vols). Les chercheur·ses ajoutent +5 % d&apos;Offlinium à tout
+              l&apos;empire.
+            </li>
+            <li className={bullet}>
+              Les bonus d&apos;une même spécialité s&apos;additionnent : trois
+              géologues sur une planète, c&apos;est +15 % de métal.
+            </li>
+            <li className={bullet}>
+              Ils arrivent sur la planète mère. Depuis leur fiche, envoyez-les
+              vivre sur une colonie : leur bonus les suit. Le panneau Population
+              liste les spécialistes de chaque planète.
+            </li>
+          </ul>
         </HelpSection>
 
         <HelpSection icon="☀️" title="Système planétaire">

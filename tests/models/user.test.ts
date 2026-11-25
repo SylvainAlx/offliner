@@ -4,7 +4,6 @@ import { Planet, generatePlanetName } from "../../src/models/planet";
 import { advanceRealTime, computeEconomy } from "../../src/models/economy";
 import {
   BUILDINGS,
-  describeSettlement,
   emptyLevels,
   getBuildingCost,
   getConstructionMs,
@@ -39,11 +38,7 @@ describe("buildings", () => {
     expect(getConstructionMs("metalMine", 1)).toBe(378_000);
   });
 
-  it("turns the habitat into a village, a city, then a megalopolis", () => {
-    expect(describeSettlement(0)).toBe("Campement");
-    expect(describeSettlement(3)).toBe("Village niv. 3");
-    expect(describeSettlement(6)).toBe("Ville niv. 1");
-    expect(describeSettlement(11)).toBe("Mégalopole niv. 1");
+  it("houses more inhabitants at every habitat level", () => {
     expect(getPopulationMax(0)).toBe(STARTING_POPULATION);
     expect(getPopulationMax(5)).toBe(110);
     expect(getPopulationMax(6)).toBeGreaterThan(getPopulationMax(5));

@@ -106,7 +106,7 @@ export const BUILDINGS: Record<BuildingType, BuildingDefinition> = {
     label: "Habitat",
     icon: "🏘️",
     description:
-      "Loge les habitants : village, puis ville au niveau 6, puis mégalopole au niveau 11.",
+      "Loge les habitants : chaque niveau augmente la population maximale.",
     cost: { metal: 150, offlinium: 50, factor: 1.6 },
     production: () => ({}),
     energyProduced: () => 0,
@@ -206,30 +206,6 @@ export function getStorageCapacity(depotLevel: number): number {
 }
 
 // --- Habitat ---------------------------------------------------------------
-
-export type SettlementStage = "camp" | "village" | "city" | "megalopolis";
-
-export const SETTLEMENT_LABELS: Record<SettlementStage, string> = {
-  camp: "Campement",
-  village: "Village",
-  city: "Ville",
-  megalopolis: "Mégalopole",
-};
-
-export function getSettlementStage(habitatLevel: number): SettlementStage {
-  if (habitatLevel <= 0) return "camp";
-  if (habitatLevel <= 5) return "village";
-  if (habitatLevel <= 10) return "city";
-  return "megalopolis";
-}
-
-/** "Village niv. 3", "Ville niv. 1"…: the level counted within the stage. */
-export function describeSettlement(habitatLevel: number): string {
-  const stage = getSettlementStage(habitatLevel);
-  if (stage === "camp") return SETTLEMENT_LABELS.camp;
-  const stageStart = stage === "village" ? 0 : stage === "city" ? 5 : 10;
-  return `${SETTLEMENT_LABELS[stage]} niv. ${habitatLevel - stageStart}`;
-}
 
 export function getPopulationMax(habitatLevel: number): number {
   if (habitatLevel <= 0) return 10;

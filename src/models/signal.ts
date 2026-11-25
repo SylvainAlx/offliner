@@ -32,6 +32,8 @@ export interface RadarSignal {
   authorSeed: string;
   message: string;
   sentAt: number;
+  /** The sender's score when they sent it (null: sent before scores existed). */
+  score: number | null;
 }
 
 export interface SentSignal extends RadarSignal {
@@ -69,6 +71,8 @@ interface Payload {
   as: string;
   m: string;
   d: number;
+  /** Score: optional, so older codes still read (and older games ignore it). */
+  sc?: number;
 }
 
 export function encodeSignal(signal: Omit<RadarSignal, "id">): string {
@@ -81,6 +85,7 @@ export function encodeSignal(signal: Omit<RadarSignal, "id">): string {
     as: signal.authorSeed,
     m: signal.message,
     d: signal.sentAt,
+    ...(signal.score === null ? {} : { sc: signal.score }),
   };
   const body = toBase64Url(JSON.stringify(payload));
   return `${PREFIX}${VERSION}.${body}.${checksum(body)}`;
@@ -135,8 +140,16 @@ export function decodeSignal(raw: string): DecodedSignal {
       authorSeed,
       message,
       sentAt: parsed.d,
+      score: sanitizeScore(parsed.sc),
     },
   };
+}
+
+/** Highest score a signal may claim: far beyond any real game. */
+const MAX_SCORE = 1e12;
+
+function sanitizeScore(value: unknown): number | null {
+  return isFiniteNumber(value) && value >= 0 && value <= MAX_SCORE ? Math.floor(value) : null;
 }
 
 /** The id a code's signal gets, without decoding it again. */
@@ -209,6 +222,7 @@ export function loadSignals<T extends RadarSignal>(
       authorSeed,
       message,
       sentAt: item.sentAt,
+      score: sanitizeScore(item.score),
     };
     return [{ ...base, ...rest } as T];
   });

@@ -36,6 +36,8 @@ export interface UserStore {
     cargo?: ExpeditionCargo,
   ) => boolean;
   updateNotable: (id: string, changes: NotableChanges) => boolean;
+  /** Sends a weekly inhabitant to live on another planet of the player. */
+  assignNotable: (id: string, colonyId: string) => boolean;
   /** Brings the game up to date with both clocks. Called every second. */
   tick: (now: number) => void;
   startConstruction: (type: BuildingType) => boolean;
@@ -186,6 +188,7 @@ export const useUser = create<UserStore>((set, get) => {
       update((user, now) => user.launchExpedition(kind, fromColonyId, targetId, now, cargo)),
 
     updateNotable: (id, changes) => update((user) => user.updateNotable(id, changes)),
+    assignNotable: (id, colonyId) => update((user) => user.assignNotable(id, colonyId)),
 
     saveUser: () => persist(get().user),
 
