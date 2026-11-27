@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useUser } from "../../stores/userStore";
 import type { User, ExpeditionPlan } from "../../models/user";
 import type { SystemPlanet } from "../../models/starSystem";
-import type { ExpeditionCargo, ExpeditionKind } from "../../models/expedition";
+import type { ExpeditionCargo, TravelKind } from "../../models/expedition";
 import {
   RESOURCE_ICONS,
   RESOURCE_LABELS,
@@ -108,7 +108,7 @@ export default function ExpeditionPanel({ target }: { target: SystemPlanet }) {
   const [launched, setLaunched] = useState<string | null>(null);
 
   const destination = user.getColonyAt(target.id);
-  const kind: ExpeditionKind = destination ? "cargo" : "colonization";
+  const kind: TravelKind = destination ? "cargo" : "colonization";
   // Departure: a planet with a spaceport, the one shown first if it has one.
   const ports = user.colonies.filter(
     (colony) => colony.planet.levels.spaceport > 0 && colony.systemPlanetId !== target.id,

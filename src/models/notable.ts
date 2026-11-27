@@ -27,6 +27,8 @@ export interface Notable {
   description: string;
   /** When the inhabitant was put in the spotlight. */
   featuredAt: number;
+  /** Set for a survivor an exploration brought back; absent otherwise. */
+  origin?: "rescued";
   /** False until the player has given them a name, a title and a story. */
   isCustomized: boolean;
 }
@@ -125,6 +127,31 @@ export function createWeeklyNotable(
   };
 }
 
+/**
+ * A survivor brought back by exploration `explorationNumber`. They live and
+ * help like a weekly inhabitant, without belonging to any week.
+ */
+export function createRescuedNotable(
+  planetSeed: string,
+  explorationNumber: number,
+  featuredAt: number,
+  colonyId: string,
+): Notable {
+  const seed = `${planetSeed}:rescue-${explorationNumber}`;
+  return {
+    id: seed,
+    seed,
+    role: "notable",
+    origin: "rescued",
+    colonyId,
+    name: generateInhabitantName(createRandom(hashSeed(seed))),
+    title: "Venu des étoiles",
+    description: "",
+    featuredAt,
+    isCustomized: false,
+  };
+}
+
 /** Applies the player's changes; refused when the name or title is empty. */
 export function applyNotableChanges(notable: Notable, changes: NotableChanges): boolean {
   const name = sanitizeName(changes.name);
@@ -153,6 +180,8 @@ export function loadNotables(value: unknown): Notable[] {
     const colonyId = sanitizeId(item.colonyId);
     if (!colonyId) return [];
     const isCustomized = item.isCustomized === true;
+    const origin =
+      item.role === "notable" && item.origin === "rescued" ? ("rescued" as const) : undefined;
     return [
       {
         id,
@@ -164,6 +193,7 @@ export function loadNotables(value: unknown): Notable[] {
         description,
         featuredAt: item.featuredAt,
         isCustomized,
+        ...(origin ? { origin } : {}),
       },
     ];
   });

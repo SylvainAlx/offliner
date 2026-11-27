@@ -112,9 +112,9 @@ function NotableTile({
   onEdit,
 }: {
   notable: Notable;
-  /** "Semaine 3", or the planet a colony leader runs. */
+  /** "Semaine 3", "Rescapé", or the planet a colony leader runs. */
   label: string;
-  /** Where a weekly inhabitant lives, shown once the player has colonies. */
+  /** Where a weekly or rescued inhabitant lives, shown once the player has colonies. */
   planetName?: string;
   onEdit: () => void;
 }) {
@@ -174,6 +174,7 @@ export default function Inhabitants() {
   const now = user.realTimeSettledAt;
   const leader = user.leader;
   const weekly = user.weeklyNotables;
+  const rescued = user.rescuedNotables;
   const editing = user.notables.find((notable) => notable.id === editingId);
   const colony = user.activeColony;
   const population = Math.floor(colony.population);
@@ -233,6 +234,30 @@ export default function Inhabitants() {
           </ul>
         )}
       </section>
+
+      {rescued.length > 0 && (
+        <section className="w-full" aria-label="Rescapés des explorations">
+          <h3 className="m-0 mb-2.5 flex items-baseline justify-between text-[0.95rem] font-extrabold text-(--gray-900)">
+            Rescapés des explorations
+            <span className="text-[0.75rem] font-bold text-(--gray-500)">{rescued.length}</span>
+          </h3>
+          <ul className="m-0 grid list-none grid-cols-2 gap-2.5 p-0 sm:grid-cols-3">
+            {rescued.map((notable) => (
+              <NotableTile
+                key={notable.id}
+                notable={notable}
+                label="Rescapé"
+                planetName={
+                  user.colonies.length > 1
+                    ? user.getColony(notable.colonyId)?.planet.name
+                    : undefined
+                }
+                onEdit={() => setEditingId(notable.id)}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
 
       {otherLeaders.length > 0 && (
         <section className="w-full" aria-label="Chefs de vos autres planètes">

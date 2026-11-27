@@ -25,9 +25,17 @@ import { isFiniteNumber, isNonNegativeNumber, isRecord, sanitizeId } from "../ut
  * Expeditions leave from a spaceport towards another planet of the system.
  * Ships are implied: their price is part of the expedition's.
  * - colonization: founds a colony on a free planet with colonists;
- * - cargo: carries metal and food to one of the player's planets.
+ * - cargo: carries metal and food to one of the player's planets;
+ * - exploration: flies into the unknown and comes back to its planet
+ *   (models/exploration).
  */
-export type ExpeditionKind = "colonization" | "cargo";
+export type ExpeditionKind = "colonization" | "cargo" | "exploration";
+
+/** The expeditions that travel to a planet of the star map. */
+export type TravelKind = Exclude<ExpeditionKind, "exploration">;
+
+/** The targetId of an exploration: no planet of the star map. */
+export const UNKNOWN_TARGET_ID = "unknown";
 
 export interface ExpeditionCargo {
   metal: number;
@@ -38,7 +46,7 @@ export interface Expedition {
   id: string;
   kind: ExpeditionKind;
   fromColonyId: string;
-  /** The destination's SystemPlanet.id. */
+  /** The destination's SystemPlanet.id, or UNKNOWN_TARGET_ID. */
   targetId: string;
   departAt: number;
   arriveAt: number;
@@ -46,11 +54,19 @@ export interface Expedition {
   cargo: ExpeditionCargo;
   /** Inhabitants on board (colonization only). */
   colonists: number;
+  /** What the draw needs, set at launch (exploration only). */
+  exploration?: {
+    /** Rank of the exploration in the game, from 1. */
+    number: number;
+    /** The departure spaceport's level. */
+    spaceportLevel: number;
+  };
 }
 
 export const EXPEDITION_LABELS: Record<ExpeditionKind, string> = {
   colonization: "Colonisation",
   cargo: "Cargo",
+  exploration: "Exploration",
 };
 
 /** How far a spaceport reaches, in astronomical units. */
@@ -76,7 +92,7 @@ export function getFlightMs(distanceAu: number): number {
   return Math.max(MIN_FLIGHT_MS, Math.round(distanceAu * FLIGHT_MS_PER_AU));
 }
 
-export function getFuelCost(kind: ExpeditionKind, distanceAu: number): number {
+export function getFuelCost(kind: TravelKind, distanceAu: number): number {
   const perAu = kind === "colonization" ? COLONIZATION_FUEL_PER_AU : CARGO_FUEL_PER_AU;
   return Math.max(1, Math.ceil(distanceAu * perAu));
 }
@@ -125,7 +141,7 @@ export function getTravel(
 }
 
 /** Offlinium burnt by a trip. */
-export function getTravelFuel(kind: ExpeditionKind, travel: Travel): number {
+export function getTravelFuel(kind: TravelKind, travel: Travel): number {
   if (!travel.isInterstellar) return getFuelCost(kind, travel.distance);
   const perLy = kind === "colonization" ? COLONIZATION_FUEL_PER_LY : CARGO_FUEL_PER_LY;
   return Math.max(1, Math.ceil(travel.distance * perLy));
@@ -146,6 +162,17 @@ export function getGalaxy(home: Pick<Planet, "seed" | "name" | "fields">): Galax
   return cachedGalaxy;
 }
 
+export function isExpeditionKind(value: unknown): value is ExpeditionKind {
+  return typeof value === "string" && Object.hasOwn(EXPEDITION_LABELS, value);
+}
+
+function loadExplorationData(value: unknown): Expedition["exploration"] {
+  if (!isRecord(value)) return undefined;
+  const { number, spaceportLevel } = value;
+  if (!isNonNegativeNumber(number) || !isNonNegativeNumber(spaceportLevel)) return undefined;
+  return { number: Math.floor(number), spaceportLevel: Math.floor(spaceportLevel) };
+}
+
 export function loadExpeditions(value: unknown): Expedition[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item): Expedition[] => {
@@ -154,7 +181,9 @@ export function loadExpeditions(value: unknown): Expedition[] {
     const fromColonyId = sanitizeId(item.fromColonyId);
     const targetId = sanitizeId(item.targetId);
     if (!id || !fromColonyId || !targetId) return [];
-    if (item.kind !== "colonization" && item.kind !== "cargo") return [];
+    if (!isExpeditionKind(item.kind)) return [];
+    const exploration = loadExplorationData(item.exploration);
+    if (item.kind === "exploration" && !exploration) return [];
     if (!isFiniteNumber(item.departAt) || !isFiniteNumber(item.arriveAt)) return [];
     const cargo = isRecord(item.cargo) ? item.cargo : {};
     return [
@@ -170,6 +199,7 @@ export function loadExpeditions(value: unknown): Expedition[] {
           food: isNonNegativeNumber(cargo.food) ? cargo.food : 0,
         },
         colonists: isNonNegativeNumber(item.colonists) ? Math.floor(item.colonists) : 0,
+        ...(item.kind === "exploration" && exploration ? { exploration } : {}),
       },
     ];
   });

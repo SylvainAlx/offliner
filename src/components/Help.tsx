@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { EXPLORATION_CHANCES } from "../models/exploration";
 import {
   BASE_STORAGE_CAPACITY,
   BUILDINGS,
@@ -19,6 +20,9 @@ import {
   NIGHT_END_HOUR,
   CARGO_FUEL_PER_LY,
   COLONIZATION_FUEL_PER_LY,
+  EXPLORATION_DURATION_MS,
+  EXPLORATION_FUEL,
+  MAX_RESCUED_INHABITANTS,
   FLIGHT_MS_PER_LY,
   INTERSTELLAR_BASE_LEVEL,
   MIN_FLIGHT_MS,
@@ -340,8 +344,8 @@ export default function Help() {
           </p>
           <ul className={list}>
             <li className={bullet}>
-              Chaque habitant de la semaine a une spécialité qui donne +5 % à
-              sa planète : géologue (métal), agronome (aliments), physicien·ne
+              Chaque habitant de la semaine, comme chaque rescapé, a une
+              spécialité qui donne +5 % à sa planète : géologue (métal), agronome (aliments), physicien·ne
               (énergie), ingénieur·e (vitesse des chantiers), logisticien·ne
               (dépôt et cargos), médecin (croissance), pilote (vitesse des
               vols). Les chercheur·ses ajoutent +5 % d&apos;Offlinium à tout
@@ -404,6 +408,33 @@ export default function Help() {
               Chaque planète a ses propres réserves, sa population et son
               chantier ; l&apos;Offlinium est commun. Passez de l&apos;une à
               l&apos;autre avec le sélecteur au-dessus des ressources.
+            </li>
+          </ul>
+        </HelpSection>
+
+        <HelpSection icon="🌌" title="Explorer l'inconnu">
+          <ul className={list}>
+            <li className={bullet}>
+              Depuis l&apos;onglet Système, envoyez un vaisseau au-delà des cartes :{" "}
+              {EXPLORATION_FUEL} ⬡ de carburant, retour en{" "}
+              {EXPLORATION_DURATION_MS / 3600000} h en temps réel (moins avec des
+              pilotes). Une seule exploration à la fois.
+            </li>
+            <li className={bullet}>
+              Au retour : du vide ({EXPLORATION_CHANCES.nothing} %), du métal (
+              {EXPLORATION_CHANCES.metal} %), de l&apos;Offlinium (
+              {EXPLORATION_CHANCES.offlinium} %), une épave avec un peu des deux (
+              {EXPLORATION_CHANCES.wreck} %) ou un rescapé (
+              {EXPLORATION_CHANCES.survivor} %).
+            </li>
+            <li className={bullet}>
+              Le métal trouvé grandit avec le spatioport de départ et peut dépasser
+              la capacité du dépôt.
+            </li>
+            <li className={bullet}>
+              Au plus {MAX_RESCUED_INHABITANTS} rescapés par partie ; ensuite, une
+              épave les remplace. Ils ne comptent pas parmi les habitants de la
+              semaine.
             </li>
           </ul>
         </HelpSection>

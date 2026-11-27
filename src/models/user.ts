@@ -3,6 +3,7 @@ import {
   applyNotableChanges,
   countWeeksSince,
   createLeader,
+  createRescuedNotable,
   createWeeklyNotable,
   loadNotables,
   type Notable,
@@ -16,12 +17,20 @@ import {
   getGalaxy,
   getTravel,
   getTravelFuel,
+  isExpeditionKind,
   loadExpeditions,
+  UNKNOWN_TARGET_ID,
   type Expedition,
   type ExpeditionCargo,
   type ExpeditionKind,
   type Travel,
+  type TravelKind,
 } from "./expedition";
+import {
+  drawExploration,
+  isExplorationDiscovery,
+  type ExplorationDiscovery,
+} from "./exploration";
 import type { Galaxy, GalaxySystem, StarSystem, SystemPlanet } from "./starSystem";
 import {
   getExchangeAmount,
@@ -55,6 +64,9 @@ import {
   COLONISTS_PER_SHIP,
   COLONIZATION_COST,
   COLONY_STARTING_RESOURCES,
+  EXPLORATION_DURATION_MS,
+  EXPLORATION_FUEL,
+  MAX_RESCUED_INHABITANTS,
   NOTABLE_INTERVAL_MS,
   OFFLINIUM_DELIVERY_INTERVAL,
   SPEED_UP_MS_PER_OFFLINIUM,
@@ -95,7 +107,7 @@ export type ExpeditionBlocker =
 
 /** Everything about an expedition before it leaves. */
 export interface ExpeditionPlan {
-  kind: ExpeditionKind;
+  kind: TravelKind;
   from: Colony;
   target: SystemPlanet;
   /** The destination's system. */
@@ -115,21 +127,45 @@ export interface ExpeditionPlan {
   blocker: ExpeditionBlocker;
 }
 
+/** Why an exploration cannot leave right now. */
+export type ExplorationBlocker = "noSpaceport" | "busy" | "resources" | null;
+
+/** Everything about an exploration before it leaves. */
+export interface ExplorationPlan {
+  from: Colony;
+  /** The departure planet's spaceport level. */
+  level: number;
+  flightMs: number;
+  /** The fuel, paid by the player. */
+  cost: ResourceAmounts;
+  blocker: ExplorationBlocker;
+}
+
 /** What happened when an expedition reached its destination. */
 export interface ExpeditionReport {
   id: string;
   kind: ExpeditionKind;
   targetName: string;
   arriveAt: number;
-  /** founded: a new colony; delivered: cargo unloaded; returned: sent back. */
-  outcome: "founded" | "delivered" | "returned";
+  /**
+   * founded: a new colony; delivered: cargo unloaded; returned: sent back;
+   * explored: an exploration came back to `targetName`, its departure planet.
+   */
+  outcome: "founded" | "delivered" | "returned" | "explored";
   cargo: ExpeditionCargo;
   colonists: number;
+  /** What an exploration found, with its Offlinium and its survivor. */
+  discovery?: ExplorationDiscovery;
+  offlinium?: number;
+  survivorName?: string;
 }
 
 /** Running totals of the game, for the achievements. */
 export interface GameStats {
+  /** Colonizations and cargo flights; explorations are counted apart. */
   expeditionsLaunched: number;
+  /** Also numbers each exploration for its draw. */
+  explorationsLaunched: number;
   cargoDeliveries: number;
   /** Metal and food units cargo flights have delivered. */
   cargoUnitsDelivered: number;
@@ -207,6 +243,7 @@ export class User {
     this.expeditionReports = [];
     this.stats = {
       expeditionsLaunched: 0,
+      explorationsLaunched: 0,
       cargoDeliveries: 0,
       cargoUnitsDelivered: 0,
       signalsSent: 0,
@@ -526,7 +563,7 @@ export class User {
    * Null when the colony or the planet does not exist.
    */
   planExpedition(
-    kind: ExpeditionKind,
+    kind: TravelKind,
     fromColonyId: string,
     targetId: string,
     requestedCargo: ExpeditionCargo = { metal: 0, food: 0 },
@@ -588,7 +625,7 @@ export class User {
 
   /** Pays for an expedition and sends it off. Call advance() first. */
   launchExpedition(
-    kind: ExpeditionKind,
+    kind: TravelKind,
     fromColonyId: string,
     targetId: string,
     now: number,
@@ -612,8 +649,102 @@ export class User {
     return true;
   }
 
+  // --- Exploration ---------------------------------------------------------
+
+  /** The exploration in flight: only one at a time for the whole empire. */
+  get explorationInFlight(): Expedition | undefined {
+    return this.expeditions.find((item) => item.kind === "exploration");
+  }
+
+  /** Works out an exploration from a colony; null when it does not exist. */
+  planExploration(fromColonyId: string): ExplorationPlan | null {
+    const from = this.getColony(fromColonyId);
+    if (!from) return null;
+    const level = from.planet.levels.spaceport;
+    const flightMs = Math.round(
+      EXPLORATION_DURATION_MS / getSpecialtyFactor(from.specialists, "pilot"),
+    );
+    const cost: ResourceAmounts = { offlinium: EXPLORATION_FUEL };
+
+    let blocker: ExplorationBlocker = null;
+    if (level <= 0) blocker = "noSpaceport";
+    else if (this.explorationInFlight) blocker = "busy";
+    else if (!hasResources(this.getResources(from), cost)) blocker = "resources";
+
+    return { from, level, flightMs, cost, blocker };
+  }
+
+  /** Pays for an exploration and sends it off. Call advance() first. */
+  launchExploration(fromColonyId: string, now: number): boolean {
+    const plan = this.planExploration(fromColonyId);
+    if (!plan || plan.blocker !== null) return false;
+    this.applyAmounts(plan.from, plan.cost, -1);
+    this.stats.explorationsLaunched += 1;
+    this.expeditions.push({
+      id: crypto.randomUUID(),
+      kind: "exploration",
+      fromColonyId,
+      targetId: UNKNOWN_TARGET_ID,
+      departAt: now,
+      arriveAt: now + plan.flightMs,
+      cargo: { metal: 0, food: 0 },
+      colonists: 0,
+      exploration: { number: this.stats.explorationsLaunched, spaceportLevel: plan.level },
+    });
+    return true;
+  }
+
+  /**
+   * An exploration comes back to its departure planet. Its metal, like a
+   * cargo's, may go over the depot's capacity.
+   */
+  private returnFromExploration(expedition: Expedition, at: number): void {
+    const { number, spaceportLevel } = expedition.exploration ?? {
+      number: 0,
+      spaceportLevel: 0,
+    };
+    const origin = this.getColony(expedition.fromColonyId) ?? this.homeColony;
+    const seed = this.homeColony.planet.seed;
+    const result = drawExploration(
+      `${seed}:exploration-${number}`,
+      getCargoCapacity(spaceportLevel),
+      this.rescuedNotables.length < MAX_RESCUED_INHABITANTS,
+    );
+
+    origin.resources.metal += result.metal;
+    this.offlinium += result.offlinium;
+    let survivorName: string | undefined;
+    if (result.discovery === "survivor") {
+      const survivor = createRescuedNotable(seed, number, at, origin.id);
+      this.notables.push(survivor);
+      this.syncSpecialists();
+      survivorName = survivor.name;
+    }
+
+    this.addReport({
+      id: expedition.id,
+      kind: "exploration",
+      targetName: origin.planet.name,
+      arriveAt: at,
+      outcome: "explored",
+      cargo: { metal: result.metal, food: 0 },
+      colonists: 0,
+      discovery: result.discovery,
+      offlinium: result.offlinium,
+      ...(survivorName ? { survivorName } : {}),
+    });
+  }
+
+  private addReport(report: ExpeditionReport): void {
+    this.expeditionReports = [report, ...this.expeditionReports].slice(0, MAX_REPORTS);
+  }
+
   /** An expedition reaches its destination at `at`. */
   private land(expedition: Expedition, at: number): void {
+    if (expedition.kind === "exploration") {
+      this.returnFromExploration(expedition, at);
+      return;
+    }
     const target = this.findSystemPlanet(expedition.targetId)?.planet;
     const destination = this.getColonyAt(expedition.targetId);
     let outcome: ExpeditionReport["outcome"];
@@ -651,18 +782,15 @@ export class User {
       outcome = "returned";
     }
 
-    this.expeditionReports = [
-      {
-        id: expedition.id,
-        kind: expedition.kind,
-        targetName: destination?.planet.name ?? target?.name ?? "?",
-        arriveAt: at,
-        outcome,
-        cargo: { ...expedition.cargo },
-        colonists: expedition.colonists,
-      },
-      ...this.expeditionReports,
-    ].slice(0, MAX_REPORTS);
+    this.addReport({
+      id: expedition.id,
+      kind: expedition.kind,
+      targetName: destination?.planet.name ?? target?.name ?? "?",
+      arriveAt: at,
+      outcome,
+      cargo: { ...expedition.cargo },
+      colonists: expedition.colonists,
+    });
   }
 
   // --- Exchange ------------------------------------------------------------
@@ -798,7 +926,7 @@ export class User {
   }
 
   /**
-   * Sends a weekly inhabitant to live on another of the player's planets,
+   * Sends a weekly or rescued inhabitant to live on another of the player's planets,
    * where their specialty now helps. Leaders stay with their colony.
    */
   assignNotable(id: string, colonyId: string): boolean {
@@ -813,7 +941,14 @@ export class User {
   /** The weekly inhabitants, newest first. */
   get weeklyNotables(): Notable[] {
     return this.notables
-      .filter((notable) => notable.role === "notable")
+      .filter((notable) => notable.role === "notable" && notable.origin !== "rescued")
+      .sort((a, b) => b.featuredAt - a.featuredAt);
+  }
+
+  /** The survivors explorations brought back, newest first. */
+  get rescuedNotables(): Notable[] {
+    return this.notables
+      .filter((notable) => notable.origin === "rescued")
       .sort((a, b) => b.featuredAt - a.featuredAt);
   }
 
@@ -891,11 +1026,14 @@ export class User {
     this.activeColonyId = activeId && this.getColony(activeId) ? activeId : this.homeColonyId;
     this.notables = loadNotables(parsed.notables);
 
-    // Expeditions only towards planets of the system, from known colonies.
+    // Expeditions only from known colonies, towards planets of the system or,
+    // for explorations, the unknown.
     this.expeditions = loadExpeditions(parsed.expeditions).filter(
       (item) =>
         this.getColony(item.fromColonyId) !== undefined &&
-        this.findSystemPlanet(item.targetId) !== undefined,
+        (item.kind === "exploration"
+          ? item.targetId === UNKNOWN_TARGET_ID
+          : this.findSystemPlanet(item.targetId) !== undefined),
     );
     this.expeditionReports = loadReports(parsed.expeditionReports);
     const stats = isRecord(parsed.stats) ? parsed.stats : {};
@@ -934,10 +1072,18 @@ function loadReports(value: unknown): ExpeditionReport[] {
     const id = sanitizeId(item.id);
     const targetName = sanitizeName(item.targetName);
     if (!id || !targetName || !isFiniteNumber(item.arriveAt)) return [];
-    if (item.kind !== "colonization" && item.kind !== "cargo") return [];
-    if (item.outcome !== "founded" && item.outcome !== "delivered" && item.outcome !== "returned") {
+    if (!isExpeditionKind(item.kind)) return [];
+    if (
+      item.outcome !== "founded" &&
+      item.outcome !== "delivered" &&
+      item.outcome !== "returned" &&
+      item.outcome !== "explored"
+    ) {
       return [];
     }
+    const discovery = isExplorationDiscovery(item.discovery) ? item.discovery : undefined;
+    if (item.outcome === "explored" && !discovery) return [];
+    const survivorName = sanitizeName(item.survivorName);
     const cargo = isRecord(item.cargo) ? item.cargo : {};
     return [
       {
@@ -951,6 +1097,9 @@ function loadReports(value: unknown): ExpeditionReport[] {
           food: isNonNegativeNumber(cargo.food) ? cargo.food : 0,
         },
         colonists: isNonNegativeNumber(item.colonists) ? Math.floor(item.colonists) : 0,
+        ...(discovery ? { discovery } : {}),
+        ...(isNonNegativeNumber(item.offlinium) ? { offlinium: item.offlinium } : {}),
+        ...(survivorName ? { survivorName } : {}),
       },
     ];
   });
