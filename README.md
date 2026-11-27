@@ -64,6 +64,8 @@ Les règles chiffrées sont regroupées dans `src/models/buildings.ts` et
   le type de planète ;
 - expéditions de colonisation et de cargo depuis le spatioport, avec portée,
   temps de vol en temps réel et sélecteur de planète ;
+- explorations de l’inconnu : un vaisseau à la fois, qui rapporte du métal, de
+  l’Offlinium, une épave, un rescapé ou rien du tout ;
 - section Habitants : le chef planétaire et la galerie des habitants mis en
   avant chaque semaine, avec une pastille tant qu’un nouveau venu attend
   son histoire ;

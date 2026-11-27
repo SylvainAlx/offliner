@@ -26,6 +26,7 @@ export default function NotableEditModal({
   const [title, setTitle] = useState(notable.title);
   const [description, setDescription] = useState(notable.description);
   const isLeader = notable.role === "leader";
+  const isRescued = notable.origin === "rescued";
   const idPrefix = `notable-${notable.id}`;
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -36,7 +37,13 @@ export default function NotableEditModal({
   return (
     <Modal
       isOpen
-      title={isLeader ? "Votre chef planétaire" : "Habitant de la semaine"}
+      title={
+        isLeader
+          ? "Votre chef planétaire"
+          : isRescued
+            ? "Habitant rescapé"
+            : "Habitant de la semaine"
+      }
       message="Donnez-lui le nom, le titre et l'histoire que vous voulez."
       onClose={onClose}
     >
@@ -120,7 +127,9 @@ export default function NotableEditModal({
             placeholder={
               isLeader
                 ? "Comment guide-t-il la colonie ?"
-                : "Qu'a-t-il fait de remarquable cette semaine ?"
+                : isRescued
+                  ? "D'où vient-il, et comment a-t-il été retrouvé ?"
+                  : "Qu'a-t-il fait de remarquable cette semaine ?"
             }
             onChange={(event) => setDescription(event.target.value)}
           />

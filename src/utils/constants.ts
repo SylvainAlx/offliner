@@ -72,6 +72,15 @@ export const COLONIZATION_COST = { metal: 2000, food: 300 } as const;
 export const COLONY_STARTING_RESOURCES = { metal: 500, food: 300 } as const;
 export const COLONISTS_PER_SHIP = 10;
 
+/**
+ * Explorations of the unknown: one ship at a time for the whole empire, from
+ * any spaceport; the result is known when it comes back.
+ */
+export const EXPLORATION_FUEL = 100;
+export const EXPLORATION_DURATION_MS = 4 * 60 * 60 * 1000;
+/** Survivors explorations can bring back in one game. */
+export const MAX_RESCUED_INHABITANTS = 3;
+
 /** A new inhabitant is put in the spotlight every week of the planet's life. */
 export const NOTABLE_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 export const MAX_NAME_LENGTH = 40;

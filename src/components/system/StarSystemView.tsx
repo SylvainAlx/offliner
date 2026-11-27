@@ -6,6 +6,7 @@ import type { GalaxySystem, StarSystem, SystemPlanet } from "../../models/starSy
 import type { User } from "../../models/user";
 import ExpeditionPanel from "./ExpeditionPanel";
 import ExpeditionsOverview from "./ExpeditionsOverview";
+import ExplorationPanel from "./ExplorationPanel";
 import StellarMap, { type SystemMarker } from "./StellarMap";
 import {
   PLANET_KIND_LABELS,
@@ -522,6 +523,8 @@ export default function StarSystemView({
         selectedId={selected.id}
         onSelect={setSystemId}
       />
+
+      <ExplorationPanel />
 
       <ExpeditionsOverview />
 

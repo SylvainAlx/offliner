@@ -1,7 +1,29 @@
 import { useUser } from "../../stores/userStore";
 import type { ExpeditionReport } from "../../models/user";
+import {
+  EXPEDITION_LABELS,
+  UNKNOWN_TARGET_ID,
+  type ExpeditionKind,
+} from "../../models/expedition";
 import { formatResources } from "../../models/resources";
 import { formatDateTime, formatWait } from "../../utils/format";
+
+function describeExploration(report: ExpeditionReport): string {
+  const back = `Exploration de retour sur ${report.targetName}`;
+  const gains = formatResources({ metal: report.cargo.metal, offlinium: report.offlinium });
+  switch (report.discovery) {
+    case "metal":
+      return `${back} avec un gisement à la dérive : ${gains}.`;
+    case "offlinium":
+      return `${back} avec une poche d'Offlinium : ${gains}.`;
+    case "wreck":
+      return `${back} : une épave a été récupérée, ${gains}.`;
+    case "survivor":
+      return `${back} avec une personne rescapée à bord : ${report.survivorName ?? "?"}. Rendez-vous dans la section Habitants.`;
+    default:
+      return `${back} : vos explorateurs n'ont trouvé que du vide.`;
+  }
+}
 
 function describeReport(report: ExpeditionReport): string {
   switch (report.outcome) {
@@ -9,6 +31,8 @@ function describeReport(report: ExpeditionReport): string {
       return `${report.targetName} colonisée par ${report.colonists} colons.`;
     case "delivered":
       return `Cargo livré sur ${report.targetName} : ${formatResources(report.cargo)}.`;
+    case "explored":
+      return describeExploration(report);
     case "returned":
       return `Impossible de se poser sur ${report.targetName} : tout est revenu au point de départ.`;
   }
@@ -18,6 +42,13 @@ const REPORT_ICONS: Record<ExpeditionReport["outcome"], string> = {
   founded: "🏳️",
   delivered: "📦",
   returned: "↩️",
+  explored: "🌌",
+};
+
+const FLIGHT_ICONS: Record<ExpeditionKind, string> = {
+  colonization: "🚀",
+  cargo: "📦",
+  exploration: "🌌",
 };
 
 /** Expeditions in flight and the latest reports. Hidden until the first one. */
@@ -28,9 +59,11 @@ export default function ExpeditionsOverview() {
   const reports = user.expeditionReports.slice(0, 3);
   if (inFlight.length === 0 && reports.length === 0) return null;
   const nameOf = (targetId: string) =>
-    user.getColonyAt(targetId)?.planet.name ??
-    user.findSystemPlanet(targetId)?.planet.name ??
-    "?";
+    targetId === UNKNOWN_TARGET_ID
+      ? "l'inconnu"
+      : (user.getColonyAt(targetId)?.planet.name ??
+        user.findSystemPlanet(targetId)?.planet.name ??
+        "?");
 
   return (
     <section className="flex w-full flex-col gap-2" aria-label="Expéditions">
@@ -49,7 +82,7 @@ export default function ExpeditionsOverview() {
               >
                 <div className="flex items-center justify-between gap-2 text-[0.78rem]">
                   <span className="min-w-0 text-(--gray-900) [overflow-wrap:anywhere]">
-                    {expedition.kind === "colonization" ? "🚀 Colonisation" : "📦 Cargo"} ·{" "}
+                    {FLIGHT_ICONS[expedition.kind]} {EXPEDITION_LABELS[expedition.kind]} ·{" "}
                     {from} → <strong>{nameOf(expedition.targetId)}</strong>
                   </span>
                   <span className="shrink-0 font-(--mono) text-(--accent)">

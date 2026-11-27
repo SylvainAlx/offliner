@@ -3,7 +3,7 @@ import { User, type ColonyCompletedConstruction, type SignalReception } from "..
 import type { SentSignal } from "../models/signal";
 import type { ExchangeResource } from "../models/exchange";
 import type { Colony } from "../models/colony";
-import type { ExpeditionCargo, ExpeditionKind } from "../models/expedition";
+import type { ExpeditionCargo, TravelKind } from "../models/expedition";
 import type { BuildingType } from "../models/buildings";
 import type { NotableChanges } from "../models/notable";
 import { userRepository } from "../services/userRepository";
@@ -30,11 +30,13 @@ export interface UserStore {
   deleteReceivedSignal: (id: string) => boolean;
   /** Sends an expedition from a colony's spaceport to a planet of the system. */
   launchExpedition: (
-    kind: ExpeditionKind,
+    kind: TravelKind,
     fromColonyId: string,
     targetId: string,
     cargo?: ExpeditionCargo,
   ) => boolean;
+  /** Sends an exploration of the unknown from a colony's spaceport. */
+  launchExploration: (fromColonyId: string) => boolean;
   updateNotable: (id: string, changes: NotableChanges) => boolean;
   /** Sends a weekly inhabitant to live on another planet of the player. */
   assignNotable: (id: string, colonyId: string) => boolean;
@@ -186,6 +188,9 @@ export const useUser = create<UserStore>((set, get) => {
 
     launchExpedition: (kind, fromColonyId, targetId, cargo) =>
       update((user, now) => user.launchExpedition(kind, fromColonyId, targetId, now, cargo)),
+
+    launchExploration: (fromColonyId) =>
+      update((user, now) => user.launchExploration(fromColonyId, now)),
 
     updateNotable: (id, changes) => update((user) => user.updateNotable(id, changes)),
     assignNotable: (id, colonyId) => update((user) => user.assignNotable(id, colonyId)),
