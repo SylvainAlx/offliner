@@ -1,11 +1,24 @@
-export const OFFLINER_VERSION = 1.0;
+import { version } from "../../package.json";
+
+/** The version of package.json, the only place where it is written. */
+export const OFFLINER_VERSION: string = version;
+
+// --- Contact and support ---------------------------------------------------
+
+/** An alias made for the game: it is public, in the app as in its code. */
+export const CONTACT_EMAIL = "offliner.quickly755@passinbox.com";
+export const DONATION_URL = "https://paypal.me/sylvainalx";
+export const AUTHOR_GITHUB_URL = "https://github.com/SylvainAlx";
+/** Public for reading only: see LICENSE. */
+export const REPOSITORY_URL = `${AUTHOR_GITHUB_URL}/offliner`;
 
 // --- Offline clock ---------------------------------------------------------
 
 /** One Offlinium delivery every 10 s of offline time: 360 /h at the base rate. */
 export const OFFLINIUM_DELIVERY_INTERVAL = 10 * 1000;
 /** Offlinium earned per hour offline, before the laboratory bonus. */
-export const OFFLINIUM_PER_HOUR = (60 * 60 * 1000) / OFFLINIUM_DELIVERY_INTERVAL;
+export const OFFLINIUM_PER_HOUR =
+  (60 * 60 * 1000) / OFFLINIUM_DELIVERY_INTERVAL;
 export const OFFLINE_CONFIRMATION_DELAY_MS = 5 * 1000;
 // Time during which the app could not observe the device (background, closed,
 // device asleep) cannot be verified. Beyond this threshold, the player is asked
@@ -36,7 +49,11 @@ export const SPEED_UP_MS_PER_OFFLINIUM = 10 * 1000;
 // --- Planet ----------------------------------------------------------------
 
 export const PLANET_FIELDS = 163;
-export const STARTING_RESOURCES = { metal: 500, food: 200, offlinium: 200 } as const;
+export const STARTING_RESOURCES = {
+  metal: 500,
+  food: 200,
+  offlinium: 200,
+} as const;
 export const STARTING_POPULATION = 10;
 /** Production that never depends on buildings, energy or staff (per hour). */
 export const BASE_METAL_PER_HOUR = 30;

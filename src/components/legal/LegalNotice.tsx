@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from "react";
 import Modal from "../ui/Modal";
+import { AUTHOR_GITHUB_URL, CONTACT_EMAIL } from "../../utils/constants";
 
 const AUTHOR = "Sylvain Alexandre";
-const AUTHOR_PROFILE = "https://github.com/SylvainAlx";
 
 const heading = "m-0 mt-4 mb-1 text-[0.88rem] font-extrabold text-(--gray-900)";
 const text = "m-0 text-[0.8rem] leading-normal text-(--gray-600)";
@@ -30,8 +30,12 @@ function LegalNoticeContent() {
           rendues publiques.
         </p>
         <p className={text}>
-          Contact : via son profil GitHub,{" "}
-          <a className={link} href={AUTHOR_PROFILE} target="_blank" rel="noreferrer">
+          Contact : par e-mail à{" "}
+          <a className={`${link} wrap-anywhere`} href={`mailto:${CONTACT_EMAIL}`}>
+            {CONTACT_EMAIL}
+          </a>
+          , ou via son profil GitHub,{" "}
+          <a className={link} href={AUTHOR_GITHUB_URL} target="_blank" rel="noreferrer">
             github.com/SylvainAlx
           </a>
           .
@@ -61,8 +65,8 @@ function LegalNoticeContent() {
         <p className={text}>
           Offliner fonctionne sans compte et sans serveur de jeu. Votre partie,
           votre pseudo et votre historique hors ligne sont enregistrés uniquement
-          sur votre appareil (stockage local du navigateur) ; ils ne sont jamais
-          transmis à l&apos;éditeur. Le jeu n&apos;utilise ni cookie, ni publicité, ni
+          sur votre appareil (stockage local du navigateur) ; le jeu ne les
+          transmet jamais à l&apos;éditeur. Le jeu n&apos;utilise ni cookie, ni publicité, ni
           outil de mesure d&apos;audience.
         </p>
         <p className={text}>
@@ -81,6 +85,69 @@ function LegalNoticeContent() {
             rel="noreferrer"
           >
             politique de confidentialité
+          </a>
+          .
+        </p>
+      </Section>
+
+      <Section title="Contact et dons">
+        <p className={text}>
+          <strong>Responsable du traitement :</strong> {AUTHOR}, joignable à{" "}
+          <span className="wrap-anywhere">{CONTACT_EMAIL}</span>.
+        </p>
+        <p className={text}>
+          <strong>Messages :</strong> si vous m&apos;écrivez, je reçois votre adresse
+          e-mail, le contenu de votre message et les informations techniques jointes
+          à tout e-mail. Je les utilise uniquement pour traiter votre demande, vous
+          répondre et corriger ou améliorer Offliner. Ce traitement repose sur mon
+          intérêt légitime à répondre aux personnes qui me contactent et à améliorer
+          l&apos;application (article 6.1.f du RGPD). Merci de ne pas m&apos;envoyer
+          d&apos;informations sensibles. Les messages sont supprimés au plus tard 12
+          mois après le dernier échange.
+        </p>
+        <p className={text}>
+          <strong>Dons :</strong> facultatifs, ils passent par PayPal, qui traite
+          vos informations selon sa{" "}
+          <a
+            className={link}
+            href="https://www.paypal.com/fr/legalhub/paypal/privacy-full"
+            target="_blank"
+            rel="noreferrer"
+          >
+            politique de confidentialité
+          </a>{" "}
+          et applique ses propres durées de conservation. Je reçois les
+          informations que PayPal communique au bénéficiaire et les utilise pour le
+          suivi des dons, sur la base de mon intérêt légitime à gérer les sommes
+          reçues, et pour respecter mes éventuelles obligations légales. Je les
+          conserve le temps nécessaire à ce suivi, ou plus longtemps si la loi
+          l&apos;impose.
+        </p>
+        <p className={text}>
+          <strong>Destinataires :</strong> ces informations ne servent ni à la
+          publicité ni à la revente. Les messages passent par le service d&apos;alias
+          Proton Pass, de la société suisse Proton (voir sa{" "}
+          <a
+            className={link}
+            href="https://proton.me/pass/privacy-policy"
+            target="_blank"
+            rel="noreferrer"
+          >
+            politique de confidentialité
+          </a>
+          ), puis par mon fournisseur de messagerie. La Commission européenne
+          reconnaît à la Suisse un niveau de protection adéquat. Pour savoir si
+          d&apos;autres transferts hors de l&apos;Union européenne ont lieu et avec
+          quelles garanties, écrivez-moi.
+        </p>
+        <p className={text}>
+          <strong>Vos droits :</strong> vous pouvez demander l&apos;accès à vos
+          données, leur rectification, leur effacement ou la limitation de leur
+          traitement, et vous opposer à ce traitement, dans les conditions prévues
+          par le RGPD, en écrivant à l&apos;adresse ci-dessus. Vous pouvez aussi
+          déposer une réclamation auprès de la{" "}
+          <a className={link} href="https://www.cnil.fr" target="_blank" rel="noreferrer">
+            CNIL
           </a>
           .
         </p>

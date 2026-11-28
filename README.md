@@ -76,6 +76,9 @@ Les règles chiffrées sont regroupées dans `src/models/buildings.ts` et
 - historique des périodes hors ligne ;
 - thème clair, sombre ou automatique (suit le réglage de l’appareil) ;
 - sauvegarde, export et import des données au format JSON ;
+- section « Contact et soutien » : retours par e-mail, lien vers le code sur GitHub et dons facultatifs par
+  PayPal, sans contrepartie dans le jeu (adresse et lien dans
+  `src/utils/constants.ts`) ;
 - fonctionnement hors ligne et installation sur l’écran d’accueil.
 
 ## Fonctionnement des données
@@ -119,7 +122,7 @@ fichier contient vos données de jeu : conservez-le dans un endroit sûr.
 ## Origine du projet
 
 Offliner a d’abord été développé en React Native avec Expo, dans le dépôt
-[offliner](https://github.com/SylvainAlx/offliner-v2). Une deuxième version a
+[offliner-react-native](https://github.com/SylvainAlx/offliner-react-native). Une deuxième version a
 exploré une approche web installable (PWA) autour d’un village et de
 compagnons à faire évoluer.
 
@@ -136,8 +139,8 @@ la manière d’OGame. Le document de conception décrit les règles et les
 ## Installation et développement
 
 ```bash
-git clone <URL_DU_DEPOT>
-cd offliner-v2
+git clone https://github.com/SylvainAlx/offliner.git
+cd offliner
 pnpm install
 pnpm dev
 ```
@@ -181,6 +184,22 @@ Tous les tests sont rassemblés dans `tests/`, qui reprend l’organisation de
 
 Leurs types sont vérifiés par `tsconfig.test.json` lors de `pnpm build`.
 
+## Versions
+
+La version n’est écrite que dans `package.json`. Après la 1.0.0 :
+
+- **correctif** (`1.1.0` → `1.1.1`) : changer la version, rien d’autre ;
+- **version mineure ou majeure** (`1.1.1` → `1.2.0` ou `2.0.0`) : changer la
+  version et ajouter son entrée dans `src/data/releaseNotes.ts`. Les joueurs la
+  voient une fois, dans une fenêtre « Quoi de neuf ? » ; un test échoue si elle
+  manque.
+
+Chaque version publiée sur `main` reçoit un tag `vX.Y.Z`.
+
+Le numéro de version de l’application est distinct de `SAVE_VERSION` : ne pas
+incrémenter ce dernier sans migration, sous peine d’effacer les parties en
+cours.
+
 ## Déploiement
 
 L’application est déployée sur Vercel. `vercel.json` remplace la commande de
@@ -214,6 +233,7 @@ src/
 │   ├── inhabitants/ Habitants célèbres
 │   ├── planet/   Écran de la planète : bâtiments, construction, population, bilan
 │   └── system/   Système planétaire
+├── data/         Contenus rédigés : notes de version
 ├── hooks/        Logique réutilisable des écrans et interactions
 ├── models/       Logique de jeu : joueur, colonies, planète, bâtiments, économie, périodes hors ligne, succès
 ├── services/     Persistance locale
