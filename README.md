@@ -181,6 +181,22 @@ Tous les tests sont rassemblés dans `tests/`, qui reprend l’organisation de
 
 Leurs types sont vérifiés par `tsconfig.test.json` lors de `pnpm build`.
 
+## Versions
+
+La version n’est écrite que dans `package.json`. Après la 1.0.0 :
+
+- **correctif** (`1.1.0` → `1.1.1`) : changer la version, rien d’autre ;
+- **version mineure ou majeure** (`1.1.1` → `1.2.0` ou `2.0.0`) : changer la
+  version et ajouter son entrée dans `src/data/releaseNotes.ts`. Les joueurs la
+  voient une fois, dans une fenêtre « Quoi de neuf ? » ; un test échoue si elle
+  manque.
+
+Chaque version publiée sur `main` reçoit un tag `vX.Y.Z`.
+
+Le numéro de version de l’application est distinct de `SAVE_VERSION` : ne pas
+incrémenter ce dernier sans migration, sous peine d’effacer les parties en
+cours.
+
 ## Déploiement
 
 L’application est déployée sur Vercel. `vercel.json` remplace la commande de
@@ -214,6 +230,7 @@ src/
 │   ├── inhabitants/ Habitants célèbres
 │   ├── planet/   Écran de la planète : bâtiments, construction, population, bilan
 │   └── system/   Système planétaire
+├── data/         Contenus rédigés : notes de version
 ├── hooks/        Logique réutilisable des écrans et interactions
 ├── models/       Logique de jeu : joueur, colonies, planète, bâtiments, économie, périodes hors ligne, succès
 ├── services/     Persistance locale

@@ -24,6 +24,11 @@ import BackupReminder from "./components/BackupReminder";
 import { useBackup } from "./stores/backupStore";
 import UnobservedGapPrompt from "./components/UnobservedGapPrompt";
 import { useInstall } from "./stores/installStore";
+import WhatsNewModal from "./components/WhatsNewModal";
+import {
+  hasDismissedWelcome,
+  rememberWelcomeDismissed,
+} from "./services/welcome";
 
 function AppContent() {
   const isOnline = useOnlineStatus((state) => state.isOnline);
@@ -128,30 +133,12 @@ function AppContent() {
       </div>
       <Footer />
       <UnobservedGapPrompt />
+      <WhatsNewModal />
     </div>
   );
 }
 
-/** Kept on the device: once the player has pressed "Jouer", the app opens directly. */
-const WELCOME_DISMISSED_KEY = "offliner:welcome-dismissed";
 const INSTALL_GUIDE_SEEN_KEY = "offliner:install-guide-seen";
-
-function hasDismissedWelcome(): boolean {
-  try {
-    return localStorage.getItem(WELCOME_DISMISSED_KEY) === "1";
-  } catch {
-    // Storage blocked (private browsing…): the welcome page shows again.
-    return false;
-  }
-}
-
-function rememberWelcomeDismissed(): void {
-  try {
-    localStorage.setItem(WELCOME_DISMISSED_KEY, "1");
-  } catch {
-    // Not kept: only this visit skips the welcome page.
-  }
-}
 
 type Stage = "welcome" | "install" | "app";
 
