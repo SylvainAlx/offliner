@@ -25,6 +25,7 @@ import { useBackup } from "./stores/backupStore";
 import UnobservedGapPrompt from "./components/UnobservedGapPrompt";
 import { useInstall } from "./stores/installStore";
 import WhatsNewModal from "./components/WhatsNewModal";
+import Support from "./components/Support";
 import {
   hasDismissedWelcome,
   rememberWelcomeDismissed,
@@ -93,6 +94,8 @@ function AppContent() {
         );
       case "help":
         return <Help />;
+      case "support":
+        return <Support />;
       case "account":
       default:
         return (
@@ -131,7 +134,12 @@ function AppContent() {
           {renderSection()}
         </main>
       </div>
-      <Footer />
+      <Footer
+        onOpenSupport={() => {
+          setActiveSection("support");
+          window.scrollTo({ top: 0 });
+        }}
+      />
       <UnobservedGapPrompt />
       <WhatsNewModal />
     </div>

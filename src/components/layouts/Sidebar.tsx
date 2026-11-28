@@ -8,7 +8,8 @@ export type AppSection =
   | "system"
   | "radar"
   | "achievements"
-  | "help";
+  | "help"
+  | "support";
 
 const menuItems: Array<{
   id: AppSection;
@@ -57,6 +58,12 @@ const menuItems: Array<{
     label: "Aide",
     description: "Les règles d'Offliner",
     icon: "?",
+  },
+  {
+    id: "support",
+    label: "Contact et soutien",
+    description: "Votre avis et vos dons",
+    icon: "❤️",
   },
 ];
 

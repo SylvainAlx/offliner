@@ -76,6 +76,9 @@ Les règles chiffrées sont regroupées dans `src/models/buildings.ts` et
 - historique des périodes hors ligne ;
 - thème clair, sombre ou automatique (suit le réglage de l’appareil) ;
 - sauvegarde, export et import des données au format JSON ;
+- section « Contact et soutien » : retours par e-mail, lien vers le code sur GitHub et dons facultatifs par
+  PayPal, sans contrepartie dans le jeu (adresse et lien dans
+  `src/utils/constants.ts`) ;
 - fonctionnement hors ligne et installation sur l’écran d’accueil.
 
 ## Fonctionnement des données
@@ -119,7 +122,7 @@ fichier contient vos données de jeu : conservez-le dans un endroit sûr.
 ## Origine du projet
 
 Offliner a d’abord été développé en React Native avec Expo, dans le dépôt
-[offliner](https://github.com/SylvainAlx/offliner-v2). Une deuxième version a
+[offliner-react-native](https://github.com/SylvainAlx/offliner-react-native). Une deuxième version a
 exploré une approche web installable (PWA) autour d’un village et de
 compagnons à faire évoluer.
 
@@ -136,8 +139,8 @@ la manière d’OGame. Le document de conception décrit les règles et les
 ## Installation et développement
 
 ```bash
-git clone <URL_DU_DEPOT>
-cd offliner-v2
+git clone https://github.com/SylvainAlx/offliner.git
+cd offliner
 pnpm install
 pnpm dev
 ```

@@ -3,6 +3,15 @@ import { version } from "../../package.json";
 /** The version of package.json, the only place where it is written. */
 export const OFFLINER_VERSION: string = version;
 
+// --- Contact and support ---------------------------------------------------
+
+/** An alias made for the game: it is public, in the app as in its code. */
+export const CONTACT_EMAIL = "offliner.quickly755@passinbox.com";
+export const DONATION_URL = "https://paypal.me/sylvainalx";
+export const AUTHOR_GITHUB_URL = "https://github.com/SylvainAlx";
+/** Public for reading only: see LICENSE. */
+export const REPOSITORY_URL = `${AUTHOR_GITHUB_URL}/offliner`;
+
 // --- Offline clock ---------------------------------------------------------
 
 /** One Offlinium delivery every 10 s of offline time: 360 /h at the base rate. */
